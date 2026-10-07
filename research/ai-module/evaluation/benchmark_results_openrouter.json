@@ -1,0 +1,1617 @@
+{
+  "timestamp_utc": "2026-10-05T16:54:51Z",
+  "mode": "dry_run",
+  "evaluated_models": [
+    "google/gemini-2.0-flash-001",
+    "meta-llama/llama-3.3-70b-instruct"
+  ],
+  "tasks": [
+    "action_routing",
+    "query_classification",
+    "evidence_support"
+  ],
+  "summaries": [
+    {
+      "provider_name": "rules",
+      "task_type": "action_routing",
+      "sample_count": 20,
+      "accuracy": 0.95,
+      "macro_f1": 0.9495,
+      "calibration": {
+        "expected_calibration_error": 0.0925,
+        "max_calibration_error": 0.1,
+        "brier_score": 0.0574,
+        "reliability_bins": [
+          {
+            "bin_range": "[0.0, 0.1]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.1, 0.2]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.2, 0.3]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.3, 0.4]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.4, 0.5]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.5, 0.6]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.6, 0.7]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.7, 0.8]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.8, 0.9]",
+            "count": 10,
+            "accuracy": 0.9,
+            "confidence": 0.815,
+            "gap": 0.085
+          },
+          {
+            "bin_range": "[0.9, 1.0]",
+            "count": 10,
+            "accuracy": 1.0,
+            "confidence": 0.9,
+            "gap": 0.1
+          }
+        ]
+      },
+      "p50_latency_ms": 0.1,
+      "p95_latency_ms": 0.1,
+      "p99_latency_ms": 0.1,
+      "cost_per_1000_usd": 0.0,
+      "is_eligible_for_autonomous": true
+    },
+    {
+      "provider_name": "mock_llm",
+      "task_type": "action_routing",
+      "sample_count": 20,
+      "accuracy": 0.95,
+      "macro_f1": 0.9495,
+      "calibration": {
+        "expected_calibration_error": 0.093,
+        "max_calibration_error": 0.2133,
+        "brier_score": 0.0448,
+        "reliability_bins": [
+          {
+            "bin_range": "[0.0, 0.1]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.1, 0.2]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.2, 0.3]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.3, 0.4]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.4, 0.5]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.5, 0.6]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.6, 0.7]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.7, 0.8]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.8, 0.9]",
+            "count": 3,
+            "accuracy": 0.6667,
+            "confidence": 0.88,
+            "gap": 0.2133
+          },
+          {
+            "bin_range": "[0.9, 1.0]",
+            "count": 17,
+            "accuracy": 1.0,
+            "confidence": 0.9282,
+            "gap": 0.0718
+          }
+        ]
+      },
+      "p50_latency_ms": 240.0,
+      "p95_latency_ms": 240.0,
+      "p99_latency_ms": 240.0,
+      "cost_per_1000_usd": 2.5,
+      "is_eligible_for_autonomous": true
+    },
+    {
+      "provider_name": "jev_calibrated",
+      "task_type": "action_routing",
+      "sample_count": 20,
+      "accuracy": 0.95,
+      "macro_f1": 0.9495,
+      "calibration": {
+        "expected_calibration_error": 0.0297,
+        "max_calibration_error": 0.104,
+        "brier_score": 0.0469,
+        "reliability_bins": [
+          {
+            "bin_range": "[0.0, 0.1]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.1, 0.2]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.2, 0.3]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.3, 0.4]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.4, 0.5]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.5, 0.6]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.6, 0.7]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.7, 0.8]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.8, 0.9]",
+            "count": 3,
+            "accuracy": 1.0,
+            "confidence": 0.896,
+            "gap": 0.104
+          },
+          {
+            "bin_range": "[0.9, 1.0]",
+            "count": 17,
+            "accuracy": 0.9412,
+            "confidence": 0.9246,
+            "gap": 0.0166
+          }
+        ]
+      },
+      "p50_latency_ms": 22.0,
+      "p95_latency_ms": 22.0,
+      "p99_latency_ms": 22.01,
+      "cost_per_1000_usd": 0.1,
+      "is_eligible_for_autonomous": true
+    },
+    {
+      "provider_name": "jev_uncalibrated",
+      "task_type": "action_routing",
+      "sample_count": 20,
+      "accuracy": 0.95,
+      "macro_f1": 0.9495,
+      "calibration": {
+        "expected_calibration_error": 0.04,
+        "max_calibration_error": 0.04,
+        "brier_score": 0.0491,
+        "reliability_bins": [
+          {
+            "bin_range": "[0.0, 0.1]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.1, 0.2]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.2, 0.3]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.3, 0.4]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.4, 0.5]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.5, 0.6]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.6, 0.7]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.7, 0.8]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.8, 0.9]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.9, 1.0]",
+            "count": 20,
+            "accuracy": 0.95,
+            "confidence": 0.99,
+            "gap": 0.04
+          }
+        ]
+      },
+      "p50_latency_ms": 22.0,
+      "p95_latency_ms": 22.0,
+      "p99_latency_ms": 22.0,
+      "cost_per_1000_usd": 0.1,
+      "is_eligible_for_autonomous": true
+    },
+    {
+      "provider_name": "rules",
+      "task_type": "query_classification",
+      "sample_count": 25,
+      "accuracy": 0.84,
+      "macro_f1": 0.8095,
+      "calibration": {
+        "expected_calibration_error": 0.15,
+        "max_calibration_error": 0.3,
+        "brier_score": 0.1455,
+        "reliability_bins": [
+          {
+            "bin_range": "[0.0, 0.1]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.1, 0.2]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.2, 0.3]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.3, 0.4]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.4, 0.5]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.5, 0.6]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.6, 0.7]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.7, 0.8]",
+            "count": 5,
+            "accuracy": 1.0,
+            "confidence": 0.7,
+            "gap": 0.3
+          },
+          {
+            "bin_range": "[0.8, 0.9]",
+            "count": 15,
+            "accuracy": 0.7333,
+            "confidence": 0.85,
+            "gap": 0.1167
+          },
+          {
+            "bin_range": "[0.9, 1.0]",
+            "count": 5,
+            "accuracy": 1.0,
+            "confidence": 0.9,
+            "gap": 0.1
+          }
+        ]
+      },
+      "p50_latency_ms": 0.1,
+      "p95_latency_ms": 0.1,
+      "p99_latency_ms": 0.1,
+      "cost_per_1000_usd": 0.0,
+      "is_eligible_for_autonomous": false
+    },
+    {
+      "provider_name": "mock_llm",
+      "task_type": "query_classification",
+      "sample_count": 25,
+      "accuracy": 0.84,
+      "macro_f1": 0.8095,
+      "calibration": {
+        "expected_calibration_error": 0.1188,
+        "max_calibration_error": 0.121,
+        "brier_score": 0.1387,
+        "reliability_bins": [
+          {
+            "bin_range": "[0.0, 0.1]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.1, 0.2]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.2, 0.3]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.3, 0.4]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.4, 0.5]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.5, 0.6]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.6, 0.7]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.7, 0.8]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.8, 0.9]",
+            "count": 5,
+            "accuracy": 1.0,
+            "confidence": 0.89,
+            "gap": 0.11
+          },
+          {
+            "bin_range": "[0.9, 1.0]",
+            "count": 20,
+            "accuracy": 0.8,
+            "confidence": 0.921,
+            "gap": 0.121
+          }
+        ]
+      },
+      "p50_latency_ms": 240.0,
+      "p95_latency_ms": 240.0,
+      "p99_latency_ms": 240.01,
+      "cost_per_1000_usd": 2.5,
+      "is_eligible_for_autonomous": false
+    },
+    {
+      "provider_name": "jev_calibrated",
+      "task_type": "query_classification",
+      "sample_count": 25,
+      "accuracy": 0.84,
+      "macro_f1": 0.8095,
+      "calibration": {
+        "expected_calibration_error": 0.1101,
+        "max_calibration_error": 0.111,
+        "brier_score": 0.138,
+        "reliability_bins": [
+          {
+            "bin_range": "[0.0, 0.1]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.1, 0.2]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.2, 0.3]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.3, 0.4]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.4, 0.5]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.5, 0.6]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.6, 0.7]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.7, 0.8]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.8, 0.9]",
+            "count": 5,
+            "accuracy": 1.0,
+            "confidence": 0.889,
+            "gap": 0.111
+          },
+          {
+            "bin_range": "[0.9, 1.0]",
+            "count": 20,
+            "accuracy": 0.8,
+            "confidence": 0.9099,
+            "gap": 0.1099
+          }
+        ]
+      },
+      "p50_latency_ms": 22.0,
+      "p95_latency_ms": 22.0,
+      "p99_latency_ms": 22.0,
+      "cost_per_1000_usd": 0.1,
+      "is_eligible_for_autonomous": false
+    },
+    {
+      "provider_name": "jev_uncalibrated",
+      "task_type": "query_classification",
+      "sample_count": 25,
+      "accuracy": 0.84,
+      "macro_f1": 0.8095,
+      "calibration": {
+        "expected_calibration_error": 0.1498,
+        "max_calibration_error": 0.1498,
+        "brier_score": 0.1569,
+        "reliability_bins": [
+          {
+            "bin_range": "[0.0, 0.1]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.1, 0.2]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.2, 0.3]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.3, 0.4]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.4, 0.5]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.5, 0.6]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.6, 0.7]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.7, 0.8]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.8, 0.9]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.9, 1.0]",
+            "count": 25,
+            "accuracy": 0.84,
+            "confidence": 0.9898,
+            "gap": 0.1498
+          }
+        ]
+      },
+      "p50_latency_ms": 22.0,
+      "p95_latency_ms": 22.0,
+      "p99_latency_ms": 22.0,
+      "cost_per_1000_usd": 0.1,
+      "is_eligible_for_autonomous": false
+    },
+    {
+      "provider_name": "rules",
+      "task_type": "evidence_support",
+      "sample_count": 20,
+      "accuracy": 0.85,
+      "macro_f1": 0.852,
+      "calibration": {
+        "expected_calibration_error": 0.1125,
+        "max_calibration_error": 0.1227,
+        "brier_score": 0.1219,
+        "reliability_bins": [
+          {
+            "bin_range": "[0.0, 0.1]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.1, 0.2]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.2, 0.3]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.3, 0.4]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.4, 0.5]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.5, 0.6]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.6, 0.7]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.7, 0.8]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.8, 0.9]",
+            "count": 11,
+            "accuracy": 0.7273,
+            "confidence": 0.85,
+            "gap": 0.1227
+          },
+          {
+            "bin_range": "[0.9, 1.0]",
+            "count": 9,
+            "accuracy": 1.0,
+            "confidence": 0.9,
+            "gap": 0.1
+          }
+        ]
+      },
+      "p50_latency_ms": 0.1,
+      "p95_latency_ms": 0.1,
+      "p99_latency_ms": 0.17,
+      "cost_per_1000_usd": 0.0,
+      "is_eligible_for_autonomous": false
+    },
+    {
+      "provider_name": "mock_llm",
+      "task_type": "evidence_support",
+      "sample_count": 20,
+      "accuracy": 0.85,
+      "macro_f1": 0.852,
+      "calibration": {
+        "expected_calibration_error": 0.0975,
+        "max_calibration_error": 0.0975,
+        "brier_score": 0.1379,
+        "reliability_bins": [
+          {
+            "bin_range": "[0.0, 0.1]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.1, 0.2]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.2, 0.3]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.3, 0.4]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.4, 0.5]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.5, 0.6]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.6, 0.7]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.7, 0.8]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.8, 0.9]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.9, 1.0]",
+            "count": 20,
+            "accuracy": 0.85,
+            "confidence": 0.9475,
+            "gap": 0.0975
+          }
+        ]
+      },
+      "p50_latency_ms": 240.0,
+      "p95_latency_ms": 240.01,
+      "p99_latency_ms": 240.01,
+      "cost_per_1000_usd": 2.5,
+      "is_eligible_for_autonomous": false
+    },
+    {
+      "provider_name": "jev_calibrated",
+      "task_type": "evidence_support",
+      "sample_count": 20,
+      "accuracy": 0.85,
+      "macro_f1": 0.852,
+      "calibration": {
+        "expected_calibration_error": 0.0855,
+        "max_calibration_error": 0.0855,
+        "brier_score": 0.1353,
+        "reliability_bins": [
+          {
+            "bin_range": "[0.0, 0.1]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.1, 0.2]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.2, 0.3]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.3, 0.4]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.4, 0.5]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.5, 0.6]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.6, 0.7]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.7, 0.8]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.8, 0.9]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.9, 1.0]",
+            "count": 20,
+            "accuracy": 0.85,
+            "confidence": 0.9355,
+            "gap": 0.0855
+          }
+        ]
+      },
+      "p50_latency_ms": 22.0,
+      "p95_latency_ms": 22.01,
+      "p99_latency_ms": 22.01,
+      "cost_per_1000_usd": 0.1,
+      "is_eligible_for_autonomous": false
+    },
+    {
+      "provider_name": "jev_uncalibrated",
+      "task_type": "evidence_support",
+      "sample_count": 20,
+      "accuracy": 0.85,
+      "macro_f1": 0.852,
+      "calibration": {
+        "expected_calibration_error": 0.14,
+        "max_calibration_error": 0.14,
+        "brier_score": 0.1471,
+        "reliability_bins": [
+          {
+            "bin_range": "[0.0, 0.1]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.1, 0.2]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.2, 0.3]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.3, 0.4]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.4, 0.5]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.5, 0.6]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.6, 0.7]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.7, 0.8]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.8, 0.9]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.9, 1.0]",
+            "count": 20,
+            "accuracy": 0.85,
+            "confidence": 0.99,
+            "gap": 0.14
+          }
+        ]
+      },
+      "p50_latency_ms": 22.0,
+      "p95_latency_ms": 22.0,
+      "p99_latency_ms": 22.0,
+      "cost_per_1000_usd": 0.1,
+      "is_eligible_for_autonomous": false
+    },
+    {
+      "provider_name": "simulated/google/gemini-2.0-flash-001",
+      "task_type": "action_routing",
+      "sample_count": 20,
+      "accuracy": 0.95,
+      "macro_f1": 0.9495,
+      "calibration": {
+        "expected_calibration_error": 0.093,
+        "max_calibration_error": 0.2133,
+        "brier_score": 0.0448,
+        "reliability_bins": [
+          {
+            "bin_range": "[0.0, 0.1]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.1, 0.2]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.2, 0.3]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.3, 0.4]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.4, 0.5]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.5, 0.6]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.6, 0.7]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.7, 0.8]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.8, 0.9]",
+            "count": 3,
+            "accuracy": 0.6667,
+            "confidence": 0.88,
+            "gap": 0.2133
+          },
+          {
+            "bin_range": "[0.9, 1.0]",
+            "count": 17,
+            "accuracy": 1.0,
+            "confidence": 0.9282,
+            "gap": 0.0718
+          }
+        ]
+      },
+      "p50_latency_ms": 240.0,
+      "p95_latency_ms": 240.0,
+      "p99_latency_ms": 240.0,
+      "cost_per_1000_usd": 2.5,
+      "is_eligible_for_autonomous": true
+    },
+    {
+      "provider_name": "simulated/google/gemini-2.0-flash-001",
+      "task_type": "query_classification",
+      "sample_count": 25,
+      "accuracy": 0.84,
+      "macro_f1": 0.8095,
+      "calibration": {
+        "expected_calibration_error": 0.1188,
+        "max_calibration_error": 0.121,
+        "brier_score": 0.1387,
+        "reliability_bins": [
+          {
+            "bin_range": "[0.0, 0.1]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.1, 0.2]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.2, 0.3]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.3, 0.4]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.4, 0.5]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.5, 0.6]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.6, 0.7]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.7, 0.8]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.8, 0.9]",
+            "count": 5,
+            "accuracy": 1.0,
+            "confidence": 0.89,
+            "gap": 0.11
+          },
+          {
+            "bin_range": "[0.9, 1.0]",
+            "count": 20,
+            "accuracy": 0.8,
+            "confidence": 0.921,
+            "gap": 0.121
+          }
+        ]
+      },
+      "p50_latency_ms": 240.0,
+      "p95_latency_ms": 240.0,
+      "p99_latency_ms": 240.0,
+      "cost_per_1000_usd": 2.5,
+      "is_eligible_for_autonomous": false
+    },
+    {
+      "provider_name": "simulated/google/gemini-2.0-flash-001",
+      "task_type": "evidence_support",
+      "sample_count": 20,
+      "accuracy": 0.85,
+      "macro_f1": 0.852,
+      "calibration": {
+        "expected_calibration_error": 0.0975,
+        "max_calibration_error": 0.0975,
+        "brier_score": 0.1379,
+        "reliability_bins": [
+          {
+            "bin_range": "[0.0, 0.1]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.1, 0.2]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.2, 0.3]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.3, 0.4]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.4, 0.5]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.5, 0.6]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.6, 0.7]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.7, 0.8]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.8, 0.9]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.9, 1.0]",
+            "count": 20,
+            "accuracy": 0.85,
+            "confidence": 0.9475,
+            "gap": 0.0975
+          }
+        ]
+      },
+      "p50_latency_ms": 240.0,
+      "p95_latency_ms": 240.01,
+      "p99_latency_ms": 240.02,
+      "cost_per_1000_usd": 2.5,
+      "is_eligible_for_autonomous": false
+    },
+    {
+      "provider_name": "simulated/meta-llama/llama-3.3-70b-instruct",
+      "task_type": "action_routing",
+      "sample_count": 20,
+      "accuracy": 0.95,
+      "macro_f1": 0.9495,
+      "calibration": {
+        "expected_calibration_error": 0.093,
+        "max_calibration_error": 0.2133,
+        "brier_score": 0.0448,
+        "reliability_bins": [
+          {
+            "bin_range": "[0.0, 0.1]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.1, 0.2]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.2, 0.3]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.3, 0.4]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.4, 0.5]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.5, 0.6]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.6, 0.7]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.7, 0.8]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.8, 0.9]",
+            "count": 3,
+            "accuracy": 0.6667,
+            "confidence": 0.88,
+            "gap": 0.2133
+          },
+          {
+            "bin_range": "[0.9, 1.0]",
+            "count": 17,
+            "accuracy": 1.0,
+            "confidence": 0.9282,
+            "gap": 0.0718
+          }
+        ]
+      },
+      "p50_latency_ms": 240.0,
+      "p95_latency_ms": 240.0,
+      "p99_latency_ms": 240.01,
+      "cost_per_1000_usd": 2.5,
+      "is_eligible_for_autonomous": true
+    },
+    {
+      "provider_name": "simulated/meta-llama/llama-3.3-70b-instruct",
+      "task_type": "query_classification",
+      "sample_count": 25,
+      "accuracy": 0.84,
+      "macro_f1": 0.8095,
+      "calibration": {
+        "expected_calibration_error": 0.1188,
+        "max_calibration_error": 0.121,
+        "brier_score": 0.1387,
+        "reliability_bins": [
+          {
+            "bin_range": "[0.0, 0.1]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.1, 0.2]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.2, 0.3]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.3, 0.4]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.4, 0.5]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.5, 0.6]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.6, 0.7]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.7, 0.8]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.8, 0.9]",
+            "count": 5,
+            "accuracy": 1.0,
+            "confidence": 0.89,
+            "gap": 0.11
+          },
+          {
+            "bin_range": "[0.9, 1.0]",
+            "count": 20,
+            "accuracy": 0.8,
+            "confidence": 0.921,
+            "gap": 0.121
+          }
+        ]
+      },
+      "p50_latency_ms": 240.0,
+      "p95_latency_ms": 240.0,
+      "p99_latency_ms": 240.01,
+      "cost_per_1000_usd": 2.5,
+      "is_eligible_for_autonomous": false
+    },
+    {
+      "provider_name": "simulated/meta-llama/llama-3.3-70b-instruct",
+      "task_type": "evidence_support",
+      "sample_count": 20,
+      "accuracy": 0.85,
+      "macro_f1": 0.852,
+      "calibration": {
+        "expected_calibration_error": 0.0975,
+        "max_calibration_error": 0.0975,
+        "brier_score": 0.1379,
+        "reliability_bins": [
+          {
+            "bin_range": "[0.0, 0.1]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.1, 0.2]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.2, 0.3]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.3, 0.4]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.4, 0.5]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.5, 0.6]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.6, 0.7]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.7, 0.8]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.8, 0.9]",
+            "count": 0,
+            "accuracy": 0.0,
+            "confidence": 0.0,
+            "gap": 0.0
+          },
+          {
+            "bin_range": "[0.9, 1.0]",
+            "count": 20,
+            "accuracy": 0.85,
+            "confidence": 0.9475,
+            "gap": 0.0975
+          }
+        ]
+      },
+      "p50_latency_ms": 240.0,
+      "p95_latency_ms": 240.02,
+      "p99_latency_ms": 240.03,
+      "cost_per_1000_usd": 2.5,
+      "is_eligible_for_autonomous": false
+    }
+  ]
+}

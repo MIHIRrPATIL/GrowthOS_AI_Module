@@ -1,0 +1,442 @@
+[
+  {
+    "case_id": "es_01",
+    "task_type": "evidence_support",
+    "input_context": {
+      "claim": "Checkout step 2 drop off rate rose to 62.5% this week.",
+      "metric": {
+        "metric_name": "checkout_step_2_drop_off_rate",
+        "value": 0.625,
+        "pct_change": 35.0,
+        "sample_size": 40,
+        "min_sample_met": true
+      }
+    },
+    "ground_truth": "supported",
+    "allowed_options": [
+      "supported",
+      "hallucinated_number",
+      "inverted_polarity",
+      "insufficient_sample"
+    ],
+    "description": "Exact percentage match with matching trend direction"
+  },
+  {
+    "case_id": "es_02",
+    "task_type": "evidence_support",
+    "input_context": {
+      "claim": "Cart abandonment rate was 44.0% based on 100 sessions.",
+      "metric": {
+        "metric_name": "cart_abandonment_rate",
+        "value": 0.44,
+        "pct_change": 12.0,
+        "sample_size": 100,
+        "min_sample_met": true
+      }
+    },
+    "ground_truth": "supported",
+    "allowed_options": [
+      "supported",
+      "hallucinated_number",
+      "inverted_polarity",
+      "insufficient_sample"
+    ],
+    "description": "Verified cart abandonment number and sample size"
+  },
+  {
+    "case_id": "es_03",
+    "task_type": "evidence_support",
+    "input_context": {
+      "claim": "Overall conversion rate increased to 20.0% this month.",
+      "metric": {
+        "metric_name": "overall_conversion_rate",
+        "value": 0.2,
+        "pct_change": 18.0,
+        "sample_size": 150,
+        "min_sample_met": true
+      }
+    },
+    "ground_truth": "supported",
+    "allowed_options": [
+      "supported",
+      "hallucinated_number",
+      "inverted_polarity",
+      "insufficient_sample"
+    ],
+    "description": "Conversion rate rise accurately described"
+  },
+  {
+    "case_id": "es_04",
+    "task_type": "evidence_support",
+    "input_context": {
+      "claim": "Add to cart rate dropped to 15.0%.",
+      "metric": {
+        "metric_name": "add_to_cart_rate",
+        "value": 0.15,
+        "pct_change": -22.0,
+        "sample_size": 80,
+        "min_sample_met": true
+      }
+    },
+    "ground_truth": "supported",
+    "allowed_options": [
+      "supported",
+      "hallucinated_number",
+      "inverted_polarity",
+      "insufficient_sample"
+    ],
+    "description": "Downward movement matching negative polarity words"
+  },
+  {
+    "case_id": "es_05",
+    "task_type": "evidence_support",
+    "input_context": {
+      "claim": "Checkout step 1 drop off was 25.0% across 50 users.",
+      "metric": {
+        "metric_name": "checkout_step_1_drop_off_rate",
+        "value": 0.25,
+        "pct_change": 0.0,
+        "sample_size": 50,
+        "min_sample_met": true
+      }
+    },
+    "ground_truth": "supported",
+    "allowed_options": [
+      "supported",
+      "hallucinated_number",
+      "inverted_polarity",
+      "insufficient_sample"
+    ],
+    "description": "Step 1 drop off precisely matching computed ratio"
+  },
+  {
+    "case_id": "es_06",
+    "task_type": "evidence_support",
+    "input_context": {
+      "claim": "Checkout step 2 drop off rate rose to 89.2% this week.",
+      "metric": {
+        "metric_name": "checkout_step_2_drop_off_rate",
+        "value": 0.625,
+        "pct_change": 35.0,
+        "sample_size": 40,
+        "min_sample_met": true
+      }
+    },
+    "ground_truth": "hallucinated_number",
+    "allowed_options": [
+      "supported",
+      "hallucinated_number",
+      "inverted_polarity",
+      "insufficient_sample"
+    ],
+    "description": "Claim invents 89.2% when actual is 62.5%"
+  },
+  {
+    "case_id": "es_07",
+    "task_type": "evidence_support",
+    "input_context": {
+      "claim": "Cart abandonment exploded to 78.4%.",
+      "metric": {
+        "metric_name": "cart_abandonment_rate",
+        "value": 0.44,
+        "pct_change": 12.0,
+        "sample_size": 100,
+        "min_sample_met": true
+      }
+    },
+    "ground_truth": "hallucinated_number",
+    "allowed_options": [
+      "supported",
+      "hallucinated_number",
+      "inverted_polarity",
+      "insufficient_sample"
+    ],
+    "description": "Exaggerated hallucinated metric percentage"
+  },
+  {
+    "case_id": "es_08",
+    "task_type": "evidence_support",
+    "input_context": {
+      "claim": "Conversion fell to 3.5% this quarter.",
+      "metric": {
+        "metric_name": "overall_conversion_rate",
+        "value": 0.2,
+        "pct_change": 18.0,
+        "sample_size": 150,
+        "min_sample_met": true
+      }
+    },
+    "ground_truth": "hallucinated_number",
+    "allowed_options": [
+      "supported",
+      "hallucinated_number",
+      "inverted_polarity",
+      "insufficient_sample"
+    ],
+    "description": "Fabricated catastrophic conversion drop"
+  },
+  {
+    "case_id": "es_09",
+    "task_type": "evidence_support",
+    "input_context": {
+      "claim": "Trial to paid conversion reached 52.1%.",
+      "metric": {
+        "metric_name": "trial_to_paid_conversion_rate",
+        "value": 0.125,
+        "pct_change": 5.0,
+        "sample_size": 60,
+        "min_sample_met": true
+      }
+    },
+    "ground_truth": "hallucinated_number",
+    "allowed_options": [
+      "supported",
+      "hallucinated_number",
+      "inverted_polarity",
+      "insufficient_sample"
+    ],
+    "description": "Hallucinated SaaS conversion number"
+  },
+  {
+    "case_id": "es_10",
+    "task_type": "evidence_support",
+    "input_context": {
+      "claim": "Checkout drop off rate was 95.0% on mobile.",
+      "metric": {
+        "metric_name": "checkout_drop_off_rate",
+        "value": 0.38,
+        "pct_change": 8.0,
+        "sample_size": 90,
+        "min_sample_met": true
+      }
+    },
+    "ground_truth": "hallucinated_number",
+    "allowed_options": [
+      "supported",
+      "hallucinated_number",
+      "inverted_polarity",
+      "insufficient_sample"
+    ],
+    "description": "Wildly ungrounded 95.0% checkout drop-off"
+  },
+  {
+    "case_id": "es_11",
+    "task_type": "evidence_support",
+    "input_context": {
+      "claim": "Checkout step 2 drop off rate decreased sharply to 62.5%.",
+      "metric": {
+        "metric_name": "checkout_step_2_drop_off_rate",
+        "value": 0.625,
+        "pct_change": 45.0,
+        "sample_size": 40,
+        "min_sample_met": true
+      }
+    },
+    "ground_truth": "inverted_polarity",
+    "allowed_options": [
+      "supported",
+      "hallucinated_number",
+      "inverted_polarity",
+      "insufficient_sample"
+    ],
+    "description": "Claims decrease when change was +45.0%"
+  },
+  {
+    "case_id": "es_12",
+    "task_type": "evidence_support",
+    "input_context": {
+      "claim": "Cart abandonment has improved and dropped to 44.0%.",
+      "metric": {
+        "metric_name": "cart_abandonment_rate",
+        "value": 0.44,
+        "pct_change": 25.0,
+        "sample_size": 100,
+        "min_sample_met": true
+      }
+    },
+    "ground_truth": "inverted_polarity",
+    "allowed_options": [
+      "supported",
+      "hallucinated_number",
+      "inverted_polarity",
+      "insufficient_sample"
+    ],
+    "description": "Claims metric improved when abandonment worsened +25%"
+  },
+  {
+    "case_id": "es_13",
+    "task_type": "evidence_support",
+    "input_context": {
+      "claim": "Overall conversion surged by 20.0% to new highs.",
+      "metric": {
+        "metric_name": "overall_conversion_rate",
+        "value": 0.2,
+        "pct_change": -30.0,
+        "sample_size": 150,
+        "min_sample_met": true
+      }
+    },
+    "ground_truth": "inverted_polarity",
+    "allowed_options": [
+      "supported",
+      "hallucinated_number",
+      "inverted_polarity",
+      "insufficient_sample"
+    ],
+    "description": "Claims surge when conversion plummeted -30%"
+  },
+  {
+    "case_id": "es_14",
+    "task_type": "evidence_support",
+    "input_context": {
+      "claim": "Checkout step 1 drop off collapsed down to 25.0%.",
+      "metric": {
+        "metric_name": "checkout_step_1_drop_off_rate",
+        "value": 0.25,
+        "pct_change": 50.0,
+        "sample_size": 50,
+        "min_sample_met": true
+      }
+    },
+    "ground_truth": "inverted_polarity",
+    "allowed_options": [
+      "supported",
+      "hallucinated_number",
+      "inverted_polarity",
+      "insufficient_sample"
+    ],
+    "description": "Uses downward words when metric rose +50%"
+  },
+  {
+    "case_id": "es_15",
+    "task_type": "evidence_support",
+    "input_context": {
+      "claim": "Add to cart rate skyrocketed to 15.0%.",
+      "metric": {
+        "metric_name": "add_to_cart_rate",
+        "value": 0.15,
+        "pct_change": -40.0,
+        "sample_size": 80,
+        "min_sample_met": true
+      }
+    },
+    "ground_truth": "inverted_polarity",
+    "allowed_options": [
+      "supported",
+      "hallucinated_number",
+      "inverted_polarity",
+      "insufficient_sample"
+    ],
+    "description": "Positive words applied to severe negative drop"
+  },
+  {
+    "case_id": "es_16",
+    "task_type": "evidence_support",
+    "input_context": {
+      "claim": "Critical outage caused by broken payment gateway proves failure.",
+      "metric": {
+        "metric_name": "checkout_step_2_drop_off_rate",
+        "value": 0.75,
+        "pct_change": 100.0,
+        "sample_size": 4,
+        "min_sample_met": false
+      }
+    },
+    "ground_truth": "insufficient_sample",
+    "allowed_options": [
+      "supported",
+      "hallucinated_number",
+      "inverted_polarity",
+      "insufficient_sample"
+    ],
+    "description": "Strong causal assertion on tiny sample of 4 events"
+  },
+  {
+    "case_id": "es_17",
+    "task_type": "evidence_support",
+    "input_context": {
+      "claim": "Definitive evidence proves users hate the new layout.",
+      "metric": {
+        "metric_name": "cart_abandonment_rate",
+        "value": 0.8,
+        "pct_change": 50.0,
+        "sample_size": 5,
+        "min_sample_met": false
+      }
+    },
+    "ground_truth": "insufficient_sample",
+    "allowed_options": [
+      "supported",
+      "hallucinated_number",
+      "inverted_polarity",
+      "insufficient_sample"
+    ],
+    "description": "Causal claim on unrepresentative sample size of 5"
+  },
+  {
+    "case_id": "es_18",
+    "task_type": "evidence_support",
+    "input_context": {
+      "claim": "This critical bug caused checkout conversion collapse.",
+      "metric": {
+        "metric_name": "overall_conversion_rate",
+        "value": 0.0,
+        "pct_change": -100.0,
+        "sample_size": 3,
+        "min_sample_met": false
+      }
+    },
+    "ground_truth": "insufficient_sample",
+    "allowed_options": [
+      "supported",
+      "hallucinated_number",
+      "inverted_polarity",
+      "insufficient_sample"
+    ],
+    "description": "Causal attribution with only 3 sessions in denominator"
+  },
+  {
+    "case_id": "es_19",
+    "task_type": "evidence_support",
+    "input_context": {
+      "claim": "Critical failure caused by coupon validation bug.",
+      "metric": {
+        "metric_name": "checkout_step_1_drop_off_rate",
+        "value": 0.9,
+        "pct_change": 80.0,
+        "sample_size": 6,
+        "min_sample_met": false
+      }
+    },
+    "ground_truth": "insufficient_sample",
+    "allowed_options": [
+      "supported",
+      "hallucinated_number",
+      "inverted_polarity",
+      "insufficient_sample"
+    ],
+    "description": "Causal claim forbidden when min_sample_met is False"
+  },
+  {
+    "case_id": "es_20",
+    "task_type": "evidence_support",
+    "input_context": {
+      "claim": "Data proves the marketing campaign completely failed.",
+      "metric": {
+        "metric_name": "add_to_cart_rate",
+        "value": 0.05,
+        "pct_change": -80.0,
+        "sample_size": 7,
+        "min_sample_met": false
+      }
+    },
+    "ground_truth": "insufficient_sample",
+    "allowed_options": [
+      "supported",
+      "hallucinated_number",
+      "inverted_polarity",
+      "insufficient_sample"
+    ],
+    "description": "Causal proof asserted on 7 sessions"
+  }
+]

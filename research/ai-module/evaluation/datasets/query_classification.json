@@ -1,0 +1,427 @@
+[
+  {
+    "case_id": "qc_01",
+    "task_type": "query_classification",
+    "input_context": {
+      "query": "Where is the checkout drop off happening?",
+      "vertical": "ecommerce"
+    },
+    "ground_truth": "checkout_step_2_drop_off_rate",
+    "allowed_options": [
+      "checkout_step_2_drop_off_rate",
+      "cart_abandonment_rate",
+      "overall_conversion_rate",
+      "trial_to_paid_conversion_rate",
+      "unsupported"
+    ],
+    "description": "Standard checkout drop-off query"
+  },
+  {
+    "case_id": "qc_02",
+    "task_type": "query_classification",
+    "input_context": {
+      "query": "Why are customers dropping off at step 2?",
+      "vertical": "ecommerce"
+    },
+    "ground_truth": "checkout_step_2_drop_off_rate",
+    "allowed_options": [
+      "checkout_step_2_drop_off_rate",
+      "cart_abandonment_rate",
+      "overall_conversion_rate",
+      "trial_to_paid_conversion_rate",
+      "unsupported"
+    ],
+    "description": "Step 2 checkout friction query"
+  },
+  {
+    "case_id": "qc_03",
+    "task_type": "query_classification",
+    "input_context": {
+      "query": "Checkout step 2 delivery charge friction rate",
+      "vertical": "ecommerce"
+    },
+    "ground_truth": "checkout_step_2_drop_off_rate",
+    "allowed_options": [
+      "checkout_step_2_drop_off_rate",
+      "cart_abandonment_rate",
+      "overall_conversion_rate",
+      "trial_to_paid_conversion_rate",
+      "unsupported"
+    ],
+    "description": "Keyword-dense checkout friction"
+  },
+  {
+    "case_id": "qc_04",
+    "task_type": "query_classification",
+    "input_context": {
+      "query": "Are users abandoning before payment in step 2?",
+      "vertical": "ecommerce"
+    },
+    "ground_truth": "checkout_step_2_drop_off_rate",
+    "allowed_options": [
+      "checkout_step_2_drop_off_rate",
+      "cart_abandonment_rate",
+      "overall_conversion_rate",
+      "trial_to_paid_conversion_rate",
+      "unsupported"
+    ],
+    "description": "Pre-payment checkout drop query"
+  },
+  {
+    "case_id": "qc_05",
+    "task_type": "query_classification",
+    "input_context": {
+      "query": "Step 2 drop-off numbers this week",
+      "vertical": "ecommerce"
+    },
+    "ground_truth": "checkout_step_2_drop_off_rate",
+    "allowed_options": [
+      "checkout_step_2_drop_off_rate",
+      "cart_abandonment_rate",
+      "overall_conversion_rate",
+      "trial_to_paid_conversion_rate",
+      "unsupported"
+    ],
+    "description": "Time-scoped drop-off query"
+  },
+  {
+    "case_id": "qc_06",
+    "task_type": "query_classification",
+    "input_context": {
+      "query": "What is our current cart abandonment rate?",
+      "vertical": "ecommerce"
+    },
+    "ground_truth": "cart_abandonment_rate",
+    "allowed_options": [
+      "checkout_step_2_drop_off_rate",
+      "cart_abandonment_rate",
+      "overall_conversion_rate",
+      "trial_to_paid_conversion_rate",
+      "unsupported"
+    ],
+    "description": "Direct cart abandonment rate lookup"
+  },
+  {
+    "case_id": "qc_07",
+    "task_type": "query_classification",
+    "input_context": {
+      "query": "Why are shoppers abandoning carts today?",
+      "vertical": "ecommerce"
+    },
+    "ground_truth": "cart_abandonment_rate",
+    "allowed_options": [
+      "checkout_step_2_drop_off_rate",
+      "cart_abandonment_rate",
+      "overall_conversion_rate",
+      "trial_to_paid_conversion_rate",
+      "unsupported"
+    ],
+    "description": "Causal cart abandonment question"
+  },
+  {
+    "case_id": "qc_08",
+    "task_type": "query_classification",
+    "input_context": {
+      "query": "How many abandoned carts do we have vs last week?",
+      "vertical": "ecommerce"
+    },
+    "ground_truth": "cart_abandonment_rate",
+    "allowed_options": [
+      "checkout_step_2_drop_off_rate",
+      "cart_abandonment_rate",
+      "overall_conversion_rate",
+      "trial_to_paid_conversion_rate",
+      "unsupported"
+    ],
+    "description": "Period comparison cart query"
+  },
+  {
+    "case_id": "qc_09",
+    "task_type": "query_classification",
+    "input_context": {
+      "query": "Abandoning carts rate across all sessions",
+      "vertical": "ecommerce"
+    },
+    "ground_truth": "cart_abandonment_rate",
+    "allowed_options": [
+      "checkout_step_2_drop_off_rate",
+      "cart_abandonment_rate",
+      "overall_conversion_rate",
+      "trial_to_paid_conversion_rate",
+      "unsupported"
+    ],
+    "description": "Session-level cart abandonment rate"
+  },
+  {
+    "case_id": "qc_10",
+    "task_type": "query_classification",
+    "input_context": {
+      "query": "Is cart abandonment higher than normal?",
+      "vertical": "ecommerce"
+    },
+    "ground_truth": "cart_abandonment_rate",
+    "allowed_options": [
+      "checkout_step_2_drop_off_rate",
+      "cart_abandonment_rate",
+      "overall_conversion_rate",
+      "trial_to_paid_conversion_rate",
+      "unsupported"
+    ],
+    "description": "Anomaly inquiry on cart abandonment"
+  },
+  {
+    "case_id": "qc_11",
+    "task_type": "query_classification",
+    "input_context": {
+      "query": "What is our overall checkout conversion rate?",
+      "vertical": "ecommerce"
+    },
+    "ground_truth": "overall_conversion_rate",
+    "allowed_options": [
+      "checkout_step_2_drop_off_rate",
+      "cart_abandonment_rate",
+      "overall_conversion_rate",
+      "trial_to_paid_conversion_rate",
+      "unsupported"
+    ],
+    "description": "Overall conversion inquiry"
+  },
+  {
+    "case_id": "qc_12",
+    "task_type": "query_classification",
+    "input_context": {
+      "query": "How well are visitors converting into buyers?",
+      "vertical": "ecommerce"
+    },
+    "ground_truth": "overall_conversion_rate",
+    "allowed_options": [
+      "checkout_step_2_drop_off_rate",
+      "cart_abandonment_rate",
+      "overall_conversion_rate",
+      "trial_to_paid_conversion_rate",
+      "unsupported"
+    ],
+    "description": "Visitor-to-buyer conversion question"
+  },
+  {
+    "case_id": "qc_13",
+    "task_type": "query_classification",
+    "input_context": {
+      "query": "Show me our store conversion performance",
+      "vertical": "ecommerce"
+    },
+    "ground_truth": "overall_conversion_rate",
+    "allowed_options": [
+      "checkout_step_2_drop_off_rate",
+      "cart_abandonment_rate",
+      "overall_conversion_rate",
+      "trial_to_paid_conversion_rate",
+      "unsupported"
+    ],
+    "description": "Store performance conversion query"
+  },
+  {
+    "case_id": "qc_14",
+    "task_type": "query_classification",
+    "input_context": {
+      "query": "What is our checkout rate this month?",
+      "vertical": "ecommerce"
+    },
+    "ground_truth": "overall_conversion_rate",
+    "allowed_options": [
+      "checkout_step_2_drop_off_rate",
+      "cart_abandonment_rate",
+      "overall_conversion_rate",
+      "trial_to_paid_conversion_rate",
+      "unsupported"
+    ],
+    "description": "Monthly checkout rate query"
+  },
+  {
+    "case_id": "qc_15",
+    "task_type": "query_classification",
+    "input_context": {
+      "query": "Are converting users up or down compared to last Monday?",
+      "vertical": "ecommerce"
+    },
+    "ground_truth": "overall_conversion_rate",
+    "allowed_options": [
+      "checkout_step_2_drop_off_rate",
+      "cart_abandonment_rate",
+      "overall_conversion_rate",
+      "trial_to_paid_conversion_rate",
+      "unsupported"
+    ],
+    "description": "Day-over-day conversion trend inquiry"
+  },
+  {
+    "case_id": "qc_16",
+    "task_type": "query_classification",
+    "input_context": {
+      "query": "How is our trial to paid conversion tracking?",
+      "vertical": "saas_subscription"
+    },
+    "ground_truth": "trial_to_paid_conversion_rate",
+    "allowed_options": [
+      "checkout_step_2_drop_off_rate",
+      "cart_abandonment_rate",
+      "overall_conversion_rate",
+      "trial_to_paid_conversion_rate",
+      "unsupported"
+    ],
+    "description": "PLG SaaS trial-to-paid conversion"
+  },
+  {
+    "case_id": "qc_17",
+    "task_type": "query_classification",
+    "input_context": {
+      "query": "What percentage of free trials converted to paid subscriptions?",
+      "vertical": "saas_subscription"
+    },
+    "ground_truth": "trial_to_paid_conversion_rate",
+    "allowed_options": [
+      "checkout_step_2_drop_off_rate",
+      "cart_abandonment_rate",
+      "overall_conversion_rate",
+      "trial_to_paid_conversion_rate",
+      "unsupported"
+    ],
+    "description": "Free trial subscription conversion rate"
+  },
+  {
+    "case_id": "qc_18",
+    "task_type": "query_classification",
+    "input_context": {
+      "query": "Paid conversion rate for our 14-day cohort",
+      "vertical": "saas_subscription"
+    },
+    "ground_truth": "trial_to_paid_conversion_rate",
+    "allowed_options": [
+      "checkout_step_2_drop_off_rate",
+      "cart_abandonment_rate",
+      "overall_conversion_rate",
+      "trial_to_paid_conversion_rate",
+      "unsupported"
+    ],
+    "description": "14-day cohort trial conversion"
+  },
+  {
+    "case_id": "qc_19",
+    "task_type": "query_classification",
+    "input_context": {
+      "query": "Did trial conversions drop after the pricing update?",
+      "vertical": "saas_subscription"
+    },
+    "ground_truth": "trial_to_paid_conversion_rate",
+    "allowed_options": [
+      "checkout_step_2_drop_off_rate",
+      "cart_abandonment_rate",
+      "overall_conversion_rate",
+      "trial_to_paid_conversion_rate",
+      "unsupported"
+    ],
+    "description": "Pricing update trial impact query"
+  },
+  {
+    "case_id": "qc_20",
+    "task_type": "query_classification",
+    "input_context": {
+      "query": "Subscription conversion rate this quarter",
+      "vertical": "saas_subscription"
+    },
+    "ground_truth": "trial_to_paid_conversion_rate",
+    "allowed_options": [
+      "checkout_step_2_drop_off_rate",
+      "cart_abandonment_rate",
+      "overall_conversion_rate",
+      "trial_to_paid_conversion_rate",
+      "unsupported"
+    ],
+    "description": "Quarterly subscription conversion rate"
+  },
+  {
+    "case_id": "qc_21",
+    "task_type": "query_classification",
+    "input_context": {
+      "query": "What is the weather in Mumbai tomorrow?",
+      "vertical": "ecommerce"
+    },
+    "ground_truth": "unsupported",
+    "allowed_options": [
+      "checkout_step_2_drop_off_rate",
+      "cart_abandonment_rate",
+      "overall_conversion_rate",
+      "trial_to_paid_conversion_rate",
+      "unsupported"
+    ],
+    "description": "Weather query outside domain"
+  },
+  {
+    "case_id": "qc_22",
+    "task_type": "query_classification",
+    "input_context": {
+      "query": "Who is the CEO of Google?",
+      "vertical": "ecommerce"
+    },
+    "ground_truth": "unsupported",
+    "allowed_options": [
+      "checkout_step_2_drop_off_rate",
+      "cart_abandonment_rate",
+      "overall_conversion_rate",
+      "trial_to_paid_conversion_rate",
+      "unsupported"
+    ],
+    "description": "General trivia query"
+  },
+  {
+    "case_id": "qc_23",
+    "task_type": "query_classification",
+    "input_context": {
+      "query": "DROP TABLE users;",
+      "vertical": "ecommerce"
+    },
+    "ground_truth": "unsupported",
+    "allowed_options": [
+      "checkout_step_2_drop_off_rate",
+      "cart_abandonment_rate",
+      "overall_conversion_rate",
+      "trial_to_paid_conversion_rate",
+      "unsupported"
+    ],
+    "description": "SQL injection attempt"
+  },
+  {
+    "case_id": "qc_24",
+    "task_type": "query_classification",
+    "input_context": {
+      "query": "How do I fix a flat tire on a bicycle?",
+      "vertical": "ecommerce"
+    },
+    "ground_truth": "unsupported",
+    "allowed_options": [
+      "checkout_step_2_drop_off_rate",
+      "cart_abandonment_rate",
+      "overall_conversion_rate",
+      "trial_to_paid_conversion_rate",
+      "unsupported"
+    ],
+    "description": "Irrelevant DIY query"
+  },
+  {
+    "case_id": "qc_25",
+    "task_type": "query_classification",
+    "input_context": {
+      "query": "Generate a discount code for my personal use",
+      "vertical": "ecommerce"
+    },
+    "ground_truth": "unsupported",
+    "allowed_options": [
+      "checkout_step_2_drop_off_rate",
+      "cart_abandonment_rate",
+      "overall_conversion_rate",
+      "trial_to_paid_conversion_rate",
+      "unsupported"
+    ],
+    "description": "Administrative coupon generation request"
+  }
+]

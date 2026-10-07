@@ -1,0 +1,375 @@
+[
+  {
+    "case_id": "ar_01",
+    "task_type": "action_routing",
+    "input_context": {
+      "signal_type": "idle_cart",
+      "customer_id": "cust_101",
+      "cart_value": 750.0,
+      "idle_minutes": 25
+    },
+    "ground_truth": "waive_delivery_fee",
+    "allowed_options": [
+      "waive_delivery_fee",
+      "flag_ui_friction_bug",
+      "sync_audience_segment",
+      "do_nothing"
+    ],
+    "description": "High value cart with identified customer above INR 500 threshold"
+  },
+  {
+    "case_id": "ar_02",
+    "task_type": "action_routing",
+    "input_context": {
+      "signal_type": "idle_cart",
+      "customer_id": "cust_102",
+      "cart_value": 1200.0,
+      "idle_minutes": 35
+    },
+    "ground_truth": "waive_delivery_fee",
+    "allowed_options": [
+      "waive_delivery_fee",
+      "flag_ui_friction_bug",
+      "sync_audience_segment",
+      "do_nothing"
+    ],
+    "description": "Premium customer basket idle for 35 minutes"
+  },
+  {
+    "case_id": "ar_03",
+    "task_type": "action_routing",
+    "input_context": {
+      "signal_type": "idle_cart",
+      "customer_id": "cust_103",
+      "cart_value": 650.0,
+      "idle_minutes": 21
+    },
+    "ground_truth": "waive_delivery_fee",
+    "allowed_options": [
+      "waive_delivery_fee",
+      "flag_ui_friction_bug",
+      "sync_audience_segment",
+      "do_nothing"
+    ],
+    "description": "INR 650 cart idle beyond 20 min mark"
+  },
+  {
+    "case_id": "ar_04",
+    "task_type": "action_routing",
+    "input_context": {
+      "signal_type": "idle_cart",
+      "customer_id": "cust_104",
+      "cart_value": 520.0,
+      "idle_minutes": 22
+    },
+    "ground_truth": "waive_delivery_fee",
+    "allowed_options": [
+      "waive_delivery_fee",
+      "flag_ui_friction_bug",
+      "sync_audience_segment",
+      "do_nothing"
+    ],
+    "description": "Just above INR 500 threshold cart with known user"
+  },
+  {
+    "case_id": "ar_05",
+    "task_type": "action_routing",
+    "input_context": {
+      "signal_type": "idle_cart",
+      "customer_id": "cust_105",
+      "cart_value": 900.0,
+      "idle_minutes": 40
+    },
+    "ground_truth": "waive_delivery_fee",
+    "allowed_options": [
+      "waive_delivery_fee",
+      "flag_ui_friction_bug",
+      "sync_audience_segment",
+      "do_nothing"
+    ],
+    "description": "High basket value idle 40m"
+  },
+  {
+    "case_id": "ar_06",
+    "task_type": "action_routing",
+    "input_context": {
+      "signal_type": "digest_flag",
+      "metric_name": "checkout_step_2_drop_off_rate",
+      "delta_pct": 85.0,
+      "severity": "high",
+      "is_statistically_significant": true
+    },
+    "ground_truth": "flag_ui_friction_bug",
+    "allowed_options": [
+      "waive_delivery_fee",
+      "flag_ui_friction_bug",
+      "sync_audience_segment",
+      "do_nothing"
+    ],
+    "description": "Spike in checkout step 2 drop off rate with high severity"
+  },
+  {
+    "case_id": "ar_07",
+    "task_type": "action_routing",
+    "input_context": {
+      "signal_type": "digest_flag",
+      "metric_name": "checkout_step_1_drop_off_rate",
+      "delta_pct": 65.0,
+      "severity": "high",
+      "is_statistically_significant": true
+    },
+    "ground_truth": "flag_ui_friction_bug",
+    "allowed_options": [
+      "waive_delivery_fee",
+      "flag_ui_friction_bug",
+      "sync_audience_segment",
+      "do_nothing"
+    ],
+    "description": "Address validation breakage in step 1"
+  },
+  {
+    "case_id": "ar_08",
+    "task_type": "action_routing",
+    "input_context": {
+      "signal_type": "digest_flag",
+      "metric_name": "checkout_drop_off_rate",
+      "delta_pct": 120.0,
+      "severity": "high",
+      "is_statistically_significant": true
+    },
+    "ground_truth": "flag_ui_friction_bug",
+    "allowed_options": [
+      "waive_delivery_fee",
+      "flag_ui_friction_bug",
+      "sync_audience_segment",
+      "do_nothing"
+    ],
+    "description": "Massive checkout drop off surge indicating broken gateway"
+  },
+  {
+    "case_id": "ar_09",
+    "task_type": "action_routing",
+    "input_context": {
+      "signal_type": "digest_flag",
+      "metric_name": "checkout_step_2_drop_off_rate",
+      "delta_pct": 45.0,
+      "severity": "medium",
+      "is_statistically_significant": true
+    },
+    "ground_truth": "flag_ui_friction_bug",
+    "allowed_options": [
+      "waive_delivery_fee",
+      "flag_ui_friction_bug",
+      "sync_audience_segment",
+      "do_nothing"
+    ],
+    "description": "Medium severity checkout drop off with significance"
+  },
+  {
+    "case_id": "ar_10",
+    "task_type": "action_routing",
+    "input_context": {
+      "signal_type": "digest_flag",
+      "metric_name": "rage_click_session_rate",
+      "delta_pct": 150.0,
+      "severity": "high",
+      "is_statistically_significant": true
+    },
+    "ground_truth": "flag_ui_friction_bug",
+    "allowed_options": [
+      "waive_delivery_fee",
+      "flag_ui_friction_bug",
+      "sync_audience_segment",
+      "do_nothing"
+    ],
+    "description": "Severe rage click spike on interactive element"
+  },
+  {
+    "case_id": "ar_11",
+    "task_type": "action_routing",
+    "input_context": {
+      "signal_type": "digest_flag",
+      "metric_name": "cart_abandonment_rate",
+      "delta_pct": 40.0,
+      "severity": "high",
+      "is_statistically_significant": true
+    },
+    "ground_truth": "sync_audience_segment",
+    "allowed_options": [
+      "waive_delivery_fee",
+      "flag_ui_friction_bug",
+      "sync_audience_segment",
+      "do_nothing"
+    ],
+    "description": "High cart abandonment rate requiring audience retargeting sync"
+  },
+  {
+    "case_id": "ar_12",
+    "task_type": "action_routing",
+    "input_context": {
+      "signal_type": "digest_flag",
+      "metric_name": "cart_abandonment_rate",
+      "delta_pct": 55.0,
+      "severity": "high",
+      "is_statistically_significant": true
+    },
+    "ground_truth": "sync_audience_segment",
+    "allowed_options": [
+      "waive_delivery_fee",
+      "flag_ui_friction_bug",
+      "sync_audience_segment",
+      "do_nothing"
+    ],
+    "description": "Cart abandonment surge across acquisition campaigns"
+  },
+  {
+    "case_id": "ar_13",
+    "task_type": "action_routing",
+    "input_context": {
+      "signal_type": "digest_flag",
+      "metric_name": "cart_to_checkout_rate",
+      "delta_pct": -35.0,
+      "severity": "high",
+      "is_statistically_significant": true
+    },
+    "ground_truth": "sync_audience_segment",
+    "allowed_options": [
+      "waive_delivery_fee",
+      "flag_ui_friction_bug",
+      "sync_audience_segment",
+      "do_nothing"
+    ],
+    "description": "Drop in cart-to-checkout conversion needing lookalike adjustment"
+  },
+  {
+    "case_id": "ar_14",
+    "task_type": "action_routing",
+    "input_context": {
+      "signal_type": "digest_flag",
+      "metric_name": "cart_abandonment_rate",
+      "delta_pct": 32.0,
+      "severity": "medium",
+      "is_statistically_significant": true
+    },
+    "ground_truth": "sync_audience_segment",
+    "allowed_options": [
+      "waive_delivery_fee",
+      "flag_ui_friction_bug",
+      "sync_audience_segment",
+      "do_nothing"
+    ],
+    "description": "Cart abandonment rise in mid-tier audience"
+  },
+  {
+    "case_id": "ar_15",
+    "task_type": "action_routing",
+    "input_context": {
+      "signal_type": "digest_flag",
+      "metric_name": "exit_intent_rate",
+      "delta_pct": 45.0,
+      "severity": "medium",
+      "is_statistically_significant": true
+    },
+    "ground_truth": "sync_audience_segment",
+    "allowed_options": [
+      "waive_delivery_fee",
+      "flag_ui_friction_bug",
+      "sync_audience_segment",
+      "do_nothing"
+    ],
+    "description": "Exit intent rise triggers audience suppression and refresh"
+  },
+  {
+    "case_id": "ar_16",
+    "task_type": "action_routing",
+    "input_context": {
+      "signal_type": "idle_cart",
+      "customer_id": null,
+      "anonymous_id": "anon_999",
+      "cart_value": 800.0,
+      "idle_minutes": 30
+    },
+    "ground_truth": "do_nothing",
+    "allowed_options": [
+      "waive_delivery_fee",
+      "flag_ui_friction_bug",
+      "sync_audience_segment",
+      "do_nothing"
+    ],
+    "description": "Anonymous cart visitor cannot receive financial waiver"
+  },
+  {
+    "case_id": "ar_17",
+    "task_type": "action_routing",
+    "input_context": {
+      "signal_type": "idle_cart",
+      "customer_id": "cust_106",
+      "cart_value": 150.0,
+      "idle_minutes": 25
+    },
+    "ground_truth": "do_nothing",
+    "allowed_options": [
+      "waive_delivery_fee",
+      "flag_ui_friction_bug",
+      "sync_audience_segment",
+      "do_nothing"
+    ],
+    "description": "Low value cart below mid and high thresholds"
+  },
+  {
+    "case_id": "ar_18",
+    "task_type": "action_routing",
+    "input_context": {
+      "signal_type": "idle_cart",
+      "customer_id": "cust_107",
+      "cart_value": 700.0,
+      "idle_minutes": 8
+    },
+    "ground_truth": "do_nothing",
+    "allowed_options": [
+      "waive_delivery_fee",
+      "flag_ui_friction_bug",
+      "sync_audience_segment",
+      "do_nothing"
+    ],
+    "description": "Cart active within maturity window (not idle yet)"
+  },
+  {
+    "case_id": "ar_19",
+    "task_type": "action_routing",
+    "input_context": {
+      "signal_type": "digest_flag",
+      "metric_name": "checkout_step_2_drop_off_rate",
+      "delta_pct": 5.0,
+      "severity": "low",
+      "is_statistically_significant": false
+    },
+    "ground_truth": "do_nothing",
+    "allowed_options": [
+      "waive_delivery_fee",
+      "flag_ui_friction_bug",
+      "sync_audience_segment",
+      "do_nothing"
+    ],
+    "description": "Low severity non-significant noise"
+  },
+  {
+    "case_id": "ar_20",
+    "task_type": "action_routing",
+    "input_context": {
+      "signal_type": "digest_flag",
+      "metric_name": "cart_abandonment_rate",
+      "delta_pct": -12.0,
+      "severity": "low",
+      "is_statistically_significant": true
+    },
+    "ground_truth": "do_nothing",
+    "allowed_options": [
+      "waive_delivery_fee",
+      "flag_ui_friction_bug",
+      "sync_audience_segment",
+      "do_nothing"
+    ],
+    "description": "Favorable movement (abandonment improved), no remediation needed"
+  }
+]
