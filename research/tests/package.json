@@ -1,0 +1,12 @@
+{
+  "name": "@growthos/tests",
+  "version": "1.0.0",
+  "description": "GrowthOS Module 2 Automated Test Suite",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.1",
+    "@types/node": "^22.13.4"
+  }
+}

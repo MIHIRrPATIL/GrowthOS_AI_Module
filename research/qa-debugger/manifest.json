@@ -1,0 +1,8 @@
+{
+  "manifest_version": 3,
+  "name": "GrowthOS Event Debugger",
+  "version": "1.0.0",
+  "description": "Real-time QA and Event Inspection DevTools panel for GrowthOS Module 2",
+  "permissions": ["storage"],
+  "devtools_page": "devtools.html"
+}

@@ -1,0 +1,241 @@
+# ==============================================================================
+# GrowthOS Root Gitignore
+# Comprehensive ignore specification across Python, Node.js/TypeScript,
+# databases, local telemetry storage, secrets, and AI evaluation artifacts.
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Environment Variables & Secret Credentials (Strictly Never Commit)
+# ------------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+!.env.template
+!.env.sample
+*.env.local
+*.env.development.local
+*.env.test.local
+*.env.production.local
+.env.backup
+.env.bak
+
+# SSL Certificates, Private Keys, & Keystores
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+*.keystore
+
+# Cloud & Service Account Credentials
+credentials.json
+service-account*.json
+*firebase-adminsdk*.json
+gcp-credentials*.json
+client_secret*.json
+id_rsa
+id_ed25519
+
+# ------------------------------------------------------------------------------
+# 2. Python & Virtual Environments
+# ------------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Distribution, Packaging, & Wheels
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments (Local & Nested)
+.venv
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+.uv-cache/
+.pypa/
+.agents/
+
+# ------------------------------------------------------------------------------
+# 3. Testing, Coverage, & Static Analysis
+# ------------------------------------------------------------------------------
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.pytype/
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+
+# ------------------------------------------------------------------------------
+# 4. Node.js, TypeScript, & Frontend Tooling
+# ------------------------------------------------------------------------------
+node_modules/
+.pnp
+.pnp.*
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# Frontend Framework Builds (Next.js, Vite, Nuxt, Astro)
+.next/
+out/
+.nuxt/
+.output/
+.astro/
+.turbo/
+.parcel-cache/
+storybook-static/
+
+# TypeScript & Linter Caches
+*.tsbuildinfo
+next-env.d.ts
+
+# Vercel Deployment Metadata
+.vercel/
+
+# ------------------------------------------------------------------------------
+# 5. Local Databases, State Storage, & Data Dumps
+# ------------------------------------------------------------------------------
+# SQLite databases generated during development and testing
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+*.duckdb
+
+# In-memory Redis dumps
+dump.rdb
+
+# Temporary Data Exports & Raw Fixtures (Exclude large CSV/Parquet dumps)
+data/raw/
+data/exports/
+data/cache/
+*.parquet
+
+# ------------------------------------------------------------------------------
+# 6. AI Models, Embeddings, & Benchmark Artifacts
+# ------------------------------------------------------------------------------
+# Local Vector Databases & Embeddings
+chroma_data/
+.chroma/
+faiss_index/
+vector_store/
+
+# Downloaded ML Model Weights & Checkpoints
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.onnx
+
+# Graphify & Knowledge Graph Analysis Outputs
+graphify-out/
+
+# Evaluation Scratchpads & Intermediate Dumps
+eval_results/
+benchmarks_out/
+
+# ------------------------------------------------------------------------------
+# 7. Logging & Runtime Traces
+# ------------------------------------------------------------------------------
+logs/
+*.log
+*.log.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+lerna-debug.log*
+
+# ------------------------------------------------------------------------------
+# 8. Operating System Specific
+# ------------------------------------------------------------------------------
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+[Dd]esktop.ini
+
+# Linux
+.fuse_hidden*
+.directory
+.trash/
+
+# ------------------------------------------------------------------------------
+# 9. IDEs & Code Editors
+# ------------------------------------------------------------------------------
+# JetBrains (PyCharm, WebStorm, etc.)
+.idea/
+*.iml
+*.iws
+
+# Visual Studio Code (Keep team configuration files)
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim & Emacs Backup/Swap Files
+*.swp
+*.swo
+*~
+.#*
+\#*\#
+
+# AI IDE Agent Artifacts
+.gemini/
+.system_generated/
+
+# ------------------------------------------------------------------------------
+# 10. Temporary Files & Scratchpads
+# ------------------------------------------------------------------------------
+tmp/
+temp/
+scratch/
+*.tmp
+*.bak
+*.orig
