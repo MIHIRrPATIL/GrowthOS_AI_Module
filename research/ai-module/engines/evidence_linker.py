@@ -56,7 +56,17 @@ class EvidenceLinker:
         "checkout conversion": "checkout_conversion_rate",
         "overall conversion": "overall_conversion_rate",
         "conversion rate": "overall_conversion_rate",
-        "conversion": "overall_conversion_rate"
+        "conversion": "overall_conversion_rate",
+        "ad spend": "ad_spend",
+        "ad cpa": "ad_cpa",
+        "cpa": "ad_cpa",
+        "roas": "ad_roas",
+        "ad roas": "ad_roas",
+        "cpc": "ad_cpc",
+        "cac": "blended_cac",
+        "blended cac": "blended_cac",
+        "ad impressions": "ad_impressions",
+        "ad clicks": "ad_clicks"
     }
 
     def __init__(self, tolerance: float = 0.005):

@@ -79,3 +79,14 @@ class EventStoragePort(ABC):
         Returns exact event count within window for metric denominator calculations.
         """
         pass
+
+    def query_idle_sessions(
+        self,
+        tenant_id: str,
+        as_of: datetime,
+        idle_threshold_minutes: float = 15.0
+    ) -> List[dict]:
+        """
+        Queries sessions with unpurchased cart activity idle for at least idle_threshold_minutes.
+        """
+        return []

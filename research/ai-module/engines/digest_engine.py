@@ -35,6 +35,7 @@ from domain.metrics import (
     Period,
     Severity,
     Polarity,
+    AdsCampaignDaily,
 )
 from engines.metrics_engine import MetricsEngine
 from engines.vertical_templates import get_vertical_template, VerticalTemplate
@@ -678,3 +679,118 @@ class DigestEngine:
         # Sort highest value carts first
         anomalies.sort(key=lambda a: a.cart_total_inr, reverse=True)
         return anomalies
+
+    def detect_ad_anomalies(
+        self,
+        tenant_id: str,
+        current_records: List[AdsCampaignDaily],
+        prior_records: List[AdsCampaignDaily],
+        cpa_drift_threshold_pct: float = 25.0,
+        impression_drop_threshold_pct: float = 30.0,
+        now: Optional[datetime] = None
+    ) -> List[DigestFlag]:
+        """
+        Deterministically evaluates ad campaign performance shifts and flags marketing anomalies.
+        Detects CPA spikes, impression share collapses, and spend waste.
+        """
+        ref_time = now or datetime.now(timezone.utc)
+        flags: List[DigestFlag] = []
+        prior_by_camp = {r.campaign_id: r for r in prior_records}
+
+        for curr in current_records:
+            cid = curr.campaign_id
+            prior = prior_by_camp.get(cid)
+            if not prior:
+                continue
+
+            # 1. CPA Drift Spike
+            if curr.conversions >= 3.0 and prior.conversions >= 3.0 and prior.cpa_paise > 0:
+                cpa_delta_pct = (curr.cpa_paise - prior.cpa_paise) / float(prior.cpa_paise) * 100.0
+                if cpa_delta_pct >= cpa_drift_threshold_pct:
+                    sev: Severity = "high" if cpa_delta_pct >= 50.0 else "medium"
+                    dedupe_key = f"{tenant_id}:{cid}:ad_cpa_spike:{curr.date}:{prior.date}"
+                    flags.append(
+                        DigestFlag(
+                            dedupe_key=dedupe_key,
+                            tenant_id=tenant_id,
+                            metric_name=f"cpa_{cid}",
+                            period="day_over_day",
+                            polarity="lower_is_better",
+                            current_value=round(float(curr.cpa_paise) / 100.0, 2),
+                            prior_value=round(float(prior.cpa_paise) / 100.0, 2),
+                            current_sample_size=int(curr.conversions),
+                            prior_sample_size=int(prior.conversions),
+                            unit="currency_inr",
+                            threshold_pct=cpa_drift_threshold_pct,
+                            severity=sev,
+                            adverse=True,
+                            flagged_at=ref_time,
+                            is_statistically_significant=True,
+                            is_new_activity=False,
+                            estimated_impact_inr=round(float(curr.spend_paise - prior.spend_paise) / 100.0, 2) if curr.spend_paise > prior.spend_paise else None,
+                            is_primary=True,
+                            timezone="Asia/Kolkata",
+                            status="active"
+                        )
+                    )
+
+            # 2. Impression Collapse
+            if prior.impressions >= 500 and curr.impressions < prior.impressions:
+                imp_delta_pct = (curr.impressions - prior.impressions) / float(prior.impressions) * 100.0
+                if abs(imp_delta_pct) >= impression_drop_threshold_pct:
+                    sev_imp: Severity = "high" if abs(imp_delta_pct) >= 50.0 else "medium"
+                    dedupe_key_imp = f"{tenant_id}:{cid}:ad_imp_drop:{curr.date}:{prior.date}"
+                    flags.append(
+                        DigestFlag(
+                            dedupe_key=dedupe_key_imp,
+                            tenant_id=tenant_id,
+                            metric_name=f"impressions_{cid}",
+                            period="day_over_day",
+                            polarity="higher_is_better",
+                            current_value=float(curr.impressions),
+                            prior_value=float(prior.impressions),
+                            current_sample_size=curr.impressions,
+                            prior_sample_size=prior.impressions,
+                            unit="count",
+                            threshold_pct=impression_drop_threshold_pct,
+                            severity=sev_imp,
+                            adverse=True,
+                            flagged_at=ref_time,
+                            is_statistically_significant=True,
+                            is_new_activity=False,
+                            is_primary=True,
+                            timezone="Asia/Kolkata",
+                            status="active"
+                        )
+                    )
+
+            # 3. High Spend Zero Conversions
+            if curr.spend_paise >= 200000 and curr.conversions == 0.0:
+                dedupe_key_zero = f"{tenant_id}:{cid}:ad_zero_conv:{curr.date}"
+                flags.append(
+                    DigestFlag(
+                        dedupe_key=dedupe_key_zero,
+                        tenant_id=tenant_id,
+                        metric_name=f"zero_conv_{cid}",
+                        period="day_over_day",
+                        polarity="lower_is_better",
+                        current_value=round(float(curr.spend_paise) / 100.0, 2),
+                        prior_value=0.0,
+                        current_sample_size=curr.clicks,
+                        prior_sample_size=0,
+                        unit="currency_inr",
+                        threshold_pct=0.0,
+                        severity="high",
+                        adverse=True,
+                        flagged_at=ref_time,
+                        is_statistically_significant=True,
+                        is_new_activity=True,
+                        estimated_impact_inr=round(float(curr.spend_paise) / 100.0, 2),
+                        is_primary=True,
+                        timezone="Asia/Kolkata",
+                        status="active"
+                    )
+                )
+
+        return flags
+

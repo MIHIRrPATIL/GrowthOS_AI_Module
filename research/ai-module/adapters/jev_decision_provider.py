@@ -242,6 +242,34 @@ class JevDecisionProvider(DecisionPort):
                 else:
                     pred = "supported"
                     raw_logit = 2.8
+        elif task == "cart_abandonment_decision":
+            cust = ctx.get("customer_id")
+            has_payment_fail = ctx.get("has_payment_failure", False)
+            friction_count = ctx.get("friction_events_count", 0)
+            cart_paise = ctx.get("cart_subtotal_paise", 0)
+            idle_mins = ctx.get("idle_minutes", 0.0)
+            views = ctx.get("product_views_count", 0)
+            adds = ctx.get("cart_adds_count", 0)
+            past_orders = ctx.get("lifetime_orders_count", 0)
+
+            if has_payment_fail or friction_count > 0:
+                pred = "RESCUE_FRICTION"
+                raw_logit = 3.8
+            elif not cust:
+                pred = "NOOP"
+                raw_logit = 3.5
+            elif past_orders >= 5:
+                pred = "SUPPRESS_INCENTIVE"
+                raw_logit = 3.6
+            elif views >= 8 and (adds == 0 or idle_mins >= 120):
+                pred = "NOOP"
+                raw_logit = 3.4
+            elif cart_paise >= 50000 and 15.0 <= idle_mins <= 60.0:
+                pred = "PROPOSE_WAIVER"
+                raw_logit = 3.5
+            else:
+                pred = "NOOP"
+                raw_logit = 3.2
         else:
             pred = "unsupported"
             raw_logit = 1.0

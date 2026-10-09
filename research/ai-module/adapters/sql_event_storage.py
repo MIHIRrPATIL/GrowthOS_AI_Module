@@ -7,7 +7,7 @@ Enforces multi-tenant isolation, idempotent deduplication, and window-based quer
 from typing import List, Optional, Dict, Any
 import sqlite3
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from ports.storage import EventStoragePort
 from domain.events import EventEnvelope
@@ -301,6 +301,73 @@ class SqlEventStorageAdapter(EventStoragePort):
         if not row or not row[0] or not row[1]:
             return None, None
         return datetime.fromisoformat(row[0]), datetime.fromisoformat(row[1])
+
+    def query_idle_sessions(
+        self,
+        tenant_id: str,
+        as_of: datetime,
+        idle_threshold_minutes: float = 15.0
+    ) -> List[Dict[str, Any]]:
+        """
+        Queries sessions with unpurchased cart activity idle for at least idle_threshold_minutes.
+        """
+        cutoff_dt = as_of - timedelta(minutes=idle_threshold_minutes)
+        cutoff_iso = cutoff_dt.isoformat()
+
+        query = """
+        SELECT session_id,
+               max(customer_id) as customer_id,
+               max(anonymous_id) as anonymous_id,
+               max(occurred_at) as last_event_at,
+               min(occurred_at) as session_start_at,
+               count(CASE WHEN event_name IN ('product_viewed', 'view_item') THEN 1 END) as product_views_count,
+               count(CASE WHEN event_name IN ('add_to_cart', 'cart_add') THEN 1 END) as cart_adds_count,
+               count(CASE WHEN event_name IN ('order_completed', 'purchase') THEN 1 END) as purchase_count
+        FROM events
+        WHERE tenant_id = ?
+        GROUP BY session_id
+        HAVING purchase_count = 0 
+           AND cart_adds_count > 0
+           AND last_event_at <= ?
+        ORDER BY last_event_at DESC;
+        """
+        cursor = self._conn.cursor()
+        cursor.execute(query, (tenant_id, cutoff_iso))
+        rows = cursor.fetchall()
+        results: List[Dict[str, Any]] = []
+
+        for r in rows:
+            sid = r["session_id"]
+            cursor.execute(
+                "SELECT properties, event_name FROM events WHERE tenant_id = ? AND session_id = ? ORDER BY occurred_at DESC LIMIT 1;",
+                (tenant_id, sid)
+            )
+            latest_row = cursor.fetchone()
+            props = json.loads(latest_row["properties"]) if (latest_row and latest_row["properties"]) else {}
+
+            cart_subtotal = props.get("cart_total_paise")
+            if cart_subtotal is None and "cart_value" in props:
+                cart_subtotal = int(round(float(props["cart_value"]) * 100))
+            elif cart_subtotal is None:
+                cart_subtotal = 0
+
+            stage = props.get("funnel_stage") or (latest_row["event_name"] if latest_row else "cart")
+
+            results.append({
+                "tenant_id": tenant_id,
+                "session_id": sid,
+                "customer_id": r["customer_id"],
+                "anonymous_id": r["anonymous_id"],
+                "last_event_at": datetime.fromisoformat(r["last_event_at"]),
+                "session_start_at": datetime.fromisoformat(r["session_start_at"]),
+                "product_views_count": r["product_views_count"],
+                "cart_adds_count": r["cart_adds_count"],
+                "cart_subtotal_paise": cart_subtotal,
+                "funnel_stage": stage,
+                "properties": props
+            })
+
+        return results
 
     def close(self) -> None:
         self._conn.close()

@@ -441,7 +441,12 @@ class ActionOrchestrator:
         params = plan.parameters
 
         if atype == ActionType.WAIVE_DELIVERY_FEE:
-            fee_inr = params["fee_amount_paise"] / 100.0
+            fee_paise = params.get("fee_amount_paise")
+            if fee_paise is None and "fee_amount" in params:
+                fee_paise = int(round(float(params["fee_amount"]) * 100))
+            elif fee_paise is None:
+                fee_paise = 5000
+            fee_inr = fee_paise / 100.0
             return self.loyalty_adapter.waive_delivery_fee(
                 customer_id=params["customer_id"],
                 fee_amount=fee_inr,

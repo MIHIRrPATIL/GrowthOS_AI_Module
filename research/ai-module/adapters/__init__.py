@@ -23,6 +23,8 @@ from .http_telemetry_adapter import (
     generate_hmac_signature,
     verify_hmac_signature
 )
+from .loyalty_waivers_adapter import HttpLoyaltyAdapter
+from .notification_gateway_adapter import HttpNotificationGatewayAdapter
 
 __all__ = [
     "MockLoyaltyAdapter",
@@ -41,4 +43,6 @@ __all__ = [
     "HttpTelemetryAdapter",
     "generate_hmac_signature",
     "verify_hmac_signature",
+    "HttpLoyaltyAdapter",
+    "HttpNotificationGatewayAdapter",
 ]

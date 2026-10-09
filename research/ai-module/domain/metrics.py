@@ -343,3 +343,49 @@ def format_change_metrics(cur_val: float, prior_val: float) -> str:
         return f"{pp_delta:+.1f} pp ({rel_pct:+.1f}% relative)"
     else:
         return f"{pp_delta:+.1f} pp (baseline N/A)"
+
+
+class AdsCampaignDaily(_Strict):
+    """
+    Normalized daily ad campaign record from Module 3 (Ads Layer Manager).
+    """
+    workspace_id: str
+    platform: str = "google_ads"
+    account_id: str
+    campaign_id: str
+    campaign_name: str
+    date: str
+    spend_paise: int = Field(ge=0)
+    spend_inr: float = Field(ge=0.0)
+    impressions: int = Field(default=0, ge=0)
+    clicks: int = Field(default=0, ge=0)
+    conversions: float = Field(default=0.0, ge=0.0)
+    conversion_value_paise: int = Field(default=0, ge=0)
+    ctr: float = Field(default=0.0, ge=0.0, le=1.0)
+    cpc_paise: int = Field(default=0, ge=0)
+    cpa_paise: int = Field(default=0, ge=0)
+    roas: float = Field(default=0.0, ge=0.0)
+    currency: str = "INR"
+    timezone: str = "Asia/Kolkata"
+    status: str = "ACTIVE"
+    synced_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+
+class BlendedAdMetrics(_Strict):
+    """
+    Aggregated cross-campaign advertising analytics computed by MetricsEngine.
+    """
+    total_spend_paise: int = Field(ge=0)
+    total_spend_inr: float = Field(ge=0.0)
+    total_impressions: int = Field(ge=0)
+    total_clicks: int = Field(ge=0)
+    total_conversions: float = Field(ge=0.0)
+    conversion_value_paise: int = Field(default=0, ge=0)
+    blended_ctr: float = Field(default=0.0, ge=0.0, le=1.0)
+    blended_cpc_paise: int = Field(default=0, ge=0)
+    blended_cpa_paise: int = Field(default=0, ge=0)
+    blended_roas: float = Field(default=0.0, ge=0.0)
+    blended_cac_paise: Optional[int] = Field(default=None, ge=0)
+    blended_cac_inr: Optional[float] = Field(default=None, ge=0.0)
+    campaign_count: int = Field(default=0, ge=0)
+

@@ -36,19 +36,50 @@ class BenchmarkEvaluator:
         file_map = {
             "query_classification": "query_classification.json",
             "action_routing": "action_routing.json",
-            "evidence_support": "evidence_support.json"
+            "evidence_support": "evidence_support.json",
+            "cart_abandonment_decision": "ground_truth_decisions.jsonl"
         }
-        if task_type not in file_map:
-            raise ValueError(f"Unknown task type '{task_type}'. Available: {list(file_map.keys())}")
-
-        path = self.dataset_dir / file_map[task_type]
+        
+        # Check standard datasets dir first, then fallback to data/benchmarks
+        path = self.dataset_dir / file_map.get(task_type, f"{task_type}.jsonl")
         if not path.exists():
-            raise FileNotFoundError(f"Dataset file not found: {path}")
+            alt_path = self.dataset_dir.parent.parent / "data" / "benchmarks" / file_map.get(task_type, f"{task_type}.jsonl")
+            if alt_path.exists():
+                path = alt_path
+            else:
+                raise FileNotFoundError(f"Dataset file not found: {path} (also checked {alt_path})")
+
+        if path.suffix == ".jsonl":
+            return self.load_jsonl(path)
 
         with open(path, "r", encoding="utf-8") as f:
             raw_cases = json.load(f)
 
         return [DecisionBenchmarkCase.model_validate(c) for c in raw_cases]
+
+    def load_jsonl(self, file_path: Path) -> List[DecisionBenchmarkCase]:
+        """Loads benchmark cases from a JSON Lines (.jsonl) file."""
+        cases = []
+        with open(file_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    cases.append(DecisionBenchmarkCase.model_validate_json(line))
+        return cases
+
+    @staticmethod
+    def compute_wilson_ci(k: int, n: int, confidence: float = 0.95) -> tuple[float, float]:
+        """
+        Computes the Wilson score interval for binomial proportions (default 95% CI).
+        """
+        if n == 0:
+            return (0.0, 0.0)
+        z = 1.959964  # Normal critical value for 95% two-sided CI
+        p = k / n
+        denominator = 1.0 + (z**2) / n
+        center = (p + (z**2) / (2.0 * n)) / denominator
+        spread = (z * math.sqrt((p * (1.0 - p) / n) + (z**2) / (4.0 * (n**2)))) / denominator
+        return (round(max(0.0, center - spread), 4), round(min(1.0, center + spread), 4))
 
     def evaluate_provider(
         self,
@@ -87,9 +118,10 @@ class BenchmarkEvaluator:
         if n == 0:
             raise ValueError("Predictions list cannot be empty")
 
-        # 1. Top-1 Accuracy
+        # 1. Top-1 Accuracy with 95% Wilson Score Confidence Interval
         correct_count = sum(1 for p in predictions if p.is_correct)
         accuracy = correct_count / n
+        ci_lower, ci_upper = self.compute_wilson_ci(correct_count, n, confidence=0.95)
 
         # 2. Macro F1
         classes = sorted(list({c.ground_truth for c in cases}))
@@ -138,7 +170,9 @@ class BenchmarkEvaluator:
             p95_latency_ms=round(p95, 2),
             p99_latency_ms=round(p99, 2),
             cost_per_1000_usd=round(cost_per_1000, 4),
-            is_eligible_for_autonomous=is_autonomous_eligible
+            is_eligible_for_autonomous=is_autonomous_eligible,
+            accuracy_ci_lower_95=ci_lower,
+            accuracy_ci_upper_95=ci_upper
         )
 
     def _calc_percentile(self, values: List[float], p: float) -> float:
