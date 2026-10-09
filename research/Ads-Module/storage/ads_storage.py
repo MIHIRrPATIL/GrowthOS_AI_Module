@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 
 from domain.models import AccountConnection, AccountStatus, AdsCampaignDaily
 from domain.plans import CampaignPlan, PlanStatus
+from domain.attribution import ClickRecord, ConversionRecord
 
 
 class SqlAdsStorageAdapter:
@@ -90,6 +91,40 @@ class SqlAdsStorageAdapter:
                 plan_json TEXT NOT NULL,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS ads_clicks (
+                click_id TEXT PRIMARY KEY,
+                workspace_id TEXT NOT NULL,
+                gclid TEXT,
+                utm_source TEXT,
+                utm_campaign TEXT,
+                utm_medium TEXT,
+                utm_term TEXT,
+                utm_content TEXT,
+                anonymous_id TEXT NOT NULL,
+                user_id TEXT,
+                landing_page TEXT NOT NULL,
+                clicked_at TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS ads_conversions (
+                conversion_id TEXT PRIMARY KEY,
+                workspace_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                order_id TEXT NOT NULL,
+                anonymous_id TEXT NOT NULL,
+                user_id TEXT,
+                amount_paise INTEGER NOT NULL,
+                amount_inr REAL NOT NULL,
+                currency TEXT NOT NULL DEFAULT 'INR',
+                converted_at TEXT NOT NULL,
+                matched_gclid TEXT,
+                matched_click_id TEXT,
+                attribution_type TEXT NOT NULL DEFAULT 'ORGANIC',
+                conversion_action_name TEXT NOT NULL DEFAULT 'Purchases',
+                uploaded_to_google INTEGER NOT NULL DEFAULT 0,
+                uploaded_at TEXT
             );
             """
 
@@ -375,3 +410,191 @@ class SqlAdsStorageAdapter:
 
         self.save_campaign_plan(plan)
         return plan
+
+    # =========================================================================
+    # Closed-Loop Attribution (Phase 4)
+    # =========================================================================
+
+    def save_click(self, click: ClickRecord) -> None:
+        sql = """
+        INSERT INTO ads_clicks (
+            click_id, workspace_id, gclid, utm_source, utm_campaign,
+            utm_medium, utm_term, utm_content, anonymous_id, user_id,
+            landing_page, clicked_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(click_id) DO UPDATE SET
+            user_id = COALESCE(excluded.user_id, ads_clicks.user_id)
+        """
+        with self._get_connection() as conn:
+            conn.execute(sql, (
+                click.click_id,
+                click.workspace_id,
+                click.gclid,
+                click.utm_source,
+                click.utm_campaign,
+                click.utm_medium,
+                click.utm_term,
+                click.utm_content,
+                click.anonymous_id,
+                click.user_id,
+                click.landing_page,
+                click.clicked_at
+            ))
+            conn.commit()
+
+    def get_clicks_for_visitor(
+        self,
+        workspace_id: str,
+        anonymous_id: str,
+        user_id: Optional[str] = None,
+        lookback_days: int = 30
+    ) -> List[ClickRecord]:
+        if user_id:
+            sql = """
+            SELECT * FROM ads_clicks
+            WHERE workspace_id = ? AND (anonymous_id = ? OR user_id = ?)
+            ORDER BY clicked_at DESC
+            """
+            params = (workspace_id, anonymous_id, user_id)
+        else:
+            sql = """
+            SELECT * FROM ads_clicks
+            WHERE workspace_id = ? AND anonymous_id = ?
+            ORDER BY clicked_at DESC
+            """
+            params = (workspace_id, anonymous_id)
+
+        with self._get_connection() as conn:
+            rows = conn.execute(sql, params).fetchall()
+            return [
+                ClickRecord(
+                    click_id=r["click_id"],
+                    workspace_id=r["workspace_id"],
+                    gclid=r["gclid"],
+                    utm_source=r["utm_source"],
+                    utm_campaign=r["utm_campaign"],
+                    utm_medium=r["utm_medium"],
+                    utm_term=r["utm_term"],
+                    utm_content=r["utm_content"],
+                    anonymous_id=r["anonymous_id"],
+                    user_id=r["user_id"],
+                    landing_page=r["landing_page"],
+                    clicked_at=r["clicked_at"]
+                )
+                for r in rows
+            ]
+
+    def save_conversion(self, conversion: ConversionRecord) -> None:
+        sql = """
+        INSERT INTO ads_conversions (
+            conversion_id, workspace_id, account_id, order_id, anonymous_id,
+            user_id, amount_paise, amount_inr, currency, converted_at,
+            matched_gclid, matched_click_id, attribution_type,
+            conversion_action_name, uploaded_to_google, uploaded_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(conversion_id) DO UPDATE SET
+            uploaded_to_google = excluded.uploaded_to_google,
+            uploaded_at = excluded.uploaded_at
+        """
+        with self._get_connection() as conn:
+            conn.execute(sql, (
+                conversion.conversion_id,
+                conversion.workspace_id,
+                conversion.account_id,
+                conversion.order_id,
+                conversion.anonymous_id,
+                conversion.user_id,
+                conversion.amount_paise,
+                conversion.amount_inr,
+                conversion.currency,
+                conversion.converted_at,
+                conversion.matched_gclid,
+                conversion.matched_click_id,
+                conversion.attribution_type,
+                conversion.conversion_action_name,
+                1 if conversion.uploaded_to_google else 0,
+                conversion.uploaded_at
+            ))
+            conn.commit()
+
+    def get_conversion(self, conversion_id: str) -> Optional[ConversionRecord]:
+        sql = "SELECT * FROM ads_conversions WHERE conversion_id = ?"
+        with self._get_connection() as conn:
+            r = conn.execute(sql, (conversion_id,)).fetchone()
+            if not r:
+                return None
+            return self._conv_row_to_model(r)
+
+    def list_conversions(self, workspace_id: str, limit: int = 100) -> List[ConversionRecord]:
+        sql = "SELECT * FROM ads_conversions WHERE workspace_id = ? ORDER BY converted_at DESC LIMIT ?"
+        with self._get_connection() as conn:
+            rows = conn.execute(sql, (workspace_id, limit)).fetchall()
+            return [self._conv_row_to_model(r) for r in rows]
+
+    def get_pending_conversions(self, workspace_id: str) -> List[ConversionRecord]:
+        sql = """
+        SELECT * FROM ads_conversions
+        WHERE workspace_id = ? AND uploaded_to_google = 0 AND matched_gclid IS NOT NULL
+        ORDER BY converted_at ASC
+        """
+        with self._get_connection() as conn:
+            rows = conn.execute(sql, (workspace_id,)).fetchall()
+            return [self._conv_row_to_model(r) for r in rows]
+
+    def mark_conversion_uploaded(self, conversion_id: str, uploaded_at: str) -> None:
+        sql = "UPDATE ads_conversions SET uploaded_to_google = 1, uploaded_at = ? WHERE conversion_id = ?"
+        with self._get_connection() as conn:
+            conn.execute(sql, (uploaded_at, conversion_id))
+            conn.commit()
+
+    def get_attribution_summary(self, workspace_id: str) -> Dict[str, Any]:
+        sql = """
+        SELECT
+            COUNT(*) as total_conversions,
+            SUM(CASE WHEN attribution_type = 'DIRECT_GCLID' THEN 1 ELSE 0 END) as direct_gclid_count,
+            SUM(CASE WHEN attribution_type = 'LAST_TOUCH_UTM' THEN 1 ELSE 0 END) as utm_count,
+            SUM(CASE WHEN attribution_type = 'ORGANIC' THEN 1 ELSE 0 END) as organic_count,
+            SUM(CASE WHEN attribution_type IN ('DIRECT_GCLID', 'LAST_TOUCH_UTM') THEN amount_paise ELSE 0 END) as attributed_paise,
+            SUM(amount_paise) as total_paise,
+            SUM(CASE WHEN uploaded_to_google = 1 THEN 1 ELSE 0 END) as uploaded_count,
+            SUM(CASE WHEN uploaded_to_google = 0 AND matched_gclid IS NOT NULL THEN 1 ELSE 0 END) as pending_upload_count
+        FROM ads_conversions
+        WHERE workspace_id = ?
+        """
+        with self._get_connection() as conn:
+            r = conn.execute(sql, (workspace_id,)).fetchone()
+            tot = r["total_conversions"] or 0
+            attr_paise = r["attributed_paise"] or 0
+            tot_paise = r["total_paise"] or 0
+            return {
+                "workspace_id": workspace_id,
+                "total_conversions": tot,
+                "direct_gclid_conversions": r["direct_gclid_count"] or 0,
+                "utm_conversions": r["utm_count"] or 0,
+                "organic_conversions": r["organic_count"] or 0,
+                "total_attributed_revenue_paise": attr_paise,
+                "total_attributed_revenue_inr": round(attr_paise / 100.0, 2),
+                "total_revenue_inr": round(tot_paise / 100.0, 2),
+                "uploaded_conversions_count": r["uploaded_count"] or 0,
+                "pending_upload_count": r["pending_upload_count"] or 0
+            }
+
+    def _conv_row_to_model(self, r: sqlite3.Row) -> ConversionRecord:
+        return ConversionRecord(
+            conversion_id=r["conversion_id"],
+            workspace_id=r["workspace_id"],
+            account_id=r["account_id"],
+            order_id=r["order_id"],
+            anonymous_id=r["anonymous_id"],
+            user_id=r["user_id"],
+            amount_paise=r["amount_paise"],
+            amount_inr=r["amount_inr"],
+            currency=r["currency"],
+            converted_at=r["converted_at"],
+            matched_gclid=r["matched_gclid"],
+            matched_click_id=r["matched_click_id"],
+            attribution_type=r["attribution_type"],
+            conversion_action_name=r["conversion_action_name"],
+            uploaded_to_google=bool(r["uploaded_to_google"]),
+            uploaded_at=r["uploaded_at"]
+        )

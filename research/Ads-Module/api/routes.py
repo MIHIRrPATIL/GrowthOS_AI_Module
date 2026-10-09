@@ -10,12 +10,22 @@ from pydantic import BaseModel, Field
 
 from domain.models import AccountConnection, AccountStatus, AdsCampaignDaily
 from domain.plans import CampaignPlan, PlanGenerationRequest, PlanStatus
+from domain.attribution import (
+    ClickRecord,
+    ConversionRecord,
+    IngestClickRequest,
+    IngestConversionRequest,
+    AttributionSummary
+)
 from services.sync_service import AdsSyncService, SyncResult
 from storage.ads_storage import SqlAdsStorageAdapter
 from connectors.base import AdsConnectorBase
 from engines.planning_engine import CampaignPlanningEngine
 from engines.validation_engine import CampaignValidationEngine
 from services.deployment_service import CampaignDeploymentService
+from attribution.click_tracker import ClickTracker
+from attribution.conversion_matcher import ConversionMatcher
+from connectors.offline_conversion_uploader import OfflineConversionUploader
 
 router = APIRouter(prefix="/api/v1/ads", tags=["Ads Module"])
 
@@ -50,6 +60,9 @@ class AdsModuleContainer:
     planning_engine: CampaignPlanningEngine
     validation_engine: CampaignValidationEngine
     deployment_service: CampaignDeploymentService
+    click_tracker: ClickTracker
+    conversion_matcher: ConversionMatcher
+    conversion_uploader: OfflineConversionUploader
 
 
 _container: Optional[AdsModuleContainer] = None
@@ -256,3 +269,61 @@ def deploy_campaign_plan(
         raise HTTPException(status_code=400, detail=str(e))
     except RuntimeError as e:
         raise HTTPException(status_code=502, detail=str(e))
+
+
+# =============================================================================
+# Closed-Loop Attribution Endpoints (Phase 4)
+# =============================================================================
+
+@router.post("/attribution/clicks", response_model=ClickRecord)
+def ingest_ad_click(
+    req: IngestClickRequest,
+    container: AdsModuleContainer = Depends(get_container)
+) -> ClickRecord:
+    """
+    Ingests ad click and session tracking data (gclid, UTM parameters).
+    """
+    return container.click_tracker.record_click(req)
+
+
+@router.post("/attribution/conversions", response_model=ConversionRecord)
+def ingest_order_conversion(
+    req: IngestConversionRequest,
+    container: AdsModuleContainer = Depends(get_container)
+) -> ConversionRecord:
+    """
+    Matches order completed events back to initial ad clicks within lookback window.
+    """
+    return container.conversion_matcher.match_and_record_conversion(req)
+
+
+@router.post("/attribution/conversions/upload")
+def upload_offline_conversions(
+    workspace_id: str = Query(..., min_length=1),
+    container: AdsModuleContainer = Depends(get_container)
+) -> Dict[str, Any]:
+    """
+    Uploads pending attributed conversions (with gclids) to Google Ads ConversionUploadService.
+    """
+    return container.conversion_uploader.upload_pending_conversions(workspace_id=workspace_id)
+
+
+@router.get("/attribution/summary", response_model=AttributionSummary)
+def get_attribution_summary(
+    workspace_id: str = Query(..., min_length=1),
+    container: AdsModuleContainer = Depends(get_container)
+) -> AttributionSummary:
+    """
+    Returns closed-loop attribution metrics (GCLID vs UTM vs Organic, attributed revenue).
+    """
+    data = container.storage.get_attribution_summary(workspace_id)
+    return AttributionSummary(**data)
+
+
+@router.get("/attribution/conversions", response_model=List[ConversionRecord])
+def list_conversions(
+    workspace_id: str = Query(..., min_length=1),
+    limit: int = Query(default=50, ge=1, le=500),
+    container: AdsModuleContainer = Depends(get_container)
+) -> List[ConversionRecord]:
+    return container.storage.list_conversions(workspace_id=workspace_id, limit=limit)

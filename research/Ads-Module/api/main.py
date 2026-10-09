@@ -16,6 +16,9 @@ from services.sync_service import AdsSyncService
 from engines.planning_engine import CampaignPlanningEngine
 from engines.validation_engine import CampaignValidationEngine
 from services.deployment_service import CampaignDeploymentService
+from attribution.click_tracker import ClickTracker
+from attribution.conversion_matcher import ConversionMatcher
+from connectors.offline_conversion_uploader import OfflineConversionUploader
 from api.routes import router, AdsModuleContainer, set_container
 
 
@@ -49,6 +52,13 @@ def create_app(
         publisher=publisher
     )
 
+    click_tracker = ClickTracker(storage=db_storage)
+    conversion_matcher = ConversionMatcher(storage=db_storage, publisher=publisher)
+    conversion_uploader = OfflineConversionUploader(
+        storage=db_storage,
+        connector=ads_connector if isinstance(ads_connector, GoogleAdsConnector) else None
+    )
+
     container = AdsModuleContainer()
     container.storage = db_storage
     container.connector = ads_connector
@@ -56,6 +66,9 @@ def create_app(
     container.planning_engine = planning_engine
     container.validation_engine = validation_engine
     container.deployment_service = deployment_service
+    container.click_tracker = click_tracker
+    container.conversion_matcher = conversion_matcher
+    container.conversion_uploader = conversion_uploader
     set_container(container)
 
     app = FastAPI(
