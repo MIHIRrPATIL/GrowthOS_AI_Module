@@ -6,10 +6,12 @@ Strictly NO emojis in code, docstrings, or logs.
 
 from typing import List, Optional, Dict, Any
 import sqlite3
+import json
 from pathlib import Path
 from datetime import datetime, timezone
 
 from domain.models import AccountConnection, AccountStatus, AdsCampaignDaily
+from domain.plans import CampaignPlan, PlanStatus
 
 
 class SqlAdsStorageAdapter:
@@ -77,6 +79,17 @@ class SqlAdsStorageAdapter:
                 status TEXT NOT NULL DEFAULT 'ACTIVE',
                 synced_at TEXT NOT NULL,
                 PRIMARY KEY (workspace_id, platform, account_id, campaign_id, date)
+            );
+
+            CREATE TABLE IF NOT EXISTS ads_campaign_plans (
+                plan_id TEXT PRIMARY KEY,
+                workspace_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                name TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'DRAFT',
+                plan_json TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
             );
             """
 
@@ -276,3 +289,89 @@ class SqlAdsStorageAdapter:
             status=r["status"],
             synced_at=r["synced_at"]
         )
+
+    # =========================================================================
+    # Campaign Plans (Phase 3)
+    # =========================================================================
+
+    def save_campaign_plan(self, plan: CampaignPlan) -> None:
+        sql = """
+        INSERT INTO ads_campaign_plans (
+            plan_id, workspace_id, account_id, name, status, plan_json, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(plan_id) DO UPDATE SET
+            name = excluded.name,
+            status = excluded.status,
+            plan_json = excluded.plan_json,
+            updated_at = excluded.updated_at
+        """
+        plan_dict = plan.model_dump()
+        plan_json = json.dumps(plan_dict)
+        now_str = datetime.now(timezone.utc).isoformat()
+        with self._get_connection() as conn:
+            conn.execute(sql, (
+                plan.plan_id,
+                plan.workspace_id,
+                plan.account_id,
+                plan.name,
+                plan.status.value,
+                plan_json,
+                plan.created_at or now_str,
+                now_str
+            ))
+            conn.commit()
+
+    def get_campaign_plan(self, plan_id: str) -> Optional[CampaignPlan]:
+        sql = "SELECT plan_json FROM ads_campaign_plans WHERE plan_id = ?"
+        with self._get_connection() as conn:
+            row = conn.execute(sql, (plan_id,)).fetchone()
+            if not row:
+                return None
+            data = json.loads(row["plan_json"])
+            return CampaignPlan.model_validate(data)
+
+    def list_campaign_plans(
+        self,
+        workspace_id: str,
+        status: Optional[PlanStatus] = None
+    ) -> List[CampaignPlan]:
+        if status:
+            sql = "SELECT plan_json FROM ads_campaign_plans WHERE workspace_id = ? AND status = ? ORDER BY created_at DESC"
+            params = (workspace_id, status.value)
+        else:
+            sql = "SELECT plan_json FROM ads_campaign_plans WHERE workspace_id = ? ORDER BY created_at DESC"
+            params = (workspace_id,)
+
+        with self._get_connection() as conn:
+            rows = conn.execute(sql, params).fetchall()
+            return [CampaignPlan.model_validate(json.loads(r["plan_json"])) for r in rows]
+
+    def update_plan_status(
+        self,
+        plan_id: str,
+        status: PlanStatus,
+        validation_errors: Optional[List[str]] = None,
+        validation_warnings: Optional[List[str]] = None,
+        deployed_campaign_id: Optional[str] = None,
+        approved_by: Optional[str] = None,
+        approval_notes: Optional[str] = None
+    ) -> Optional[CampaignPlan]:
+        plan = self.get_campaign_plan(plan_id)
+        if not plan:
+            return None
+
+        plan.status = status
+        plan.updated_at = datetime.now(timezone.utc).isoformat()
+        if validation_errors is not None:
+            plan.validation_errors = validation_errors
+        if validation_warnings is not None:
+            plan.validation_warnings = validation_warnings
+        if deployed_campaign_id is not None:
+            plan.deployed_campaign_id = deployed_campaign_id
+        if approved_by is not None:
+            plan.approved_by = approved_by
+        if approval_notes is not None:
+            plan.approval_notes = approval_notes
+
+        self.save_campaign_plan(plan)
+        return plan

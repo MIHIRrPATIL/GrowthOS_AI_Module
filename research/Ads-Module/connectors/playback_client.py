@@ -115,6 +115,28 @@ class PlaybackAdsConnector:
             "simulated_error": self._simulated_error
         }
 
+    def deploy_campaign(
+        self,
+        account_id: str,
+        plan: Any,
+        validate_only: bool = False
+    ) -> Dict[str, Any]:
+        if self._simulated_error == "AUTHENTICATION_FAILED":
+            raise PermissionError("Google Ads API Authentication Failed (Simulated)")
+        if self._simulated_error == "VALIDATION_FAILED":
+            raise ValueError("Google Ads Platform Validation Error (Simulated)")
+
+        plan_id = getattr(plan, "plan_id", "default")
+        campaign_id = f"sim_camp_{plan_id[-6:]}"
+        return {
+            "success": True,
+            "validate_only": validate_only,
+            "account_id": account_id,
+            "deployed_campaign_id": campaign_id,
+            "status": "VALIDATED" if validate_only else "ACTIVE",
+            "message": "Campaign validated successfully in dry-run mode" if validate_only else "Campaign deployed successfully to Google Ads"
+        }
+
     def _generate_synthetic_rows(
         self,
         account_id: str,

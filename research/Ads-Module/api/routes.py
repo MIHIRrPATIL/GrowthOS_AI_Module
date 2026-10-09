@@ -9,9 +9,13 @@ from fastapi import APIRouter, HTTPException, Query, Header, Depends
 from pydantic import BaseModel, Field
 
 from domain.models import AccountConnection, AccountStatus, AdsCampaignDaily
+from domain.plans import CampaignPlan, PlanGenerationRequest, PlanStatus
 from services.sync_service import AdsSyncService, SyncResult
 from storage.ads_storage import SqlAdsStorageAdapter
 from connectors.base import AdsConnectorBase
+from engines.planning_engine import CampaignPlanningEngine
+from engines.validation_engine import CampaignValidationEngine
+from services.deployment_service import CampaignDeploymentService
 
 router = APIRouter(prefix="/api/v1/ads", tags=["Ads Module"])
 
@@ -33,11 +37,19 @@ class SyncAccountRequest(BaseModel):
     lookback_days: int = Field(default=3, ge=1, le=90)
 
 
+class ApprovePlanRequest(BaseModel):
+    approved_by: str = Field(..., min_length=1, description="Merchant user or automated brain ID")
+    approval_notes: Optional[str] = Field(default=None)
+
+
 # Dependency injection container holder
 class AdsModuleContainer:
     storage: SqlAdsStorageAdapter
     connector: AdsConnectorBase
     sync_service: AdsSyncService
+    planning_engine: CampaignPlanningEngine
+    validation_engine: CampaignValidationEngine
+    deployment_service: CampaignDeploymentService
 
 
 _container: Optional[AdsModuleContainer] = None
@@ -150,3 +162,97 @@ def get_bulk_metrics(
         start_date=start_date,
         end_date=end_date
     )
+
+
+# =============================================================================
+# Campaign Planning & Lifecycle State Machine Endpoints (Phase 3)
+# =============================================================================
+
+@router.post("/campaigns/plan", response_model=CampaignPlan)
+def generate_campaign_plan(
+    req: PlanGenerationRequest,
+    container: AdsModuleContainer = Depends(get_container)
+) -> CampaignPlan:
+    """
+    Synthesizes a structured CampaignPlan from natural language prompt / merchant goals.
+    Initial state: DRAFT.
+    """
+    plan = container.planning_engine.generate_plan(req)
+    container.storage.save_campaign_plan(plan)
+    return plan
+
+
+@router.get("/campaigns/plans", response_model=List[CampaignPlan])
+def list_campaign_plans(
+    workspace_id: str = Query(..., min_length=1),
+    status: Optional[PlanStatus] = Query(None),
+    container: AdsModuleContainer = Depends(get_container)
+) -> List[CampaignPlan]:
+    return container.storage.list_campaign_plans(workspace_id=workspace_id, status=status)
+
+
+@router.get("/campaigns/plans/{plan_id}", response_model=CampaignPlan)
+def get_campaign_plan(
+    plan_id: str,
+    container: AdsModuleContainer = Depends(get_container)
+) -> CampaignPlan:
+    plan = container.storage.get_campaign_plan(plan_id)
+    if not plan:
+        raise HTTPException(status_code=404, detail=f"Campaign plan '{plan_id}' not found")
+    return plan
+
+
+@router.post("/campaigns/plans/{plan_id}/validate", response_model=CampaignPlan)
+def validate_campaign_plan(
+    plan_id: str,
+    container: AdsModuleContainer = Depends(get_container)
+) -> CampaignPlan:
+    """
+    Executes validation checks against financial, editorial, and platform constraints.
+    Transitions: DRAFT -> VALIDATING -> AWAITING_APPROVAL (or VALIDATION_FAILED).
+    """
+    try:
+        return container.deployment_service.validate_plan(plan_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.post("/campaigns/plans/{plan_id}/approve", response_model=CampaignPlan)
+def approve_campaign_plan(
+    plan_id: str,
+    req: ApprovePlanRequest,
+    container: AdsModuleContainer = Depends(get_container)
+) -> CampaignPlan:
+    """
+    Approves validated plan for deployment.
+    Transitions: AWAITING_APPROVAL -> APPROVED.
+    """
+    try:
+        return container.deployment_service.approve_plan(
+            plan_id=plan_id,
+            approved_by=req.approved_by,
+            approval_notes=req.approval_notes
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/campaigns/plans/{plan_id}/deploy", response_model=CampaignPlan)
+def deploy_campaign_plan(
+    plan_id: str,
+    validate_only: bool = Query(default=False, description="Dry-run validation with Google Ads API without committing spend"),
+    container: AdsModuleContainer = Depends(get_container)
+) -> CampaignPlan:
+    """
+    Deploys approved campaign to Google Ads API.
+    Transitions: APPROVED -> DEPLOYING -> ACTIVE (or DEPLOYMENT_FAILED).
+    """
+    try:
+        return container.deployment_service.deploy_plan(
+            plan_id=plan_id,
+            validate_only=validate_only
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=502, detail=str(e))

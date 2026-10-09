@@ -34,3 +34,27 @@ class AdsPort(Protocol):
         Retrieves daily performance rows for a specific campaign ID.
         """
         ...
+
+    def plan_campaign(self, req: dict) -> dict:
+        """
+        Requests Ads Module to synthesize a structured CampaignPlan.
+        """
+        ...
+
+    def validate_campaign_plan(self, plan_id: str) -> dict:
+        """
+        Triggers validation on an existing campaign plan.
+        """
+        ...
+
+    def approve_campaign_plan(self, plan_id: str, approved_by: str, approval_notes: Optional[str] = None) -> dict:
+        """
+        Approves a validated campaign plan.
+        """
+        ...
+
+    def deploy_campaign_plan(self, plan_id: str, validate_only: bool = False) -> dict:
+        """
+        Deploys an approved campaign plan to Google Ads.
+        """
+        ...

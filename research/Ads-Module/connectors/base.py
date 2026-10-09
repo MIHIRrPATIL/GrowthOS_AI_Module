@@ -37,3 +37,15 @@ class AdsConnectorBase(Protocol):
         Checks connector availability, token health, or offline playback status.
         """
         ...
+
+    def deploy_campaign(
+        self,
+        account_id: str,
+        plan: Any,
+        validate_only: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Mutates or dry-runs Google Ads API to deploy a search campaign.
+        Returns a dict with deployed_campaign_id, status, and details.
+        """
+        ...

@@ -73,3 +73,54 @@ class HttpAdsAdapter:
         except Exception as e:
             logger.error(f"Failed to fetch campaign metrics from {url}: {e}")
             raise RuntimeError(f"Ads Module API communication error: {e}") from e
+
+    def plan_campaign(self, req: dict) -> dict:
+        url = f"{self.base_url}/api/v1/ads/campaigns/plan"
+        try:
+            with httpx.Client(timeout=self.timeout, transport=self.transport) as client:
+                res = client.post(url, json=req)
+                res.raise_for_status()
+                return res.json()
+        except Exception as e:
+            logger.error(f"Failed to generate campaign plan: {e}")
+            raise RuntimeError(f"Ads Module API communication error: {e}") from e
+
+    def validate_campaign_plan(self, plan_id: str) -> dict:
+        url = f"{self.base_url}/api/v1/ads/campaigns/plans/{plan_id}/validate"
+        try:
+            with httpx.Client(timeout=self.timeout, transport=self.transport) as client:
+                res = client.post(url)
+                res.raise_for_status()
+                return res.json()
+        except Exception as e:
+            logger.error(f"Failed to validate campaign plan {plan_id}: {e}")
+            raise RuntimeError(f"Ads Module API communication error: {e}") from e
+
+    def approve_campaign_plan(
+        self,
+        plan_id: str,
+        approved_by: str,
+        approval_notes: Optional[str] = None
+    ) -> dict:
+        url = f"{self.base_url}/api/v1/ads/campaigns/plans/{plan_id}/approve"
+        payload = {"approved_by": approved_by, "approval_notes": approval_notes}
+        try:
+            with httpx.Client(timeout=self.timeout, transport=self.transport) as client:
+                res = client.post(url, json=payload)
+                res.raise_for_status()
+                return res.json()
+        except Exception as e:
+            logger.error(f"Failed to approve campaign plan {plan_id}: {e}")
+            raise RuntimeError(f"Ads Module API communication error: {e}") from e
+
+    def deploy_campaign_plan(self, plan_id: str, validate_only: bool = False) -> dict:
+        url = f"{self.base_url}/api/v1/ads/campaigns/plans/{plan_id}/deploy"
+        params = {"validate_only": validate_only}
+        try:
+            with httpx.Client(timeout=self.timeout, transport=self.transport) as client:
+                res = client.post(url, params=params)
+                res.raise_for_status()
+                return res.json()
+        except Exception as e:
+            logger.error(f"Failed to deploy campaign plan {plan_id}: {e}")
+            raise RuntimeError(f"Ads Module API communication error: {e}") from e

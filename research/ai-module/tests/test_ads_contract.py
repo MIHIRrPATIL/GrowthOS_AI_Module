@@ -87,6 +87,40 @@ def create_mock_ads_server_transport() -> httpx.MockTransport:
         elif url_path == "/api/v1/ads/health":
             return httpx.Response(200, json={"status": "healthy", "service": "growthos-ads-module"})
 
+        elif url_path == "/api/v1/ads/campaigns/plan" and request.method == "POST":
+            body = json.loads(request.content)
+            return httpx.Response(200, json={
+                "plan_id": "plan_test123",
+                "workspace_id": body.get("workspace_id", "ws_test"),
+                "account_id": body.get("account_id", "8023466278"),
+                "name": "Test Search Campaign",
+                "status": "DRAFT",
+                "daily_budget_paise": int(body.get("daily_budget_inr", 2000) * 100)
+            })
+
+        elif url_path == "/api/v1/ads/campaigns/plans/plan_test123/validate" and request.method == "POST":
+            return httpx.Response(200, json={
+                "plan_id": "plan_test123",
+                "status": "AWAITING_APPROVAL",
+                "validation_errors": []
+            })
+
+        elif url_path == "/api/v1/ads/campaigns/plans/plan_test123/approve" and request.method == "POST":
+            body = json.loads(request.content)
+            return httpx.Response(200, json={
+                "plan_id": "plan_test123",
+                "status": "APPROVED",
+                "approved_by": body.get("approved_by", "admin")
+            })
+
+        elif url_path == "/api/v1/ads/campaigns/plans/plan_test123/deploy" and request.method == "POST":
+            validate_only = request.url.params.get("validate_only", "false").lower() == "true"
+            return httpx.Response(200, json={
+                "plan_id": "plan_test123",
+                "status": "APPROVED" if validate_only else "ACTIVE",
+                "deployed_campaign_id": None if validate_only else "camp_998877"
+            })
+
         return httpx.Response(404, json={"detail": "Not found"})
 
     return httpx.MockTransport(handler)
@@ -291,3 +325,37 @@ def test_evidence_linker_grounds_ad_narrative_claim():
     assert citations[0].metric_name == "ad_cpa"
     assert citations[0].is_verified is True
     assert "ad cpa increased to 175.0" in clean_text
+
+
+def test_http_ads_adapter_campaign_lifecycle_contract():
+    transport = create_mock_ads_server_transport()
+    adapter = HttpAdsAdapter(base_url="http://localhost:8001", transport=transport)
+
+    # 1. Plan campaign
+    req = {
+        "workspace_id": "tenant_dominos_qsr",
+        "account_id": "8023466278",
+        "goal_prompt": "Boost weekend pizza delivery orders in Mumbai",
+        "daily_budget_inr": 2500.0
+    }
+    plan = adapter.plan_campaign(req)
+    assert plan["plan_id"] == "plan_test123"
+    assert plan["status"] == "DRAFT"
+
+    # 2. Validate campaign
+    val = adapter.validate_campaign_plan("plan_test123")
+    assert val["status"] == "AWAITING_APPROVAL"
+
+    # 3. Approve campaign
+    appr = adapter.approve_campaign_plan("plan_test123", approved_by="ai_brain_policy")
+    assert appr["status"] == "APPROVED"
+    assert appr["approved_by"] == "ai_brain_policy"
+
+    # 4. Dry-run deploy
+    dry = adapter.deploy_campaign_plan("plan_test123", validate_only=True)
+    assert dry["status"] == "APPROVED"
+
+    # 5. Full deploy
+    live = adapter.deploy_campaign_plan("plan_test123", validate_only=False)
+    assert live["status"] == "ACTIVE"
+    assert live["deployed_campaign_id"] == "camp_998877"

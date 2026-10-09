@@ -44,3 +44,17 @@ ON ads_campaigns_daily (workspace_id, date);
 
 CREATE INDEX IF NOT EXISTS idx_ads_campaign_id 
 ON ads_campaigns_daily (campaign_id, date);
+
+CREATE TABLE IF NOT EXISTS ads_campaign_plans (
+    plan_id TEXT PRIMARY KEY,
+    workspace_id TEXT NOT NULL,
+    account_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'DRAFT',
+    plan_json TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_ads_plans_workspace
+ON ads_campaign_plans (workspace_id, status);

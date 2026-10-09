@@ -13,13 +13,19 @@ from connectors.google_ads_connector import GoogleAdsConnector
 from normalization.normalizer import AdsNormalizer
 from events.publisher import EventPublisher
 from services.sync_service import AdsSyncService
+from engines.planning_engine import CampaignPlanningEngine
+from engines.validation_engine import CampaignValidationEngine
+from services.deployment_service import CampaignDeploymentService
 from api.routes import router, AdsModuleContainer, set_container
+
+
+from connectors.base import AdsConnectorBase
 
 
 def create_app(
     config: Optional[AdsModuleConfig] = None,
     storage: Optional[SqlAdsStorageAdapter] = None,
-    connector: Optional[GoogleAdsConnector] = None
+    connector: Optional[AdsConnectorBase] = None
 ) -> FastAPI:
     cfg = config or get_config()
     db_storage = storage or SqlAdsStorageAdapter(cfg.db_url.replace("sqlite:///", ""))
@@ -34,10 +40,22 @@ def create_app(
         publisher=publisher
     )
 
+    planning_engine = CampaignPlanningEngine()
+    validation_engine = CampaignValidationEngine()
+    deployment_service = CampaignDeploymentService(
+        storage=db_storage,
+        connector=ads_connector,
+        validation_engine=validation_engine,
+        publisher=publisher
+    )
+
     container = AdsModuleContainer()
     container.storage = db_storage
     container.connector = ads_connector
     container.sync_service = sync_service
+    container.planning_engine = planning_engine
+    container.validation_engine = validation_engine
+    container.deployment_service = deployment_service
     set_container(container)
 
     app = FastAPI(

@@ -43,6 +43,25 @@ class EventPublisher:
         if self.webhook_url:
             self._post_webhook(event)
 
+    def publish(self, event_type: str, payload: Dict[str, Any]) -> None:
+        logger.info(f"Emitting domain event '{event_type}': {payload}")
+        for subscriber in self._subscribers:
+            try:
+                subscriber(payload)
+            except Exception as e:
+                logger.error(f"Error in event subscriber ({e})")
+
+        if self.webhook_url:
+            try:
+                with httpx.Client(timeout=3.0) as client:
+                    client.post(
+                        self.webhook_url,
+                        json={"event_name": event_type, "payload": payload},
+                        headers={"Content-Type": "application/json"}
+                    )
+            except Exception as e:
+                logger.debug(f"Webhook dispatch failed ({e}); ignored in offline/disconnected environments.")
+
     def _post_webhook(self, event: MetricsUpdatedEvent) -> None:
         try:
             with httpx.Client(timeout=3.0) as client:
