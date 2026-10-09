@@ -238,3 +238,10 @@ scratch/
 *.tmp
 *.bak
 *.orig
+
+# Module 3 Ads Module local files
+research/Ads-Module/.env
+research/Ads-Module/*.db
+research/Ads-Module/*.db-wal
+research/Ads-Module/*.db-shm
+

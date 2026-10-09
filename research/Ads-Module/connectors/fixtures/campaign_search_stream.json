@@ -1,0 +1,121 @@
+[
+  {
+    "campaign": {
+      "id": "10101",
+      "name": "Domino's Weekend Pizza Delivery Search",
+      "status": "ENABLED"
+    },
+    "segments": {
+      "date": "2026-10-06"
+    },
+    "metrics": {
+      "cost_micros": 4500000000,
+      "impressions": 12500,
+      "clicks": 625,
+      "conversions": 45.0,
+      "conversions_value": 22500000000
+    }
+  },
+  {
+    "campaign": {
+      "id": "10101",
+      "name": "Domino's Weekend Pizza Delivery Search",
+      "status": "ENABLED"
+    },
+    "segments": {
+      "date": "2026-10-07"
+    },
+    "metrics": {
+      "cost_micros": 5200000000,
+      "impressions": 14200,
+      "clicks": 710,
+      "conversions": 48.0,
+      "conversions_value": 24000000000
+    }
+  },
+  {
+    "campaign": {
+      "id": "10101",
+      "name": "Domino's Weekend Pizza Delivery Search",
+      "status": "ENABLED"
+    },
+    "segments": {
+      "date": "2026-10-08"
+    },
+    "metrics": {
+      "cost_micros": 6000000000,
+      "impressions": 16000,
+      "clicks": 800,
+      "conversions": 52.0,
+      "conversions_value": 26000000000
+    }
+  },
+  {
+    "campaign": {
+      "id": "10102",
+      "name": "Domino's Late Night Pizza Search",
+      "status": "ENABLED"
+    },
+    "segments": {
+      "date": "2026-10-06"
+    },
+    "metrics": {
+      "cost_micros": 2200000000,
+      "impressions": 8400,
+      "clicks": 380,
+      "conversions": 19.0,
+      "conversions_value": 9500000000
+    }
+  },
+  {
+    "campaign": {
+      "id": "10102",
+      "name": "Domino's Late Night Pizza Search",
+      "status": "ENABLED"
+    },
+    "segments": {
+      "date": "2026-10-07"
+    },
+    "metrics": {
+      "cost_micros": 2400000000,
+      "impressions": 8900,
+      "clicks": 410,
+      "conversions": 21.0,
+      "conversions_value": 10500000000
+    }
+  },
+  {
+    "campaign": {
+      "id": "10102",
+      "name": "Domino's Late Night Pizza Search",
+      "status": "ENABLED"
+    },
+    "segments": {
+      "date": "2026-10-08"
+    },
+    "metrics": {
+      "cost_micros": 2800000000,
+      "impressions": 9500,
+      "clicks": 440,
+      "conversions": 20.0,
+      "conversions_value": 10000000000
+    }
+  },
+  {
+    "campaign": {
+      "id": "10103",
+      "name": "Domino's Brand Protection Search",
+      "status": "ENABLED"
+    },
+    "segments": {
+      "date": "2026-10-08"
+    },
+    "metrics": {
+      "cost_micros": 1200000000,
+      "impressions": 25000,
+      "clicks": 2100,
+      "conversions": 140.0,
+      "conversions_value": 70000000000
+    }
+  }
+]
