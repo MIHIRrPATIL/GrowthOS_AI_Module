@@ -107,3 +107,17 @@ ON ads_conversions (workspace_id, converted_at);
 
 CREATE INDEX IF NOT EXISTS idx_ads_conv_pending
 ON ads_conversions (workspace_id, uploaded_to_google);
+
+CREATE TABLE IF NOT EXISTS ads_optimization_proposals (
+    proposal_id TEXT PRIMARY KEY,
+    workspace_id TEXT NOT NULL,
+    account_id TEXT NOT NULL,
+    proposal_type TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'PROPOSED',
+    proposal_json TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_ads_opt_workspace
+ON ads_optimization_proposals (workspace_id, status);

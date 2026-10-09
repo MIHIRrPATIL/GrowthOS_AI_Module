@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from domain.models import AccountConnection, AccountStatus, AdsCampaignDaily
 from domain.plans import CampaignPlan, PlanStatus
 from domain.attribution import ClickRecord, ConversionRecord
+from domain.optimization import OptimizationProposal, ProposalStatus
 
 
 class SqlAdsStorageAdapter:
@@ -125,6 +126,17 @@ class SqlAdsStorageAdapter:
                 conversion_action_name TEXT NOT NULL DEFAULT 'Purchases',
                 uploaded_to_google INTEGER NOT NULL DEFAULT 0,
                 uploaded_at TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS ads_optimization_proposals (
+                proposal_id TEXT PRIMARY KEY,
+                workspace_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                proposal_type TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'PROPOSED',
+                proposal_json TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
             );
             """
 
@@ -598,3 +610,80 @@ class SqlAdsStorageAdapter:
             uploaded_to_google=bool(r["uploaded_to_google"]),
             uploaded_at=r["uploaded_at"]
         )
+
+    # =========================================================================
+    # Autonomous Optimization Proposals (Phase 5)
+    # =========================================================================
+
+    def save_proposal(self, proposal: OptimizationProposal) -> None:
+        sql = """
+        INSERT INTO ads_optimization_proposals (
+            proposal_id, workspace_id, account_id, proposal_type, status, proposal_json, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(proposal_id) DO UPDATE SET
+            status = excluded.status,
+            proposal_json = excluded.proposal_json,
+            updated_at = excluded.updated_at
+        """
+        prop_json = json.dumps(proposal.model_dump())
+        now_str = datetime.now(timezone.utc).isoformat()
+        with self._get_connection() as conn:
+            conn.execute(sql, (
+                proposal.proposal_id,
+                proposal.workspace_id,
+                proposal.account_id,
+                proposal.proposal_type.value,
+                proposal.status.value,
+                prop_json,
+                proposal.created_at or now_str,
+                now_str
+            ))
+            conn.commit()
+
+    def get_proposal(self, proposal_id: str) -> Optional[OptimizationProposal]:
+        sql = "SELECT proposal_json FROM ads_optimization_proposals WHERE proposal_id = ?"
+        with self._get_connection() as conn:
+            r = conn.execute(sql, (proposal_id,)).fetchone()
+            if not r:
+                return None
+            return OptimizationProposal.model_validate(json.loads(r["proposal_json"]))
+
+    def list_proposals(
+        self,
+        workspace_id: str,
+        status: Optional[ProposalStatus] = None
+    ) -> List[OptimizationProposal]:
+        if status:
+            sql = "SELECT proposal_json FROM ads_optimization_proposals WHERE workspace_id = ? AND status = ? ORDER BY created_at DESC"
+            params = (workspace_id, status.value)
+        else:
+            sql = "SELECT proposal_json FROM ads_optimization_proposals WHERE workspace_id = ? ORDER BY created_at DESC"
+            params = (workspace_id,)
+
+        with self._get_connection() as conn:
+            rows = conn.execute(sql, params).fetchall()
+            return [OptimizationProposal.model_validate(json.loads(r["proposal_json"])) for r in rows]
+
+    def update_proposal_status(
+        self,
+        proposal_id: str,
+        status: ProposalStatus,
+        applied_at: Optional[str] = None,
+        rolled_back_at: Optional[str] = None,
+        rollback_snapshot: Optional[Dict[str, Any]] = None
+    ) -> Optional[OptimizationProposal]:
+        proposal = self.get_proposal(proposal_id)
+        if not proposal:
+            return None
+
+        proposal.status = status
+        proposal.updated_at = datetime.now(timezone.utc).isoformat()
+        if applied_at is not None:
+            proposal.applied_at = applied_at
+        if rolled_back_at is not None:
+            proposal.rolled_back_at = rolled_back_at
+        if rollback_snapshot is not None:
+            proposal.rollback_snapshot = rollback_snapshot
+
+        self.save_proposal(proposal)
+        return proposal

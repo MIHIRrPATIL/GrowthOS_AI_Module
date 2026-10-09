@@ -26,6 +26,13 @@ from services.deployment_service import CampaignDeploymentService
 from attribution.click_tracker import ClickTracker
 from attribution.conversion_matcher import ConversionMatcher
 from connectors.offline_conversion_uploader import OfflineConversionUploader
+from domain.optimization import (
+    OptimizationProposal,
+    OptimizationRequest,
+    ProposalStatus
+)
+from engines.optimization_engine import CampaignOptimizationEngine
+from services.optimization_service import OptimizationService
 
 router = APIRouter(prefix="/api/v1/ads", tags=["Ads Module"])
 
@@ -63,6 +70,8 @@ class AdsModuleContainer:
     click_tracker: ClickTracker
     conversion_matcher: ConversionMatcher
     conversion_uploader: OfflineConversionUploader
+    optimization_engine: CampaignOptimizationEngine
+    optimization_service: OptimizationService
 
 
 _container: Optional[AdsModuleContainer] = None
@@ -327,3 +336,55 @@ def list_conversions(
     container: AdsModuleContainer = Depends(get_container)
 ) -> List[ConversionRecord]:
     return container.storage.list_conversions(workspace_id=workspace_id, limit=limit)
+
+
+# =============================================================================
+# Autonomous Optimization & Policy-Gated Write-Back (Phase 5)
+# =============================================================================
+
+@router.post("/optimizations/generate", response_model=List[OptimizationProposal])
+def generate_optimizations(
+    req: OptimizationRequest,
+    container: AdsModuleContainer = Depends(get_container)
+) -> List[OptimizationProposal]:
+    """
+    Analyzes historical campaign performance and generates policy-bounded optimization proposals.
+    """
+    return container.optimization_engine.generate_proposals(req)
+
+
+@router.get("/optimizations/proposals", response_model=List[OptimizationProposal])
+def list_proposals(
+    workspace_id: str = Query(..., min_length=1),
+    status: Optional[ProposalStatus] = Query(None),
+    container: AdsModuleContainer = Depends(get_container)
+) -> List[OptimizationProposal]:
+    return container.storage.list_proposals(workspace_id=workspace_id, status=status)
+
+
+@router.post("/optimizations/proposals/{proposal_id}/apply", response_model=OptimizationProposal)
+def apply_proposal(
+    proposal_id: str,
+    container: AdsModuleContainer = Depends(get_container)
+) -> OptimizationProposal:
+    """
+    Executes optimization with safety limits (max 15% shift) and takes a rollback snapshot.
+    """
+    try:
+        return container.optimization_service.apply_proposal(proposal_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/optimizations/proposals/{proposal_id}/rollback", response_model=OptimizationProposal)
+def rollback_proposal(
+    proposal_id: str,
+    container: AdsModuleContainer = Depends(get_container)
+) -> OptimizationProposal:
+    """
+    Reverts an applied optimization proposal back to its exact pre-execution state.
+    """
+    try:
+        return container.optimization_service.rollback_proposal(proposal_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
