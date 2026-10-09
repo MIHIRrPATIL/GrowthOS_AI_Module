@@ -18,6 +18,11 @@ from .openrouter_decision_provider import OpenRouterDecisionProvider
 from .gemini_client import GeminiClient
 from .gemini_llm_adapter import GeminiLLMAdapter
 from .gemini_decision_provider import GeminiDecisionProvider
+from .http_telemetry_adapter import (
+    HttpTelemetryAdapter,
+    generate_hmac_signature,
+    verify_hmac_signature
+)
 
 __all__ = [
     "MockLoyaltyAdapter",
@@ -33,4 +38,7 @@ __all__ = [
     "GeminiClient",
     "GeminiLLMAdapter",
     "GeminiDecisionProvider",
+    "HttpTelemetryAdapter",
+    "generate_hmac_signature",
+    "verify_hmac_signature",
 ]
