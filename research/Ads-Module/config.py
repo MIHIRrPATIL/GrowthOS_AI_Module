@@ -5,7 +5,26 @@ Strictly NO emojis in code, docstrings, or logs.
 
 from typing import Optional
 import os
+from pathlib import Path
 from pydantic import BaseModel, Field
+
+
+def _load_env_file() -> None:
+    env_path = Path(__file__).parent / ".env"
+    if env_path.exists():
+        with open(env_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                k, v = line.split("=", 1)
+                k = k.strip()
+                v = v.strip().strip("'\"")
+                if k and k not in os.environ:
+                    os.environ[k] = v
+
+
+_load_env_file()
 
 
 class AdsModuleConfig(BaseModel):
