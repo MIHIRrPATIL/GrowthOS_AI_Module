@@ -180,5 +180,96 @@
     "is_eligible_for_autonomous": true,
     "accuracy_ci_lower_95": 0.9295,
     "accuracy_ci_upper_95": 0.9829
+  },
+  {
+    "provider_name": "GeminiDecisionProvider (gemini-2.5-flash)",
+    "task_type": "cart_abandonment_decision",
+    "sample_count": 10,
+    "accuracy": 0.9,
+    "macro_f1": 0.9474,
+    "calibration": {
+      "expected_calibration_error": 0.135,
+      "max_calibration_error": 0.85,
+      "brier_score": 0.0754,
+      "reliability_bins": [
+        {
+          "bin_range": "[0.0, 0.1]",
+          "count": 0,
+          "accuracy": 0.0,
+          "confidence": 0.0,
+          "gap": 0.0
+        },
+        {
+          "bin_range": "[0.1, 0.2]",
+          "count": 0,
+          "accuracy": 0.0,
+          "confidence": 0.0,
+          "gap": 0.0
+        },
+        {
+          "bin_range": "[0.2, 0.3]",
+          "count": 0,
+          "accuracy": 0.0,
+          "confidence": 0.0,
+          "gap": 0.0
+        },
+        {
+          "bin_range": "[0.3, 0.4]",
+          "count": 0,
+          "accuracy": 0.0,
+          "confidence": 0.0,
+          "gap": 0.0
+        },
+        {
+          "bin_range": "[0.4, 0.5]",
+          "count": 0,
+          "accuracy": 0.0,
+          "confidence": 0.0,
+          "gap": 0.0
+        },
+        {
+          "bin_range": "[0.5, 0.6]",
+          "count": 0,
+          "accuracy": 0.0,
+          "confidence": 0.0,
+          "gap": 0.0
+        },
+        {
+          "bin_range": "[0.6, 0.7]",
+          "count": 0,
+          "accuracy": 0.0,
+          "confidence": 0.0,
+          "gap": 0.0
+        },
+        {
+          "bin_range": "[0.7, 0.8]",
+          "count": 0,
+          "accuracy": 0.0,
+          "confidence": 0.0,
+          "gap": 0.0
+        },
+        {
+          "bin_range": "[0.8, 0.9]",
+          "count": 1,
+          "accuracy": 0.0,
+          "confidence": 0.85,
+          "gap": 0.85
+        },
+        {
+          "bin_range": "[0.9, 1.0]",
+          "count": 9,
+          "accuracy": 1.0,
+          "confidence": 0.9444,
+          "gap": 0.0556
+        }
+      ]
+    },
+    "p50_latency_ms": 3046.4,
+    "p95_latency_ms": 49065.0,
+    "p99_latency_ms": 77661.5,
+    "cost_per_1000_usd": 0.0471,
+    "is_eligible_for_autonomous": false,
+    "accuracy_ci_lower_95": 0.5958,
+    "accuracy_ci_upper_95": 0.9821
   }
 ]
