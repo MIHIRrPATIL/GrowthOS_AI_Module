@@ -183,6 +183,10 @@ ActionStatus = Literal[
     "rejected",
     "failed",
     "expired",
+    "holdout",
+    "converted",
+    "holdout_converted",
+    "holdout_expired",
     "reconciliation_needed"
 ]
 

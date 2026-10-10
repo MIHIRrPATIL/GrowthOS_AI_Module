@@ -21,7 +21,7 @@ from collections import defaultdict
 
 from ports.storage import EventStoragePort
 from domain.events import EventEnvelope
-from domain.metrics import MetricResult, MetricStatus, TimeWindow
+from domain.metrics import MetricResult, MetricStatus, TimeWindow, AdsCampaignDaily, BlendedAdMetrics
 from engines.vertical_templates import (
     get_vertical_template,
     VerticalTemplate,
@@ -548,3 +548,51 @@ class MetricsEngine:
 
         assert 0 <= numerator <= denominator, f"Ratio violation: {numerator}/{denominator}"
         return numerator, denominator
+
+    def calculate_blended_ad_metrics(
+        self,
+        ad_records: List[AdsCampaignDaily],
+        new_customers_count: int = 0,
+        attributed_revenue_paise: int = 0
+    ) -> BlendedAdMetrics:
+        """
+        Computes deterministic grounded blended advertising analytics across campaigns.
+        Calculates total spend (paise & INR), aggregate impressions, clicks, conversions,
+        blended CTR, blended CPC, blended CPA, blended ROAS, and blended CAC.
+        """
+        total_spend_paise = sum(r.spend_paise for r in ad_records)
+        total_spend_inr = round(total_spend_paise / 100.0, 2)
+        total_impressions = sum(r.impressions for r in ad_records)
+        total_clicks = sum(r.clicks for r in ad_records)
+        total_conversions = sum(r.conversions for r in ad_records)
+        conversion_value_paise = attributed_revenue_paise if attributed_revenue_paise > 0 else sum(r.conversion_value_paise for r in ad_records)
+
+        blended_ctr = round(float(total_clicks) / float(total_impressions), 4) if total_impressions > 0 else 0.0
+        blended_cpc_paise = int(round(float(total_spend_paise) / float(total_clicks))) if total_clicks > 0 else 0
+        blended_cpa_paise = int(round(float(total_spend_paise) / total_conversions)) if total_conversions > 0 else 0
+        blended_roas = round(float(conversion_value_paise) / float(total_spend_paise), 2) if total_spend_paise > 0 else 0.0
+
+        blended_cac_paise = None
+        blended_cac_inr = None
+        if new_customers_count > 0:
+            blended_cac_paise = int(round(float(total_spend_paise) / float(new_customers_count)))
+            blended_cac_inr = round(blended_cac_paise / 100.0, 2)
+
+        unique_campaigns = {r.campaign_id for r in ad_records}
+
+        return BlendedAdMetrics(
+            total_spend_paise=total_spend_paise,
+            total_spend_inr=total_spend_inr,
+            total_impressions=total_impressions,
+            total_clicks=total_clicks,
+            total_conversions=total_conversions,
+            conversion_value_paise=conversion_value_paise,
+            blended_ctr=blended_ctr,
+            blended_cpc_paise=blended_cpc_paise,
+            blended_cpa_paise=blended_cpa_paise,
+            blended_roas=blended_roas,
+            blended_cac_paise=blended_cac_paise,
+            blended_cac_inr=blended_cac_inr,
+            campaign_count=len(unique_campaigns)
+        )
+

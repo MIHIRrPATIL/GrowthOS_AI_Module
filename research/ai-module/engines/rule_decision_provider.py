@@ -354,6 +354,51 @@ class RuleDecisionProvider(DecisionPort):
                 else:
                     pred = "supported"
                     conf = 0.75
+        elif task == "cart_abandonment_decision":
+            cust = ctx.get("customer_id")
+            has_payment_fail = ctx.get("has_payment_failure", False)
+            friction_count = ctx.get("friction_events_count", 0)
+            cart_paise = ctx.get("cart_subtotal_paise", 0)
+            aov_paise = ctx.get("tenant_aov_paise", 60000)
+            idle_mins = ctx.get("idle_minutes", 0.0)
+            views = ctx.get("product_views_count", 0)
+            adds = ctx.get("cart_adds_count", 0)
+            stage = ctx.get("funnel_stage", "")
+            past_orders = ctx.get("lifetime_orders_count", 0)
+
+            if has_payment_fail or friction_count > 0:
+                pred = "RESCUE_FRICTION"
+                conf = 0.95
+            elif not cust:
+                pred = "NOOP"
+                conf = 0.95
+            else:
+                from engines.heuristic_scoring import score_purchase_propensity
+                prop = score_purchase_propensity(
+                    cart_subtotal_paise=cart_paise,
+                    tenant_aov_paise=aov_paise,
+                    product_views_count=views,
+                    cart_adds_count=adds,
+                    funnel_stage=stage,
+                    idle_minutes=idle_mins
+                )
+
+                if prop.eligibility == "SUPPRESS_ORGANIC_BUYER" or past_orders >= 5:
+                    pred = "SUPPRESS_INCENTIVE"
+                    conf = 0.92
+                elif prop.eligibility == "SUPPRESS_LOW_INTENT" or cart_paise == 0 or adds == 0:
+                    pred = "NOOP"
+                    conf = 0.90
+                elif prop.eligibility == "ELIGIBLE_FOR_INCENTIVE":
+                    if cart_paise >= 50000:  # Threshold >= INR 500 (50,000 paise)
+                        pred = "PROPOSE_WAIVER"
+                        conf = 0.90
+                    else:
+                        pred = "NOOP"
+                        conf = 0.85
+                else:
+                    pred = "NOOP"
+                    conf = 0.75
         else:
             pred = "unsupported"
             conf = 0.50

@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI_MODULE_ARCHITECTURE_AND_COMPONENTS</title>
+  <style id="theme-css">
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { background-color: #ffffff; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+                   'Helvetica Neue', Arial, sans-serif;
+      font-size: 16px;
+      max-width: 960px; /* matches GitHub / VS Code markdown preview width */
+      margin: 0 auto;
+      padding: 1em 1.5rem 4rem;
+      line-height: 1.7;
+      word-wrap: break-word;
+      color: #24292e;
+      background-color: #ffffff;
+    }
+    h1 { font-size: 2em; border-bottom: 2px solid #e1e4e8; padding-bottom: 0.3em; }
+    h2 { font-size: 1.5em; border-bottom: 1px solid #e1e4e8; padding-bottom: 0.2em; }
+    h3 { font-size: 1.25em; }
+    h1, h2, h3, h4, h5, h6 { margin-top: 1.5em; margin-bottom: 0.5em; scroll-margin-top: 1.5em; }
+    p { margin: 0.8em 0; }
+    a { color: #0366d6; }
+    a:visited { color: #6f42c1; }
+    code {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 0.875em;
+      color: #24292e;
+      background: #f6f8fa;
+      padding: 0.2em 0.4em;
+      border-radius: 3px;
+    }
+    pre {
+      border: 1px solid #e1e4e8;
+      border-radius: 6px;
+      padding: 1em 1.2em;
+      overflow-x: auto;
+    }
+    pre code { background: none; padding: 0; font-size: 0.875em; }
+    table { border-collapse: collapse; display: block; width: 100%; overflow: auto; margin: 1em 0; word-break: keep-all; }
+    th, td { border: 1px solid #dfe2e5; padding: 0.5em 1em; text-align: left; }
+    th { background: #f6f8fa; font-weight: 600; }
+    tr:nth-child(even) { background: #fafbfc; }
+    blockquote {
+      border-left: 4px solid #dfe2e5;
+      margin: 0.8em 0; /* vertical margin so consecutive blockquotes stay separate, like GitHub */
+      padding: 0.5em 1em;
+      color: #6a737d;
+      background-color: #f6f8fa;
+    }
+    blockquote > :first-child { margin-top: 0; }
+    blockquote > :last-child { margin-bottom: 0; }
+    
+    .markdown-alert {
+      padding: 0.5em 1em;
+      margin: 0.8em 0;
+      border-left: 0.25em solid #0969da;
+      color: inherit;
+    }
+    .markdown-alert > :first-child { margin-top: 0; }
+    .markdown-alert > :last-child { margin-bottom: 0; }
+    .markdown-alert-title {
+      display: flex;
+      align-items: center;
+      font-weight: 600;
+      line-height: 1;
+      margin-bottom: 0.5em;
+    }
+    .markdown-alert-title .octicon {
+      margin-right: 0.5em;
+      fill: currentColor;
+      overflow: visible;
+      vertical-align: text-bottom;
+    }
+    .markdown-alert-note { border-left-color: #0969da; }
+    .markdown-alert-note > .markdown-alert-title { color: #0969da; }
+    .markdown-alert-tip { border-left-color: #1a7f37; }
+    .markdown-alert-tip > .markdown-alert-title { color: #1a7f37; }
+    .markdown-alert-important { border-left-color: #8250df; }
+    .markdown-alert-important > .markdown-alert-title { color: #8250df; }
+    .markdown-alert-warning { border-left-color: #9a6700; }
+    .markdown-alert-warning > .markdown-alert-title { color: #9a6700; }
+    .markdown-alert-caution { border-left-color: #d1242f; }
+    .markdown-alert-caution > .markdown-alert-title { color: #d1242f; }
+    hr { border: none; border-top: 2px solid #e1e4e8; margin: 2em 0; }
+    img { max-width: 100%; height: auto; }
+    .plantuml-diagram { margin: 1.5em 0; text-align: left; width: fit-content; }
+    .plantuml-diagram svg { height: auto; }
+    .mermaid-diagram { margin: 1.5em 0; text-align: left; width: fit-content; }
+    .mermaid-diagram pre.mermaid { visibility: hidden; overflow: visible; border: none; padding: 0; }
+    .mermaid-diagram svg { visibility: visible; height: auto; }
+    .mermaid-error { visibility: visible; color: #d32f2f; border-left: 3px solid #d32f2f; padding: 0.5em; white-space: pre-wrap; font-size: 0.85em; }
+    .d2-diagram { margin: 1.5em 0; text-align: left; }
+    .d2-diagram svg { height: auto; }
+    .d2-error { color: #d32f2f; border-left: 3px solid #d32f2f; padding: 0.5em; white-space: pre-wrap; font-size: 0.85em; }
+    .katex { color: inherit; }
+    .katex-display { margin: 1em 0; overflow-x: auto; overflow-y: hidden; }
+    body.preview { margin: 0; max-width: none; padding: 1em 26px; }
+    .hljs { background: #f6f8fa; color: #24292e; }
+    .hljs-comment, .hljs-prolog, .hljs-doctype, .hljs-cdata { color: #6a737d; font-style: italic; }
+    .hljs-keyword, .hljs-selector-tag { color: #d73a49; }
+    .hljs-string, .hljs-doctag { color: #032f62; }
+    .hljs-number, .hljs-literal { color: #005cc5; }
+    .hljs-attr, .hljs-attribute { color: #005cc5; }
+    .hljs-name, .hljs-tag, .hljs-selector-id, .hljs-selector-class { color: #22863a; }
+    .hljs-title, .hljs-section, .hljs-function { color: #6f42c1; font-weight: bold; }
+    .hljs-built_in, .hljs-type { color: #e36209; }
+    .hljs-symbol, .hljs-bullet, .hljs-link { color: #0366d6; }
+    .hljs-meta { color: #e36209; }
+    .hljs-addition { background: #e6ffed; color: #22863a; }
+    .hljs-deletion { background: #ffeef0; color: #b31d28; }
+    .hljs-strong { font-weight: bold; }
+    .hljs-emphasis { font-style: italic; }
+    #toc-sidebar { background-color: #ffffff; color: #24292e; }
+    #toc-sidebar::before { background-color: #e1e4e8; }
+    #toc-sidebar .toc-toggle { color: #24292e; }
+    #toc-sidebar a { color: #0366d6; }
+    #toc-sidebar a:hover { background: #f6f8fa; }
+    #toc-sidebar a.active { color: #0366d6; border-left-color: #0366d6; }
+    #nav-toolbar button { color: #24292e; }
+    #nav-toolbar button:hover, #nav-toolbar button.active { background: #f6f8fa; }
+  </style>
+  <style id="katex-css">@font-face{font-display:block;font-family:KaTeX_AMS;font-style:normal;font-weight:400;src:url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_AMS-Regular.woff2) format("woff2"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_AMS-Regular.woff) format("woff"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_AMS-Regular.ttf) format("truetype")}@font-face{font-display:block;font-family:KaTeX_Caligraphic;font-style:normal;font-weight:700;src:url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Caligraphic-Bold.woff2) format("woff2"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Caligraphic-Bold.woff) format("woff"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Caligraphic-Bold.ttf) format("truetype")}@font-face{font-display:block;font-family:KaTeX_Caligraphic;font-style:normal;font-weight:400;src:url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Caligraphic-Regular.woff2) format("woff2"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Caligraphic-Regular.woff) format("woff"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Caligraphic-Regular.ttf) format("truetype")}@font-face{font-display:block;font-family:KaTeX_Fraktur;font-style:normal;font-weight:700;src:url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Fraktur-Bold.woff2) format("woff2"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Fraktur-Bold.woff) format("woff"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Fraktur-Bold.ttf) format("truetype")}@font-face{font-display:block;font-family:KaTeX_Fraktur;font-style:normal;font-weight:400;src:url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Fraktur-Regular.woff2) format("woff2"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Fraktur-Regular.woff) format("woff"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Fraktur-Regular.ttf) format("truetype")}@font-face{font-display:block;font-family:KaTeX_Main;font-style:normal;font-weight:700;src:url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Main-Bold.woff2) format("woff2"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Main-Bold.woff) format("woff"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Main-Bold.ttf) format("truetype")}@font-face{font-display:block;font-family:KaTeX_Main;font-style:italic;font-weight:700;src:url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Main-BoldItalic.woff2) format("woff2"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Main-BoldItalic.woff) format("woff"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Main-BoldItalic.ttf) format("truetype")}@font-face{font-display:block;font-family:KaTeX_Main;font-style:italic;font-weight:400;src:url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Main-Italic.woff2) format("woff2"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Main-Italic.woff) format("woff"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Main-Italic.ttf) format("truetype")}@font-face{font-display:block;font-family:KaTeX_Main;font-style:normal;font-weight:400;src:url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Main-Regular.woff2) format("woff2"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Main-Regular.woff) format("woff"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Main-Regular.ttf) format("truetype")}@font-face{font-display:block;font-family:KaTeX_Math;font-style:italic;font-weight:700;src:url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Math-BoldItalic.woff2) format("woff2"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Math-BoldItalic.woff) format("woff"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Math-BoldItalic.ttf) format("truetype")}@font-face{font-display:block;font-family:KaTeX_Math;font-style:italic;font-weight:400;src:url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Math-Italic.woff2) format("woff2"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Math-Italic.woff) format("woff"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Math-Italic.ttf) format("truetype")}@font-face{font-display:block;font-family:"KaTeX_SansSerif";font-style:normal;font-weight:700;src:url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_SansSerif-Bold.woff2) format("woff2"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_SansSerif-Bold.woff) format("woff"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_SansSerif-Bold.ttf) format("truetype")}@font-face{font-display:block;font-family:"KaTeX_SansSerif";font-style:italic;font-weight:400;src:url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_SansSerif-Italic.woff2) format("woff2"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_SansSerif-Italic.woff) format("woff"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_SansSerif-Italic.ttf) format("truetype")}@font-face{font-display:block;font-family:"KaTeX_SansSerif";font-style:normal;font-weight:400;src:url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_SansSerif-Regular.woff2) format("woff2"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_SansSerif-Regular.woff) format("woff"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_SansSerif-Regular.ttf) format("truetype")}@font-face{font-display:block;font-family:KaTeX_Script;font-style:normal;font-weight:400;src:url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Script-Regular.woff2) format("woff2"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Script-Regular.woff) format("woff"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Script-Regular.ttf) format("truetype")}@font-face{font-display:block;font-family:KaTeX_Size1;font-style:normal;font-weight:400;src:url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Size1-Regular.woff2) format("woff2"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Size1-Regular.woff) format("woff"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Size1-Regular.ttf) format("truetype")}@font-face{font-display:block;font-family:KaTeX_Size2;font-style:normal;font-weight:400;src:url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Size2-Regular.woff2) format("woff2"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Size2-Regular.woff) format("woff"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Size2-Regular.ttf) format("truetype")}@font-face{font-display:block;font-family:KaTeX_Size3;font-style:normal;font-weight:400;src:url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Size3-Regular.woff2) format("woff2"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Size3-Regular.woff) format("woff"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Size3-Regular.ttf) format("truetype")}@font-face{font-display:block;font-family:KaTeX_Size4;font-style:normal;font-weight:400;src:url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Size4-Regular.woff2) format("woff2"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Size4-Regular.woff) format("woff"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Size4-Regular.ttf) format("truetype")}@font-face{font-display:block;font-family:KaTeX_Typewriter;font-style:normal;font-weight:400;src:url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Typewriter-Regular.woff2) format("woff2"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Typewriter-Regular.woff) format("woff"),url(https://cdn.jsdelivr.net/npm/katex@0.16.35/dist/fonts/KaTeX_Typewriter-Regular.ttf) format("truetype")}.katex{font:normal 1.21em KaTeX_Main,Times New Roman,serif;line-height:1.2;position:relative;text-indent:0;text-rendering:auto}.katex *{-ms-high-contrast-adjust:none!important;border-color:currentColor}.katex .katex-version:after{content:"0.16.47"}.katex .katex-mathml{border:0;-webkit-clip-path:inset(50%);clip-path:inset(50%);height:1px;overflow:hidden;padding:0;position:absolute;width:1px}.katex .katex-html>.newline{display:block}.katex .base{position:relative;white-space:nowrap;width:-webkit-min-content;width:-moz-min-content;width:min-content}.katex .base,.katex .strut{display:inline-block}.katex .textbf{font-weight:700}.katex .textit{font-style:italic}.katex .textrm{font-family:KaTeX_Main}.katex .textsf{font-family:KaTeX_SansSerif}.katex .texttt{font-family:KaTeX_Typewriter}.katex .mathnormal{font-family:KaTeX_Math;font-style:italic}.katex .mathit{font-family:KaTeX_Main;font-style:italic}.katex .mathrm{font-style:normal}.katex .mathbf{font-family:KaTeX_Main;font-weight:700}.katex .boldsymbol{font-family:KaTeX_Math;font-style:italic;font-weight:700}.katex .amsrm,.katex .mathbb,.katex .textbb{font-family:KaTeX_AMS}.katex .mathcal{font-family:KaTeX_Caligraphic}.katex .mathfrak,.katex .textfrak{font-family:KaTeX_Fraktur}.katex .mathboldfrak,.katex .textboldfrak{font-family:KaTeX_Fraktur;font-weight:700}.katex .mathtt{font-family:KaTeX_Typewriter}.katex .mathscr,.katex .textscr{font-family:KaTeX_Script}.katex .mathsf,.katex .textsf{font-family:KaTeX_SansSerif}.katex .mathboldsf,.katex .textboldsf{font-family:KaTeX_SansSerif;font-weight:700}.katex .mathitsf,.katex .mathsfit,.katex .textitsf{font-family:KaTeX_SansSerif;font-style:italic}.katex .mainrm{font-family:KaTeX_Main;font-style:normal}.katex .vlist-t{border-collapse:collapse;display:inline-table;table-layout:fixed}.katex .vlist-r{display:table-row}.katex .vlist{display:table-cell;position:relative;vertical-align:bottom}.katex .vlist>span{display:block;height:0;position:relative}.katex .vlist>span>span{display:inline-block}.katex .vlist>span>.pstrut{overflow:hidden;width:0}.katex .vlist-t2{margin-right:-2px}.katex .vlist-s{display:table-cell;font-size:1px;min-width:2px;vertical-align:bottom;width:2px}.katex .vbox{align-items:baseline;display:inline-flex;flex-direction:column}.katex .hbox{width:100%}.katex .hbox,.katex .thinbox{display:inline-flex;flex-direction:row}.katex .thinbox{max-width:0;width:0}.katex .msupsub{text-align:left}.katex .mfrac>span>span{text-align:center}.katex .mfrac .frac-line{border-bottom-style:solid;display:inline-block;width:100%}.katex .hdashline,.katex .hline,.katex .mfrac .frac-line,.katex .overline .overline-line,.katex .rule,.katex .underline .underline-line{min-height:1px}.katex .mspace{display:inline-block}.katex .smash{display:inline;line-height:0}.katex .clap,.katex .llap,.katex .rlap{position:relative;width:0}.katex .clap>.inner,.katex .llap>.inner,.katex .rlap>.inner{position:absolute}.katex .clap>.fix,.katex .llap>.fix,.katex .rlap>.fix{display:inline-block}.katex .llap>.inner{right:0}.katex .clap>.inner,.katex .rlap>.inner{left:0}.katex .clap>.inner>span{margin-left:-50%;margin-right:50%}.katex .rule{border:0 solid;display:inline-block;position:relative}.katex .hline,.katex .overline .overline-line,.katex .underline .underline-line{border-bottom-style:solid;display:inline-block;width:100%}.katex .hdashline{border-bottom-style:dashed;display:inline-block;width:100%}.katex .sqrt>.root{margin-left:.2777777778em;margin-right:-.5555555556em}.katex .fontsize-ensurer.reset-size1.size1,.katex .sizing.reset-size1.size1{font-size:1em}.katex .fontsize-ensurer.reset-size1.size2,.katex .sizing.reset-size1.size2{font-size:1.2em}.katex .fontsize-ensurer.reset-size1.size3,.katex .sizing.reset-size1.size3{font-size:1.4em}.katex .fontsize-ensurer.reset-size1.size4,.katex .sizing.reset-size1.size4{font-size:1.6em}.katex .fontsize-ensurer.reset-size1.size5,.katex .sizing.reset-size1.size5{font-size:1.8em}.katex .fontsize-ensurer.reset-size1.size6,.katex .sizing.reset-size1.size6{font-size:2em}.katex .fontsize-ensurer.reset-size1.size7,.katex .sizing.reset-size1.size7{font-size:2.4em}.katex .fontsize-ensurer.reset-size1.size8,.katex .sizing.reset-size1.size8{font-size:2.88em}.katex .fontsize-ensurer.reset-size1.size9,.katex .sizing.reset-size1.size9{font-size:3.456em}.katex .fontsize-ensurer.reset-size1.size10,.katex .sizing.reset-size1.size10{font-size:4.148em}.katex .fontsize-ensurer.reset-size1.size11,.katex .sizing.reset-size1.size11{font-size:4.976em}.katex .fontsize-ensurer.reset-size2.size1,.katex .sizing.reset-size2.size1{font-size:.8333333333em}.katex .fontsize-ensurer.reset-size2.size2,.katex .sizing.reset-size2.size2{font-size:1em}.katex .fontsize-ensurer.reset-size2.size3,.katex .sizing.reset-size2.size3{font-size:1.1666666667em}.katex .fontsize-ensurer.reset-size2.size4,.katex .sizing.reset-size2.size4{font-size:1.3333333333em}.katex .fontsize-ensurer.reset-size2.size5,.katex .sizing.reset-size2.size5{font-size:1.5em}.katex .fontsize-ensurer.reset-size2.size6,.katex .sizing.reset-size2.size6{font-size:1.6666666667em}.katex .fontsize-ensurer.reset-size2.size7,.katex .sizing.reset-size2.size7{font-size:2em}.katex .fontsize-ensurer.reset-size2.size8,.katex .sizing.reset-size2.size8{font-size:2.4em}.katex .fontsize-ensurer.reset-size2.size9,.katex .sizing.reset-size2.size9{font-size:2.88em}.katex .fontsize-ensurer.reset-size2.size10,.katex .sizing.reset-size2.size10{font-size:3.4566666667em}.katex .fontsize-ensurer.reset-size2.size11,.katex .sizing.reset-size2.size11{font-size:4.1466666667em}.katex .fontsize-ensurer.reset-size3.size1,.katex .sizing.reset-size3.size1{font-size:.7142857143em}.katex .fontsize-ensurer.reset-size3.size2,.katex .sizing.reset-size3.size2{font-size:.8571428571em}.katex .fontsize-ensurer.reset-size3.size3,.katex .sizing.reset-size3.size3{font-size:1em}.katex .fontsize-ensurer.reset-size3.size4,.katex .sizing.reset-size3.size4{font-size:1.1428571429em}.katex .fontsize-ensurer.reset-size3.size5,.katex .sizing.reset-size3.size5{font-size:1.2857142857em}.katex .fontsize-ensurer.reset-size3.size6,.katex .sizing.reset-size3.size6{font-size:1.4285714286em}.katex .fontsize-ensurer.reset-size3.size7,.katex .sizing.reset-size3.size7{font-size:1.7142857143em}.katex .fontsize-ensurer.reset-size3.size8,.katex .sizing.reset-size3.size8{font-size:2.0571428571em}.katex .fontsize-ensurer.reset-size3.size9,.katex .sizing.reset-size3.size9{font-size:2.4685714286em}.katex .fontsize-ensurer.reset-size3.size10,.katex .sizing.reset-size3.size10{font-size:2.9628571429em}.katex .fontsize-ensurer.reset-size3.size11,.katex .sizing.reset-size3.size11{font-size:3.5542857143em}.katex .fontsize-ensurer.reset-size4.size1,.katex .sizing.reset-size4.size1{font-size:.625em}.katex .fontsize-ensurer.reset-size4.size2,.katex .sizing.reset-size4.size2{font-size:.75em}.katex .fontsize-ensurer.reset-size4.size3,.katex .sizing.reset-size4.size3{font-size:.875em}.katex .fontsize-ensurer.reset-size4.size4,.katex .sizing.reset-size4.size4{font-size:1em}.katex .fontsize-ensurer.reset-size4.size5,.katex .sizing.reset-size4.size5{font-size:1.125em}.katex .fontsize-ensurer.reset-size4.size6,.katex .sizing.reset-size4.size6{font-size:1.25em}.katex .fontsize-ensurer.reset-size4.size7,.katex .sizing.reset-size4.size7{font-size:1.5em}.katex .fontsize-ensurer.reset-size4.size8,.katex .sizing.reset-size4.size8{font-size:1.8em}.katex .fontsize-ensurer.reset-size4.size9,.katex .sizing.reset-size4.size9{font-size:2.16em}.katex .fontsize-ensurer.reset-size4.size10,.katex .sizing.reset-size4.size10{font-size:2.5925em}.katex .fontsize-ensurer.reset-size4.size11,.katex .sizing.reset-size4.size11{font-size:3.11em}.katex .fontsize-ensurer.reset-size5.size1,.katex .sizing.reset-size5.size1{font-size:.5555555556em}.katex .fontsize-ensurer.reset-size5.size2,.katex .sizing.reset-size5.size2{font-size:.6666666667em}.katex .fontsize-ensurer.reset-size5.size3,.katex .sizing.reset-size5.size3{font-size:.7777777778em}.katex .fontsize-ensurer.reset-size5.size4,.katex .sizing.reset-size5.size4{font-size:.8888888889em}.katex .fontsize-ensurer.reset-size5.size5,.katex .sizing.reset-size5.size5{font-size:1em}.katex .fontsize-ensurer.reset-size5.size6,.katex .sizing.reset-size5.size6{font-size:1.1111111111em}.katex .fontsize-ensurer.reset-size5.size7,.katex .sizing.reset-size5.size7{font-size:1.3333333333em}.katex .fontsize-ensurer.reset-size5.size8,.katex .sizing.reset-size5.size8{font-size:1.6em}.katex .fontsize-ensurer.reset-size5.size9,.katex .sizing.reset-size5.size9{font-size:1.92em}.katex .fontsize-ensurer.reset-size5.size10,.katex .sizing.reset-size5.size10{font-size:2.3044444444em}.katex .fontsize-ensurer.reset-size5.size11,.katex .sizing.reset-size5.size11{font-size:2.7644444444em}.katex .fontsize-ensurer.reset-size6.size1,.katex .sizing.reset-size6.size1{font-size:.5em}.katex .fontsize-ensurer.reset-size6.size2,.katex .sizing.reset-size6.size2{font-size:.6em}.katex .fontsize-ensurer.reset-size6.size3,.katex .sizing.reset-size6.size3{font-size:.7em}.katex .fontsize-ensurer.reset-size6.size4,.katex .sizing.reset-size6.size4{font-size:.8em}.katex .fontsize-ensurer.reset-size6.size5,.katex .sizing.reset-size6.size5{font-size:.9em}.katex .fontsize-ensurer.reset-size6.size6,.katex .sizing.reset-size6.size6{font-size:1em}.katex .fontsize-ensurer.reset-size6.size7,.katex .sizing.reset-size6.size7{font-size:1.2em}.katex .fontsize-ensurer.reset-size6.size8,.katex .sizing.reset-size6.size8{font-size:1.44em}.katex .fontsize-ensurer.reset-size6.size9,.katex .sizing.reset-size6.size9{font-size:1.728em}.katex .fontsize-ensurer.reset-size6.size10,.katex .sizing.reset-size6.size10{font-size:2.074em}.katex .fontsize-ensurer.reset-size6.size11,.katex .sizing.reset-size6.size11{font-size:2.488em}.katex .fontsize-ensurer.reset-size7.size1,.katex .sizing.reset-size7.size1{font-size:.4166666667em}.katex .fontsize-ensurer.reset-size7.size2,.katex .sizing.reset-size7.size2{font-size:.5em}.katex .fontsize-ensurer.reset-size7.size3,.katex .sizing.reset-size7.size3{font-size:.5833333333em}.katex .fontsize-ensurer.reset-size7.size4,.katex .sizing.reset-size7.size4{font-size:.6666666667em}.katex .fontsize-ensurer.reset-size7.size5,.katex .sizing.reset-size7.size5{font-size:.75em}.katex .fontsize-ensurer.reset-size7.size6,.katex .sizing.reset-size7.size6{font-size:.8333333333em}.katex .fontsize-ensurer.reset-size7.size7,.katex .sizing.reset-size7.size7{font-size:1em}.katex .fontsize-ensurer.reset-size7.size8,.katex .sizing.reset-size7.size8{font-size:1.2em}.katex .fontsize-ensurer.reset-size7.size9,.katex .sizing.reset-size7.size9{font-size:1.44em}.katex .fontsize-ensurer.reset-size7.size10,.katex .sizing.reset-size7.size10{font-size:1.7283333333em}.katex .fontsize-ensurer.reset-size7.size11,.katex .sizing.reset-size7.size11{font-size:2.0733333333em}.katex .fontsize-ensurer.reset-size8.size1,.katex .sizing.reset-size8.size1{font-size:.3472222222em}.katex .fontsize-ensurer.reset-size8.size2,.katex .sizing.reset-size8.size2{font-size:.4166666667em}.katex .fontsize-ensurer.reset-size8.size3,.katex .sizing.reset-size8.size3{font-size:.4861111111em}.katex .fontsize-ensurer.reset-size8.size4,.katex .sizing.reset-size8.size4{font-size:.5555555556em}.katex .fontsize-ensurer.reset-size8.size5,.katex .sizing.reset-size8.size5{font-size:.625em}.katex .fontsize-ensurer.reset-size8.size6,.katex .sizing.reset-size8.size6{font-size:.6944444444em}.katex .fontsize-ensurer.reset-size8.size7,.katex .sizing.reset-size8.size7{font-size:.8333333333em}.katex .fontsize-ensurer.reset-size8.size8,.katex .sizing.reset-size8.size8{font-size:1em}.katex .fontsize-ensurer.reset-size8.size9,.katex .sizing.reset-size8.size9{font-size:1.2em}.katex .fontsize-ensurer.reset-size8.size10,.katex .sizing.reset-size8.size10{font-size:1.4402777778em}.katex .fontsize-ensurer.reset-size8.size11,.katex .sizing.reset-size8.size11{font-size:1.7277777778em}.katex .fontsize-ensurer.reset-size9.size1,.katex .sizing.reset-size9.size1{font-size:.2893518519em}.katex .fontsize-ensurer.reset-size9.size2,.katex .sizing.reset-size9.size2{font-size:.3472222222em}.katex .fontsize-ensurer.reset-size9.size3,.katex .sizing.reset-size9.size3{font-size:.4050925926em}.katex .fontsize-ensurer.reset-size9.size4,.katex .sizing.reset-size9.size4{font-size:.462962963em}.katex .fontsize-ensurer.reset-size9.size5,.katex .sizing.reset-size9.size5{font-size:.5208333333em}.katex .fontsize-ensurer.reset-size9.size6,.katex .sizing.reset-size9.size6{font-size:.5787037037em}.katex .fontsize-ensurer.reset-size9.size7,.katex .sizing.reset-size9.size7{font-size:.6944444444em}.katex .fontsize-ensurer.reset-size9.size8,.katex .sizing.reset-size9.size8{font-size:.8333333333em}.katex .fontsize-ensurer.reset-size9.size9,.katex .sizing.reset-size9.size9{font-size:1em}.katex .fontsize-ensurer.reset-size9.size10,.katex .sizing.reset-size9.size10{font-size:1.2002314815em}.katex .fontsize-ensurer.reset-size9.size11,.katex .sizing.reset-size9.size11{font-size:1.4398148148em}.katex .fontsize-ensurer.reset-size10.size1,.katex .sizing.reset-size10.size1{font-size:.2410800386em}.katex .fontsize-ensurer.reset-size10.size2,.katex .sizing.reset-size10.size2{font-size:.2892960463em}.katex .fontsize-ensurer.reset-size10.size3,.katex .sizing.reset-size10.size3{font-size:.337512054em}.katex .fontsize-ensurer.reset-size10.size4,.katex .sizing.reset-size10.size4{font-size:.3857280617em}.katex .fontsize-ensurer.reset-size10.size5,.katex .sizing.reset-size10.size5{font-size:.4339440694em}.katex .fontsize-ensurer.reset-size10.size6,.katex .sizing.reset-size10.size6{font-size:.4821600771em}.katex .fontsize-ensurer.reset-size10.size7,.katex .sizing.reset-size10.size7{font-size:.5785920926em}.katex .fontsize-ensurer.reset-size10.size8,.katex .sizing.reset-size10.size8{font-size:.6943105111em}.katex .fontsize-ensurer.reset-size10.size9,.katex .sizing.reset-size10.size9{font-size:.8331726133em}.katex .fontsize-ensurer.reset-size10.size10,.katex .sizing.reset-size10.size10{font-size:1em}.katex .fontsize-ensurer.reset-size10.size11,.katex .sizing.reset-size10.size11{font-size:1.1996142719em}.katex .fontsize-ensurer.reset-size11.size1,.katex .sizing.reset-size11.size1{font-size:.2009646302em}.katex .fontsize-ensurer.reset-size11.size2,.katex .sizing.reset-size11.size2{font-size:.2411575563em}.katex .fontsize-ensurer.reset-size11.size3,.katex .sizing.reset-size11.size3{font-size:.2813504823em}.katex .fontsize-ensurer.reset-size11.size4,.katex .sizing.reset-size11.size4{font-size:.3215434084em}.katex .fontsize-ensurer.reset-size11.size5,.katex .sizing.reset-size11.size5{font-size:.3617363344em}.katex .fontsize-ensurer.reset-size11.size6,.katex .sizing.reset-size11.size6{font-size:.4019292605em}.katex .fontsize-ensurer.reset-size11.size7,.katex .sizing.reset-size11.size7{font-size:.4823151125em}.katex .fontsize-ensurer.reset-size11.size8,.katex .sizing.reset-size11.size8{font-size:.578778135em}.katex .fontsize-ensurer.reset-size11.size9,.katex .sizing.reset-size11.size9{font-size:.6945337621em}.katex .fontsize-ensurer.reset-size11.size10,.katex .sizing.reset-size11.size10{font-size:.8336012862em}.katex .fontsize-ensurer.reset-size11.size11,.katex .sizing.reset-size11.size11{font-size:1em}.katex .delimsizing.size1{font-family:KaTeX_Size1}.katex .delimsizing.size2{font-family:KaTeX_Size2}.katex .delimsizing.size3{font-family:KaTeX_Size3}.katex .delimsizing.size4{font-family:KaTeX_Size4}.katex .delimsizing.mult .delim-size1>span{font-family:KaTeX_Size1}.katex .delimsizing.mult .delim-size4>span{font-family:KaTeX_Size4}.katex .nulldelimiter{display:inline-block;width:.12em}.katex .delimcenter,.katex .op-symbol{position:relative}.katex .op-symbol.small-op{font-family:KaTeX_Size1}.katex .op-symbol.large-op{font-family:KaTeX_Size2}.katex .accent>.vlist-t,.katex .op-limits>.vlist-t{text-align:center}.katex .accent .accent-body{position:relative}.katex .accent .accent-body:not(.accent-full){width:0}.katex .overlay{display:block}.katex .mtable .vertical-separator{display:inline-block;min-width:1px}.katex .mtable .arraycolsep{display:inline-block}.katex .mtable .col-align-c>.vlist-t{text-align:center}.katex .mtable .col-align-l>.vlist-t{text-align:left}.katex .mtable .col-align-r>.vlist-t{text-align:right}.katex .svg-align{text-align:left}.katex svg{fill:currentColor;stroke:currentColor;display:block;height:inherit;position:absolute;width:100%}.katex svg path{stroke:none}.katex svg{fill-rule:nonzero;fill-opacity:1;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1}.katex img{border-style:none;max-height:none;max-width:none;min-height:0;min-width:0}.katex .stretchy{display:block;overflow:hidden;position:relative;width:100%}.katex .stretchy:after,.katex .stretchy:before{content:""}.katex .hide-tail{overflow:hidden;position:relative;width:100%}.katex .halfarrow-left{left:0;overflow:hidden;position:absolute;width:50.2%}.katex .halfarrow-right{overflow:hidden;position:absolute;right:0;width:50.2%}.katex .brace-left{left:0;overflow:hidden;position:absolute;width:25.1%}.katex .brace-center{left:25%;overflow:hidden;position:absolute;width:50%}.katex .brace-right{overflow:hidden;position:absolute;right:0;width:25.1%}.katex .x-arrow-pad{padding:0 .5em}.katex .cd-arrow-pad{padding:0 .55556em 0 .27778em}.katex .mover,.katex .munder,.katex .x-arrow{text-align:center}.katex .boxpad{padding:0 .3em}.katex .fbox,.katex .fcolorbox{border:.04em solid;box-sizing:border-box}.katex .cancel-pad{padding:0 .2em}.katex .cancel-lap{margin-left:-.2em;margin-right:-.2em}.katex .sout{border-bottom-style:solid;border-bottom-width:.08em}.katex .angl{border-right:.049em solid;border-top:.049em solid;box-sizing:border-box;margin-right:.03889em}.katex .anglpad{padding:0 .03889em}.katex .eqn-num:before{content:"(" counter(katexEqnNo) ")";counter-increment:katexEqnNo}.katex .mml-eqn-num:before{content:"(" counter(mmlEqnNo) ")";counter-increment:mmlEqnNo}.katex .mtr-glue{width:50%}.katex .cd-vert-arrow{display:inline-block;position:relative}.katex .cd-label-left{display:inline-block;position:absolute;right:calc(50% + .3em);text-align:left}.katex .cd-label-right{display:inline-block;left:calc(50% + .3em);position:absolute;text-align:right}.katex-display{display:block;margin:1em 0;text-align:center}.katex-display>.katex{display:block;text-align:center;white-space:nowrap}.katex-display>.katex>.katex-html{display:block;position:relative}.katex-display>.katex>.katex-html>.tag{position:absolute;right:0}.katex-display.leqno>.katex>.katex-html>.tag{left:0;right:auto}.katex-display.fleqn>.katex{padding-left:2em;text-align:left}body{counter-reset:katexEqnNo mmlEqnNo}
+</style>
+  <style>body{max-width:none;margin:0}.plantuml-diagram svg{max-width:100%;height:auto!important}.d2-diagram svg{max-width:100%;height:auto!important}pre.mermaid svg{max-width:100%!important;height:auto}img{max-width:100%;height:auto}table{width:100%;table-layout:fixed}table td,table th{word-break:break-word;overflow-wrap:break-word}</style>
+</head>
+<body>
+<!-- NOTE: This ID is also referenced in src/webview/scroll-sync-webview.ts (applyPendingBodyUpdate). -->
+<div id="preview-content">
+<h1 id="growthos-ai-module-ai-growth-brain-architecture-components-and-technical-specification">GrowthOS AI Module (AI Growth Brain): Architecture, Components, and Technical Specification</h1>
+<p>This document provides a comprehensive technical breakdown of every component in the GrowthOS AI Module (Module 4, AI Growth Brain). Each component is analyzed across three dimensions:</p>
+<ul>
+<li><strong>WHAT</strong>: Definition, system role, inputs, outputs, and contracts.</li>
+<li><strong>HOW</strong>: Implementation details, algorithms, data structures, and state transitions.</li>
+<li><strong>WHY</strong>: Architectural rationale, platform constraints, mathematical invariants, anti-hallucination guarantees, and design trade-offs.</li>
+</ul>
+<hr>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol>
+<li><a href="#1-architectural-overview--core-invariants">Architectural Overview &amp; Core Invariants</a></li>
+<li><a href="#2-domain-layer-domain">Domain Layer (<code>domain/</code>)</a>
+<ul>
+<li><a href="#21-telemetry--event-envelopes-domaineventspy-domaintelemetrypy">2.1 Telemetry &amp; Event Envelopes (<code>domain/events.py</code>, <code>domain/telemetry.py</code>)</a></li>
+<li><a href="#22-metrics--digest-contracts-domainmetricspy">2.2 Metrics &amp; Digest Contracts (<code>domain/metrics.py</code>)</a></li>
+<li><a href="#23-natural-language-processing-contracts-domainnlppy">2.3 Natural Language Processing Contracts (<code>domain/nlp.py</code>)</a></li>
+<li><a href="#24-actions-policies--audit-models-domainactionspy">2.4 Actions, Policies &amp; Audit Models (<code>domain/actions.py</code>)</a></li>
+<li><a href="#25-reversible-identity-graph-domainidentitypy">2.5 Reversible Identity Graph (<code>domain/identity.py</code>)</a></li>
+</ul>
+</li>
+<li><a href="#3-analytical--decision-engines-engines">Analytical &amp; Decision Engines (<code>engines/</code>)</a>
+<ul>
+<li><a href="#31-grounded-deterministic-metrics-engine-enginesmetrics_enginepy">3.1 Grounded Deterministic Metrics Engine (<code>engines/metrics_engine.py</code>)</a></li>
+<li><a href="#32-deterministic-digest--anomaly-engine-enginesdigest_enginepy">3.2 Deterministic Digest &amp; Anomaly Engine (<code>engines/digest_engine.py</code>)</a></li>
+<li><a href="#33-anti-hallucination-evidence-linker-enginesevidence_linkerpy">3.3 Anti-Hallucination Evidence Linker (<code>engines/evidence_linker.py</code>)</a></li>
+<li><a href="#34-natural-language-query-engine-enginesnl_query_enginepy">3.4 Natural Language Query Engine (<code>engines/nl_query_engine.py</code>)</a></li>
+<li><a href="#35-deterministic-policy-engine-enginespolicy_enginepy">3.5 Deterministic Policy Engine (<code>engines/policy_engine.py</code>)</a></li>
+<li><a href="#36-digest-explanation-engine-enginesdigest_explanation_enginepy">3.6 Digest Explanation Engine (<code>engines/digest_explanation_engine.py</code>)</a></li>
+<li><a href="#37-heuristic-scoring-engine-enginesheuristic_scoringpy">3.7 Heuristic Scoring Engine (<code>engines/heuristic_scoring.py</code>)</a></li>
+<li><a href="#38-vertical-industry-templates-enginesvertical_templatespy">3.8 Vertical Industry Templates (<code>engines/vertical_templates.py</code>)</a></li>
+</ul>
+</li>
+<li><a href="#4-application-services-services">Application Services (<code>services/</code>)</a>
+<ul>
+<li><a href="#41-action-orchestrator-service-servicesaction_orchestratorpy">4.1 Action Orchestrator Service (<code>services/action_orchestrator.py</code>)</a></li>
+<li><a href="#42-24-hour-attribution-closing-worker-servicesattribution_closing_workerpy">4.2 24-Hour Attribution Closing Worker (<code>services/attribution_closing_worker.py</code>)</a></li>
+<li><a href="#43-idle-cart-sweep-worker-servicesidle_cart_sweep_workerpy">4.3 Idle Cart Sweep Worker (<code>services/idle_cart_sweep_worker.py</code>)</a></li>
+<li><a href="#44-action-proposer-service-servicesaction_proposerpy">4.4 Action Proposer Service (<code>services/action_proposer.py</code>)</a></li>
+<li><a href="#45-approval--decision-services-servicesapproval_servicepy-servicesdecision_managerpy">4.5 Approval &amp; Decision Services (<code>services/approval_service.py</code>, <code>services/decision_manager.py</code>)</a></li>
+<li><a href="#46-merchant-query-service-servicesmerchant_query_servicepy">4.6 Merchant Query Service (<code>services/merchant_query_service.py</code>)</a></li>
+</ul>
+</li>
+<li><a href="#5-ports--adapters-hexagonal-architecture-ports-adapters">Ports &amp; Adapters (Hexagonal Architecture) (<code>ports/</code>, <code>adapters/</code>)</a>
+<ul>
+<li><a href="#51-google-gemini-live-decision-provider-adaptersgemini_decision_providerpy">5.1 Google Gemini Live Decision Provider (<code>adapters/gemini_decision_provider.py</code>)</a></li>
+<li><a href="#52-multi-model-openrouter-adapter-adaptersopenrouter_decision_providerpy">5.2 Multi-Model OpenRouter Adapter (<code>adapters/openrouter_decision_provider.py</code>)</a></li>
+<li><a href="#53-rule-decision-provider--degraded-mode-enginesrule_decision_providerpy">5.3 Rule Decision Provider / Degraded Mode (<code>engines/rule_decision_provider.py</code>)</a></li>
+<li><a href="#54-relational-identity-resolver-adapterssql_identity_resolverpy">5.4 Relational Identity Resolver (<code>adapters/sql_identity_resolver.py</code>)</a></li>
+<li><a href="#55-tamper-evident-cryptographic-audit-ledger-adapterssql_audit_ledgerpy">5.5 Tamper-Evident Cryptographic Audit Ledger (<code>adapters/sql_audit_ledger.py</code>)</a></li>
+<li><a href="#56-outbound-adapters-ads-loyalty-notifications-adaptershttp_ads_adapterpy-etc">5.6 Outbound Adapters: Ads, Loyalty, Notifications (<code>adapters/http_ads_adapter.py</code>, etc.)</a></li>
+</ul>
+</li>
+<li><a href="#6-evaluation--benchmark-suite-evaluation">Evaluation &amp; Benchmark Suite (<code>evaluation/</code>)</a>
+<ul>
+<li><a href="#61-provider-evaluator-evaluationevaluatorpy">6.1 Provider Evaluator (<code>evaluation/evaluator.py</code>)</a></li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="1-architectural-overview-core-invariants">1. Architectural Overview &amp; Core Invariants</h2>
+<p>The AI Module (Module 4) is the analytical brain of GrowthOS. It serves as an autonomous intelligence, natural language interface, and policy-governed intervention engine. It bridges raw storefront telemetry, mathematical anomaly detection, LLM reasoning, and downstream ad/retention execution.</p>
+<pre><code>+----------------------------------------------------------------------------------------------------+
+|                                      GROWTHOS AI GROWTH BRAIN                                      |
++----------------------------------------------------------------------------------------------------+
+|                                                                                                    |
+|    [ Raw Storefront Telemetry ]                          [ Merchant Natural Language Queries ]     |
+|                 │                                                          │                       |
+|                 ▼                                                          ▼                       |
+|       +-------------------+                                      +--------------------+            |
+|       | SqlEventStorage   |                                      | NLQueryEngine      |            |
+|       +---------┬---------+                                      +---------┬----------+            |
+|                 │                                                          │                       |
+|                 ▼                                                          ▼                       |
+|       +-------------------+                                      +--------------------+            |
+|       | MetricsEngine     |&lt;-------------------------------------| Intent Classifier  |            |
+|       +---------┬---------+                                      +--------------------+            |
+|                 │                                                          │                       |
+|                 ▼                                                          ▼                       |
+|       +-------------------+                                      +--------------------+            |
+|       | DigestEngine      |                                      | Ground-Truth Facts |            |
+|       +---------┬---------+                                      +---------┬----------+            |
+|                 │                                                          │                       |
+|                 ▼                                                          ▼                       |
+|       +-------------------+       +-----------------------+      +--------------------+            |
+|       | Anomaly Detection |------&gt;| GeminiDecisionProvider|-----&gt;| EvidenceLinker     |            |
+|       +-------------------+       +-----------┬-----------+      +---------┬----------+            |
+|                                               │                            │                       |
+|                                               ▼                            ▼                       |
+|                                   +-----------------------+      +--------------------+            |
+|                                   | PolicyEngine (Gates)  |      | 3-Tier Answer      |            |
+|                                   +-----------┬-----------+      +--------------------+            |
+|                                               │                                                    |
+|                                               ▼                                                    |
+|                                   +-----------------------+                                        |
+|                                   | ActionOrchestrator    |                                        |
+|                                   +-----┬-----------┬-----+                                        |
+|                                         │           │                                              |
+|                                         ▼           ▼                                              |
+|                     +-----------------------+   +-----------------------+                          |
+|                     | SqlAuditLedger        |   | Outbound Adapters     |                          |
+|                     | (Cryptographic Chain) |   | (Ads, WhatsApp, Fee)  |                          |
+|                     +-----------------------+   +-----------------------+                          |
++----------------------------------------------------------------------------------------------------+
+</code></pre>
+<h3 id="core-invariants-of-the-ai-module">Core Invariants of the AI Module</h3>
+<ol>
+<li><strong>Zero Generative Math</strong>: All metrics, rates, conversion funnels, and deltas are calculated in pure Python and SQL code. LLMs are strictly forbidden from performing mathematical calculations.</li>
+<li><strong>0.5% EvidenceLinker Anti-Hallucination Bound</strong>: Every numerical claim generated by an LLM is cross-checked against deterministic database values; any deviation beyond <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.0833em;"></span><span class="mord">±</span><span class="mord">0.5%</span></span></span></span> is pruned or rejected.</li>
+<li><strong>No Text-to-SQL Execution</strong>: User queries are classified into curated vertical metric templates. The engine never generates arbitrary raw SQL from natural language, preventing prompt injection attacks and query errors.</li>
+<li><strong>Integer-Paise Financial Boundaries</strong>: All fee waivers, credit allocations, and budgets are represented as 64-bit integer paise (1 INR = 100 paise). Float values are rejected.</li>
+<li><strong>Fail-Closed Policy Enforcement</strong>: Actions cannot execute without passing deterministic policy evaluation (quiet hours, contact cooldowns, DPDP purpose consent, budget limits). If consent cannot be verified, the action fails closed.</li>
+<li><strong>Cryptographic Write-Ahead Audit Trail</strong>: Every proposed, approved, or executed action is hashed and recorded in an append-only ledger with trigger-enforced <code>BLOCK_UPDATE_DELETE</code> constraints.</li>
+<li><strong>10% Randomized Holdout Controls</strong>: Interventions allocate a randomized 10% un-messaged control group to measure true incremental conversion lift.</li>
+</ol>
+<hr>
+<h2 id="2-domain-layer-domain">2. Domain Layer (<code>domain/</code>)</h2>
+<p>The domain layer establishes the foundational data contracts, domain events, and state representations across the AI system.</p>
+<h3 id="21-telemetry-event-envelopes-domaineventspyfilehomemihircodesinternshipgrowthosresearchai-moduledomaineventspy-domaintelemetrypyfilehomemihircodesinternshipgrowthosresearchai-moduledomaintelemetrypy">2.1 Telemetry &amp; Event Envelopes ([domain/events.py](file:///home/mihir/Codes/internship/GrowthOS/research/ai-module/domain/events.py), [domain/telemetry.py](file:///home/mihir/Codes/internship/GrowthOS/research/ai-module/domain/telemetry.py))</h3>
+<ul>
+<li><strong>WHAT</strong>: Immutable envelopes for all storefront actions: pageviews, cart updates, checkout progression, payments, and rage clicks.</li>
+<li><strong>HOW</strong>: <code>EventEnvelope</code> defines:
+<ul>
+<li><code>event_id</code>: Unique identifier (<code>evt_...</code>).</li>
+<li><code>tenant_id</code>: Multi-tenant workspace identifier.</li>
+<li><code>event_name</code>: Canonical action name (<code>cart.item_added</code>, <code>checkout.step_passed</code>, <code>order_completed</code>).</li>
+<li><code>anonymous_id</code>: First-party cookie tracking device sessions.</li>
+<li><code>user_id</code>: Authenticated customer identifier (phone, email).</li>
+<li><code>timestamp</code>: Event creation time in UTC.</li>
+<li><code>received_at</code>: Ingestion watermark timestamp.</li>
+</ul>
+</li>
+<li><strong>WHY</strong>: Watermarking on <code>received_at</code> ensures queries are 100% reproducible over historical data, preventing backfill events from skewing retrospective anomaly detection.</li>
+</ul>
+<h3 id="22-metrics-digest-contracts-domainmetricspyfilehomemihircodesinternshipgrowthosresearchai-moduledomainmetricspy">2.2 Metrics &amp; Digest Contracts ([domain/metrics.py](file:///home/mihir/Codes/internship/GrowthOS/research/ai-module/domain/metrics.py))</h3>
+<ul>
+<li><strong>WHAT</strong>: Strict output models for deterministic metric evaluations.</li>
+<li><strong>HOW</strong>: <code>MetricResult</code> encapsulates:
+<ul>
+<li><code>metric_name</code>: Canonical key (e.g. <code>cart_abandonment_rate</code>, <code>checkout_step_2_drop_off_rate</code>).</li>
+<li><code>value</code>: Computed float or integer (or <code>None</code> if undefined).</li>
+<li><code>numerator</code>, <code>denominator</code>: Exact integer counts.</li>
+<li><code>status</code>: <code>MetricStatus.OK</code>, <code>ZERO_DENOMINATOR</code>, <code>INSUFFICIENT_SAMPLE</code>.</li>
+<li><code>window</code>: Evaluated <code>TimeWindow</code> (start to end).</li>
+<li><code>as_of</code>: Query watermark timestamp.</li>
+</ul>
+</li>
+<li><strong>WHY</strong>: Preserving explicit numerator and denominator counts enables the two-proportion Z-test and ensures <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0/0</span></span></span></span> is properly classified as <code>ZERO_DENOMINATOR</code> rather than misrepresented as <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8056em;vertical-align:-0.0556em;"></span><span class="mord">0.0%</span></span></span></span>.</li>
+</ul>
+<h3 id="23-natural-language-processing-contracts-domainnlppyfilehomemihircodesinternshipgrowthosresearchai-moduledomainnlppy">2.3 Natural Language Processing Contracts ([domain/nlp.py](file:///home/mihir/Codes/internship/GrowthOS/research/ai-module/domain/nlp.py))</h3>
+<ul>
+<li><strong>WHAT</strong>: Type definitions for natural language classification and grounded narrative output.</li>
+<li><strong>HOW</strong>:
+<ul>
+<li><code>QueryIntent</code>: Enum covering <code>FUNNEL_DROP_OFF</code>, <code>ANOMALY_DIAGNOSIS</code>, <code>REVENUE_IMPACT</code>, <code>CAMPAIGN_RECOMMENDATION</code>, <code>WHAT_IF_SIMULATION</code>.</li>
+<li><code>StructuredAnswer</code>: 3-tier response model:
+<ul>
+<li>Tier 1: <code>executive_summary</code> (concise narrative).</li>
+<li>Tier 2: <code>analytical_detail</code> (dimensional breakdowns, step transitions).</li>
+<li>Tier 3: <code>technical_telemetry</code> (sample sizes, watermarks, SQL query identifiers).</li>
+</ul>
+</li>
+<li><code>EvidenceCitation</code>: Explicit binding between a claimed sentence and verified <code>MetricResult</code> facts.</li>
+</ul>
+</li>
+<li><strong>WHY</strong>: Segmenting answers into 3 tiers allows the same engine to serve both busy founders (Tier 1) and data engineers (Tier 3), while citations prove factual verification.</li>
+</ul>
+<h3 id="24-actions-policies-audit-models-domainactionspyfilehomemihircodesinternshipgrowthosresearchai-moduledomainactionspy">2.4 Actions, Policies &amp; Audit Models ([domain/actions.py](file:///home/mihir/Codes/internship/GrowthOS/research/ai-module/domain/actions.py))</h3>
+<ul>
+<li><strong>WHAT</strong>: Specifications for autonomous growth interventions.</li>
+<li><strong>HOW</strong>:
+<ul>
+<li><code>ActionPlan</code>: Encapsulates <code>plan_id</code>, <code>action_type</code> (<code>WAIVE_DELIVERY_FEE</code>, <code>SEND_RECOVERY_WHATSAPP</code>, <code>FLAG_UI_FRICTION_BUG</code>, <code>SHIFT_BUDGET</code>), <code>execution_mode</code> (<code>MANUAL</code>, <code>APPROVAL</code>, <code>AUTONOMOUS</code>), <code>parameters</code>, and <code>holdout_assigned</code> (boolean).</li>
+<li><code>PolicyRule</code>: Defines hard constraints (max discount paise, cooldown hours, allowed hours).</li>
+<li><code>AuditRecord</code>: Immutable record with cryptographic hash, previous hash, timestamp, and action diff.</li>
+</ul>
+</li>
+<li><strong>WHY</strong>: Prevents accidental actions. Every proposed intervention must have an explicit execution mode and adhere to policy limits before reaching dispatch adapters.</li>
+</ul>
+<h3 id="25-reversible-identity-graph-domainidentitypyfilehomemihircodesinternshipgrowthosresearchai-moduledomainidentitypy">2.5 Reversible Identity Graph ([domain/identity.py](file:///home/mihir/Codes/internship/GrowthOS/research/ai-module/domain/identity.py))</h3>
+<ul>
+<li><strong>WHAT</strong>: Models for linking fragmented customer touchpoints (anonymous device cookies, phones, emails).</li>
+<li><strong>HOW</strong>: <code>IdentityLink</code> captures <code>source_id</code>, <code>target_id</code>, <code>link_reason</code>, <code>confidence_score</code>, <code>status</code> (<code>active</code>, <code>reversed</code>), and <code>evidence_event_id</code>.</li>
+<li><strong>WHY</strong>: Avoids permanent schema merges. When multiple users share a device, links can be reversed without corrupting historical event data.</li>
+</ul>
+<hr>
+<h2 id="3-analytical-decision-engines-engines">3. Analytical &amp; Decision Engines (<code>engines/</code>)</h2>
+<h3 id="31-grounded-deterministic-metrics-engine-enginesmetrics_enginepyfilehomemihircodesinternshipgrowthosresearchai-moduleenginesmetrics_enginepy">3.1 Grounded Deterministic Metrics Engine ([engines/metrics_engine.py](file:///home/mihir/Codes/internship/GrowthOS/research/ai-module/engines/metrics_engine.py))</h3>
+<ul>
+<li><strong>WHAT</strong>: Core computation engine that calculates exact e-commerce metrics from raw events with zero LLM involvement.</li>
+<li><strong>HOW</strong>: Implements 9 mathematical invariants:
+<ol>
+<li>Exact Ratios:<p class="katex-block"><span class="katex-display"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord text"><span class="mord">Cart Abandonment Rate</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1.0</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:2.0574em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3714em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord text"><span class="mord">Sessions with Cart Additions</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord text"><span class="mord">Sessions with Completed Checkout</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span></p>
+<p class="katex-block"><span class="katex-display"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord text"><span class="mord">Step </span></span><span class="mord mathnormal" style="margin-right:0.0315em;">k</span><span class="mord text"><span class="mord"> Drop-Off</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.2519em;vertical-align:-0.8804em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3714em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord text"><span class="mord">Sessions at Step </span></span><span class="mord mathnormal" style="margin-right:0.0315em;">k</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord text"><span class="mord">Sessions at Step </span></span><span class="mord mathnormal" style="margin-right:0.0315em;">k</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord text"><span class="mord">Sessions Reaching Step </span></span><span class="mord mathnormal" style="margin-right:0.0315em;">k</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.8804em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span></p>
+</li>
+<li>Session Maturity Guard: Excludes sessions opened in the last 15 minutes that have not had time to convert.</li>
+<li>Strict Watermarking: Filters all queries on <code>received_at &lt;= as_of</code>.</li>
+<li>Explicit Entity Grouping: Counts unique sessions or customers rather than raw event clicks.</li>
+<li>Set-Difference Bound: Guarantees <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7804em;vertical-align:-0.136em;"></span><span class="mord">0</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7719em;vertical-align:-0.136em;"></span><span class="mord text"><span class="mord">numerator</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord text"><span class="mord">denominator</span></span></span></span></span>.</li>
+<li>Zero Denominator Safety: Returns <code>value = None</code> with status <code>zero_denominator</code> (never <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0.0</span></span></span></span>).</li>
+<li>Dimension Allowlisting: Rejects arbitrary SQL group-bys to prevent unindexed table scans.</li>
+</ol>
+</li>
+<li><strong>WHY</strong>: LLMs often hallucinate arithmetic. Computing metrics deterministically guarantees accuracy and reproducibility.</li>
+</ul>
+<hr>
+<h3 id="32-deterministic-digest-anomaly-engine-enginesdigest_enginepyfilehomemihircodesinternshipgrowthosresearchai-moduleenginesdigest_enginepy">3.2 Deterministic Digest &amp; Anomaly Engine ([engines/digest_engine.py](file:///home/mihir/Codes/internship/GrowthOS/research/ai-module/engines/digest_engine.py))</h3>
+<ul>
+<li><strong>WHAT</strong>: Period-over-period comparison engine that identifies statistical anomalies, conversion bottlenecks, and idle carts.</li>
+<li><strong>HOW</strong>:
+<ol>
+<li>Rolling Multi-Period Baselines: Compares the active window against the median of 4 prior matching weekday periods (e.g. comparing Friday evening against the prior 4 Friday evenings).</li>
+<li>Two-Proportion Hypothesis Testing:
+Computes pooled standard error and Z-score:<p class="katex-block"><span class="katex-display"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7167em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">pool</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.0963em;vertical-align:-0.836em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.2603em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">n</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal">n</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.836em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span></p>
+<p class="katex-block"><span class="katex-display"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0715em;">Z</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:3.5903em;vertical-align:-2.33em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.2603em;"><span style="top:-2.11em;"><span class="pstrut" style="height:3.535em;"></span><span class="mord"><span class="mord sqrt"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.535em;"><span class="svg-align" style="top:-4.4em;"><span class="pstrut" style="height:4.4em;"></span><span class="mord" style="padding-left:1em;"><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">pool</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">pool</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;"><span class="delimsizing size2">(</span></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8451em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3173em;"><span style="top:-2.357em;margin-left:0em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.143em;"><span></span></span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.4451em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8451em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3173em;"><span style="top:-2.357em;margin-left:0em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.143em;"><span></span></span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.4451em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mclose delimcenter" style="top:0em;"><span class="delimsizing size2">)</span></span></span></span></span><span style="top:-3.495em;"><span class="pstrut" style="height:4.4em;"></span><span class="hide-tail" style="min-width:1.02em;height:2.48em;"><svg xmlns="http://www.w3.org/2000/svg" width="400em" height="2.48em" viewBox="0 0 400000 2592" preserveAspectRatio="xMinYMin slice"><path d="M424,2478
+c-1.3,-0.7,-38.5,-172,-111.5,-514c-73,-342,-109.8,-513.3,-110.5,-514
+c0,-2,-10.7,14.3,-32,49c-4.7,7.3,-9.8,15.7,-15.5,25c-5.7,9.3,-9.8,16,-12.5,20
+s-5,7,-5,7c-4,-3.3,-8.3,-7.7,-13,-13s-13,-13,-13,-13s76,-122,76,-122s77,-121,77,-121
+s209,968,209,968c0,-2,84.7,-361.7,254,-1079c169.3,-717.3,254.7,-1077.7,256,-1081
+l0 -0c4,-6.7,10,-10,18,-10 H400000
+v40H1014.6
+s-87.3,378.7,-272.6,1166c-185.3,787.3,-279.3,1182.3,-282,1185
+c-2,6,-10,9,-24,9
+c-8,0,-12,-0.7,-12,-2z M1001 80
+h400000v40h-400000z"/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.905em;"><span></span></span></span></span></span></span></span><span style="top:-3.765em;"><span class="pstrut" style="height:3.535em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-4.212em;"><span class="pstrut" style="height:3.535em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:2.33em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span></p>
+Flags an anomaly when <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">∣</span><span class="mord mathnormal" style="margin-right:0.0715em;">Z</span><span class="mord">∣</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≥</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">2.5</span></span></span></span> (<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7335em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&lt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0.01</span></span></span></span>) and relative change exceeds threshold.</li>
+<li>Financial Impact Ranking:
+Estimates revenue impact using Average Order Value (AOV):<p class="katex-block"><span class="katex-display"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord text"><span class="mord">Revenue Impact</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord text"><span class="mord">Expected Conversions</span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text"><span class="mord">Actual Conversions</span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord text"><span class="mord">AOV</span></span></span></span></span></span></p>
+</li>
+<li>Funnel Bottleneck Isolation: Correlates funnel drops to isolate the root-cause stage (e.g. payment gateway failure vs address entry friction).</li>
+</ol>
+</li>
+<li><strong>WHY</strong>: Percentage changes can be misleading with small sample sizes (e.g. 1 out of 2 is a 50% drop, but not statistically significant). The two-proportion test filters out random noise and surfaces true anomalies.</li>
+</ul>
+<hr>
+<h3 id="33-anti-hallucination-evidence-linker-enginesevidence_linkerpyfilehomemihircodesinternshipgrowthosresearchai-moduleenginesevidence_linkerpy">3.3 Anti-Hallucination Evidence Linker ([engines/evidence_linker.py](file:///home/mihir/Codes/internship/GrowthOS/research/ai-module/engines/evidence_linker.py))</h3>
+<ul>
+<li><strong>WHAT</strong>: Post-generation verification gate that audits LLM-generated summaries against computed metrics.</li>
+<li><strong>HOW</strong>:
+<ol>
+<li>Numeric Claim Extraction: Regex-extracts all numbers, percentages, and currencies from generated sentences.</li>
+<li>Metric Semantic Mapping: Maps sentence phrases (<em>&quot;cart abandonment&quot;</em>, <em>&quot;step 2 friction&quot;</em>) to canonical metric keys.</li>
+<li>Numerical Tolerance Check:
+Reconciles LLM numbers against database ground truth:<p class="katex-block"><span class="katex-display"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:2.113em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.427em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord text"><span class="mord">Ground Truth Value</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">∣</span><span class="mord text"><span class="mord">Claimed Value</span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord text"><span class="mord">Ground Truth Value</span></span><span class="mord">∣</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">0.005</span><span class="mspace" style="margin-right:1em;"></span><span class="mopen">(</span><span class="mord">0.5%</span><span class="mclose">)</span></span></span></span></span></p>
+</li>
+<li>Directional Polarity Verification: Ensures directional terms (<em>&quot;increased&quot;</em>, <em>&quot;rose&quot;</em>, <em>&quot;spiked&quot;</em>) match positive deltas, while (<em>&quot;dropped&quot;</em>, <em>&quot;fell&quot;</em>) match negative deltas.</li>
+<li>Hyperbole Pruning: Removes ungrounded qualitative terms (<em>&quot;alarming&quot;</em>, <em>&quot;catastrophic&quot;</em>, <em>&quot;massive&quot;</em>) lacking statistical support.</li>
+</ol>
+</li>
+<li><strong>WHY</strong>: Keeps generative outputs grounded. Even when LLMs hallucinate during edge cases, the EvidenceLinker catches discrepancies before they reach the user.</li>
+</ul>
+<hr>
+<h3 id="34-natural-language-query-engine-enginesnl_query_enginepyfilehomemihircodesinternshipgrowthosresearchai-moduleenginesnl_query_enginepy">3.4 Natural Language Query Engine ([engines/nl_query_engine.py](file:///home/mihir/Codes/internship/GrowthOS/research/ai-module/engines/nl_query_engine.py))</h3>
+<ul>
+<li><strong>WHAT</strong>: Natural language question-answering system over business metrics.</li>
+<li><strong>HOW</strong>:
+<ul>
+<li>Classifies user intent into predefined vertical metrics catalogs.</li>
+<li>Calls <code>MetricsEngine</code> to compute current and baseline values.</li>
+<li>Constructs grounded prompts containing exact metric values for the LLM.</li>
+<li>Receives structured responses and verifies them through <code>EvidenceLinker</code>.</li>
+<li>Produces structured 3-tier answers.</li>
+</ul>
+</li>
+<li><strong>WHY</strong>: <strong>Replaces Text-to-SQL</strong>. Text-to-SQL often invents non-existent columns, struggles with session logic, and exposes databases to SQL injection. Classifying intent to structured metric APIs provides safety and reliability.</li>
+</ul>
+<hr>
+<h3 id="35-deterministic-policy-engine-enginespolicy_enginepyfilehomemihircodesinternshipgrowthosresearchai-moduleenginespolicy_enginepy">3.5 Deterministic Policy Engine ([engines/policy_engine.py](file:///home/mihir/Codes/internship/GrowthOS/research/ai-module/engines/policy_engine.py))</h3>
+<ul>
+<li><strong>WHAT</strong>: Deterministic gatekeeper that evaluates proposed growth actions against legal, financial, and platform rules.</li>
+<li><strong>HOW</strong>:
+<ul>
+<li>Financial Limits: Asserts delivery fee waivers do not exceed max allowed paise (<code>fee_amount_paise &lt;= max_discount_paise</code>).</li>
+<li>Contact Cooldown: Verifies customer has not received promotional messages in the prior 48 hours.</li>
+<li>Quiet Hours Enforcement: Uses recipient timezones (IST UTC+5:30) to block marketing messages between 9:00 PM and 9:00 AM (TRAI and DPDP compliance).</li>
+<li>Purpose-Specific Consent: Checks consent records for <code>marketing_notification</code> permission.</li>
+<li>Budget Shift Caps: Caps ad spend shifts at <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7719em;vertical-align:-0.136em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8056em;vertical-align:-0.0556em;"></span><span class="mord">15%</span></span></span></span> per 24 hours.</li>
+</ul>
+</li>
+<li><strong>WHY</strong>: LLMs should not have direct execution authority over financial disbursements or customer communications. Pure deterministic code enforces non-negotiable legal and financial boundaries.</li>
+</ul>
+<hr>
+<h3 id="36-digest-explanation-engine-enginesdigest_explanation_enginepyfilehomemihircodesinternshipgrowthosresearchai-moduleenginesdigest_explanation_enginepy">3.6 Digest Explanation Engine ([engines/digest_explanation_engine.py](file:///home/mihir/Codes/internship/GrowthOS/research/ai-module/engines/digest_explanation_engine.py))</h3>
+<ul>
+<li><strong>WHAT</strong>: Translates statistical anomaly flags into natural language operational digests.</li>
+<li><strong>HOW</strong>: Combines anomaly metrics, Z-scores, and dimensional breakdowns into prompt contexts for the LLM, producing actionable executive summaries.</li>
+<li><strong>WHY</strong>: Converts statistical flags into plain language summaries for merchant operators.</li>
+</ul>
+<hr>
+<h3 id="37-heuristic-scoring-engine-enginesheuristic_scoringpyfilehomemihircodesinternshipgrowthosresearchai-moduleenginesheuristic_scoringpy">3.7 Heuristic Scoring Engine ([engines/heuristic_scoring.py](file:///home/mihir/Codes/internship/GrowthOS/research/ai-module/engines/heuristic_scoring.py))</h3>
+<ul>
+<li><strong>WHAT</strong>: Computes customer purchase propensity and Customer Lifetime Value (CLTV) scores without heavy machine learning training dependencies.</li>
+<li><strong>HOW</strong>:
+<ul>
+<li>Propensity score: Evaluates cart value, items viewed, session duration, and prior orders.</li>
+<li>Propensity gating:
+<ul>
+<li>High propensity (<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7719em;vertical-align:-0.136em;"></span><span class="mrel">≥</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0.85</span></span></span></span>): Suppresses discounts to protect margins.</li>
+<li>Low propensity (<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7719em;vertical-align:-0.136em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0.15</span></span></span></span>): Suppresses outreach to save messaging costs.</li>
+<li>Medium propensity (<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6835em;vertical-align:-0.0391em;"></span><span class="mord">0.15</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&lt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7335em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&lt;</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0.85</span></span></span></span>): Qualifies for intervention.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>WHY</strong>: Protects profit margins by avoiding discounts for customers who intended to purchase anyway.</li>
+</ul>
+<hr>
+<h3 id="38-vertical-industry-templates-enginesvertical_templatespyfilehomemihircodesinternshipgrowthosresearchai-moduleenginesvertical_templatespy">3.8 Vertical Industry Templates ([engines/vertical_templates.py](file:///home/mihir/Codes/internship/GrowthOS/research/ai-module/engines/vertical_templates.py))</h3>
+<ul>
+<li><strong>WHAT</strong>: Configuration registry defining metric calculation formulas and entities across industry verticals (<code>ecommerce_d2c</code>, <code>fintech</code>, <code>saas</code>).</li>
+<li><strong>HOW</strong>: Maps metrics to required events, filter criteria, and denominator entities.</li>
+<li><strong>WHY</strong>: Enables the system to support new verticals (e.g., loan applications or SaaS onboarding) by adding template definitions without modifying engine code.</li>
+</ul>
+<hr>
+<h2 id="4-application-services-services">4. Application Services (<code>services/</code>)</h2>
+<h3 id="41-action-orchestrator-service-servicesaction_orchestratorpyfilehomemihircodesinternshipgrowthosresearchai-moduleservicesaction_orchestratorpy">4.1 Action Orchestrator Service ([services/action_orchestrator.py](file:///home/mihir/Codes/internship/GrowthOS/research/ai-module/services/action_orchestrator.py))</h3>
+<ul>
+<li><strong>WHAT</strong>: Central orchestrator that handles policy evaluation, execution mode routing, and action dispatch.</li>
+<li><strong>HOW</strong>:
+<ol>
+<li>Re-verifies policies immediately prior to dispatch to prevent race conditions.</li>
+<li>Routes by execution mode:
+<ul>
+<li><code>MANUAL</code>: Records draft for human review.</li>
+<li><code>APPROVAL</code>: Notifies merchant and pauses execution pending approval.</li>
+<li><code>AUTONOMOUS</code>: Evaluates randomized holdout (10% un-messaged control), records audit trail, and dispatches to outbound adapters.</li>
+</ul>
+</li>
+<li>Claims an idempotency lock on <code>(tenant_id, plan_id)</code> to prevent duplicate dispatches.</li>
+</ol>
+</li>
+<li><strong>WHY</strong>: Manages the critical handoff between analytical reasoning and external action execution.</li>
+</ul>
+<hr>
+<h3 id="42-24-hour-attribution-closing-worker-servicesattribution_closing_workerpyfilehomemihircodesinternshipgrowthosresearchai-moduleservicesattribution_closing_workerpy">4.2 24-Hour Attribution Closing Worker ([services/attribution_closing_worker.py](file:///home/mihir/Codes/internship/GrowthOS/research/ai-module/services/attribution_closing_worker.py))</h3>
+<ul>
+<li><strong>WHAT</strong>: Background worker that measures incremental conversion lift between treated and control groups after 24 hours.</li>
+<li><strong>HOW</strong>:
+<ul>
+<li>Scans ActionPlans that have passed their 24-hour window.</li>
+<li>Queries event storage for subsequent <code>order_completed</code> events.</li>
+<li>Calculates true incremental lift:<p class="katex-block"><span class="katex-display"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord text"><span class="mord">Incremental Lift</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7778em;vertical-align:-0.0833em;"></span><span class="mord text"><span class="mord">Treated CVR</span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6944em;"></span><span class="mord text"><span class="mord">Holdout CVR</span></span></span></span></span></span></p>
+</li>
+<li>Logs results to the immutable audit ledger.</li>
+</ul>
+</li>
+<li><strong>WHY</strong>: Proves whether interventions drove incremental revenue or simply offered unnecessary discounts.</li>
+</ul>
+<hr>
+<h3 id="43-idle-cart-sweep-worker-servicesidle_cart_sweep_workerpyfilehomemihircodesinternshipgrowthosresearchai-moduleservicesidle_cart_sweep_workerpy">4.3 Idle Cart Sweep Worker ([services/idle_cart_sweep_worker.py](file:///home/mihir/Codes/internship/GrowthOS/research/ai-module/services/idle_cart_sweep_worker.py))</h3>
+<ul>
+<li><strong>WHAT</strong>: Periodic background daemon sweeping for abandoned carts.</li>
+<li><strong>HOW</strong>: Filters carts idle for <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.7719em;vertical-align:-0.136em;"></span><span class="mrel">≥</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">15</span></span></span></span> minutes, resolves user identities, scores propensity, generates <code>ActionPlan</code> candidates, and routes through <code>ActionOrchestrator</code>.</li>
+<li><strong>WHY</strong>: Automates cart recovery within the high-intent window while enforcing governance policies.</li>
+</ul>
+<hr>
+<h3 id="44-action-proposer-service-servicesaction_proposerpyfilehomemihircodesinternshipgrowthosresearchai-moduleservicesaction_proposerpy">4.4 Action Proposer Service ([services/action_proposer.py](file:///home/mihir/Codes/internship/GrowthOS/research/ai-module/services/action_proposer.py))</h3>
+<ul>
+<li><strong>WHAT</strong>: Bridges anomaly detection and candidate action synthesis.</li>
+<li><strong>HOW</strong>: Maps detected metric shifts (e.g. checkout step 2 drop-off) to action types (<code>WAIVE_DELIVERY_FEE</code>, <code>FLAG_UI_FRICTION_BUG</code>).</li>
+<li><strong>WHY</strong>: Generates candidate actions directly from detected bottlenecks.</li>
+</ul>
+<hr>
+<h3 id="45-approval-decision-services-servicesapproval_servicepyfilehomemihircodesinternshipgrowthosresearchai-moduleservicesapproval_servicepy-servicesdecision_managerpyfilehomemihircodesinternshipgrowthosresearchai-moduleservicesdecision_managerpy">4.5 Approval &amp; Decision Services ([services/approval_service.py](file:///home/mihir/Codes/internship/GrowthOS/research/ai-module/services/approval_service.py), [services/decision_manager.py](file:///home/mihir/Codes/internship/GrowthOS/research/ai-module/services/decision_manager.py))</h3>
+<ul>
+<li><strong>WHAT</strong>: Manages merchant approval workflows.</li>
+<li><strong>HOW</strong>: Provides <code>approve_plan(plan_id)</code> and <code>reject_plan(plan_id)</code> endpoints that update statuses and resume the <code>ActionOrchestrator</code> execution pipeline.</li>
+<li><strong>WHY</strong>: Enables merchant oversight for high-impact actions.</li>
+</ul>
+<hr>
+<h3 id="46-merchant-query-service-servicesmerchant_query_servicepyfilehomemihircodesinternshipgrowthosresearchai-moduleservicesmerchant_query_servicepy">4.6 Merchant Query Service ([services/merchant_query_service.py](file:///home/mihir/Codes/internship/GrowthOS/research/ai-module/services/merchant_query_service.py))</h3>
+<ul>
+<li><strong>WHAT</strong>: Application facade for the natural language query pipeline.</li>
+<li><strong>HOW</strong>: Dispatches queries to <code>NLQueryEngine</code> and returns formatted answers to the CLI and frontend dashboard.</li>
+<li><strong>WHY</strong>: Simplifies client integration with a single query entry point.</li>
+</ul>
+<hr>
+<h2 id="5-ports-adapters-hexagonal-architecture-ports-adapters">5. Ports &amp; Adapters (Hexagonal Architecture) (<code>ports/</code>, <code>adapters/</code>)</h2>
+<h3 id="51-google-gemini-live-decision-provider-adaptersgemini_decision_providerpyfilehomemihircodesinternshipgrowthosresearchai-moduleadaptersgemini_decision_providerpy">5.1 Google Gemini Live Decision Provider ([adapters/gemini_decision_provider.py](file:///home/mihir/Codes/internship/GrowthOS/research/ai-module/adapters/gemini_decision_provider.py))</h3>
+<ul>
+<li><strong>WHAT</strong>: Production LLM adapter integrating Google Gemini (<code>gemini-2.5-flash</code>).</li>
+<li><strong>HOW</strong>: Uses <code>GeminiClient</code> to make API calls with system instructions, structured JSON schemas, temperature 0.1, and execution tracing (latency, tokens).</li>
+<li><strong>WHY</strong>: Fast execution (~1.8s) and structured outputs make it well-suited for interactive growth diagnostics.</li>
+</ul>
+<hr>
+<h3 id="52-multi-model-openrouter-adapter-adaptersopenrouter_decision_providerpyfilehomemihircodesinternshipgrowthosresearchai-moduleadaptersopenrouter_decision_providerpy">5.2 Multi-Model OpenRouter Adapter ([adapters/openrouter_decision_provider.py](file:///home/mihir/Codes/internship/GrowthOS/research/ai-module/adapters/openrouter_decision_provider.py))</h3>
+<ul>
+<li><strong>WHAT</strong>: Multi-model evaluation client connecting to Anthropic Claude 3.5 Sonnet, OpenAI GPT-4o, and DeepSeek R1.</li>
+<li><strong>HOW</strong>: Formats standard OpenAI-compatible completions to evaluate reasoning quality, latency, and cost across providers.</li>
+<li><strong>WHY</strong>: Prevents vendor lock-in and allows continuous benchmarking across LLM providers.</li>
+</ul>
+<hr>
+<h3 id="53-rule-decision-provider-degraded-mode-enginesrule_decision_providerpyfilehomemihircodesinternshipgrowthosresearchai-moduleenginesrule_decision_providerpy">5.3 Rule Decision Provider / Degraded Mode ([engines/rule_decision_provider.py](file:///home/mihir/Codes/internship/GrowthOS/research/ai-module/engines/rule_decision_provider.py))</h3>
+<ul>
+<li><strong>WHAT</strong>: Deterministic fallback engine for offline execution and circuit breaking.</li>
+<li><strong>HOW</strong>: Evaluates signal conditions through hardcoded if-else trees to generate candidate plans when LLM APIs are unavailable.</li>
+<li><strong>WHY</strong>: Keeps the system operational during network outages or API rate limiting.</li>
+</ul>
+<hr>
+<h3 id="54-relational-identity-resolver-adapterssql_identity_resolverpyfilehomemihircodesinternshipgrowthosresearchai-moduleadapterssql_identity_resolverpy">5.4 Relational Identity Resolver ([adapters/sql_identity_resolver.py](file:///home/mihir/Codes/internship/GrowthOS/research/ai-module/adapters/sql_identity_resolver.py))</h3>
+<ul>
+<li><strong>WHAT</strong>: Relational customer identity resolution engine.</li>
+<li><strong>HOW</strong>: Stores bidirectional linkages in <code>identity_links</code>. Resolves canonical customer IDs via recursive path queries without modifying historical telemetry.</li>
+<li><strong>WHY</strong>: Avoids the operational overhead of a graph database while maintaining full link reversibility.</li>
+</ul>
+<hr>
+<h3 id="55-tamper-evident-cryptographic-audit-ledger-adapterssql_audit_ledgerpyfilehomemihircodesinternshipgrowthosresearchai-moduleadapterssql_audit_ledgerpy">5.5 Tamper-Evident Cryptographic Audit Ledger ([adapters/sql_audit_ledger.py](file:///home/mihir/Codes/internship/GrowthOS/research/ai-module/adapters/sql_audit_ledger.py))</h3>
+<ul>
+<li><strong>WHAT</strong>: Append-only audit logger using SQLite triggers.</li>
+<li><strong>HOW</strong>:
+<ul>
+<li>SQLite triggers fail on any <code>UPDATE</code> or <code>DELETE</code> attempt.</li>
+<li>Chains records cryptographically:<p class="katex-block"><span class="katex-display"><span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0044em;vertical-align:-0.31em;"></span><span class="mord text"><span class="mord">record_hash</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.06em;vertical-align:-0.31em;"></span><span class="mord text"><span class="mord">SHA256</span></span><span class="mopen">(</span><span class="mord text"><span class="mord">prev_hash</span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.0044em;vertical-align:-0.31em;"></span><span class="mord text"><span class="mord">plan_id</span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.0044em;vertical-align:-0.31em;"></span><span class="mord text"><span class="mord">action_diff</span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text"><span class="mord">timestamp</span></span><span class="mclose">)</span></span></span></span></span></p>
+</li>
+<li>Redacts PII (emails, phone numbers) before persistence.</li>
+</ul>
+</li>
+<li><strong>WHY</strong>: Provides an immutable, verifiable audit log required for enterprise compliance.</li>
+</ul>
+<hr>
+<h3 id="56-outbound-adapters-ads-loyalty-notifications-adaptershttp_ads_adapterpyfilehomemihircodesinternshipgrowthosresearchai-moduleadaptershttp_ads_adapterpy-etc">5.6 Outbound Adapters: Ads, Loyalty, Notifications ([adapters/http_ads_adapter.py](file:///home/mihir/Codes/internship/GrowthOS/research/ai-module/adapters/http_ads_adapter.py), etc.)</h3>
+<ul>
+<li><strong>WHAT</strong>: Outbound integration adapters that communicate with external systems.</li>
+<li><strong>HOW</strong>:
+<ul>
+<li><code>http_ads_adapter</code>: Calls Module 3 to create campaigns or shift budgets.</li>
+<li><code>loyalty_waivers_adapter</code>: Applies fee waivers to storefront carts.</li>
+<li><code>notification_gateway_adapter</code>: Sends recovery WhatsApp messages via transactional gateways.</li>
+</ul>
+</li>
+<li><strong>WHY</strong>: Follows hexagonal architecture principles by isolating core logic from third-party API dependencies.</li>
+</ul>
+<hr>
+<h2 id="6-evaluation-benchmark-suite-evaluation">6. Evaluation &amp; Benchmark Suite (<code>evaluation/</code>)</h2>
+<h3 id="61-provider-evaluator-evaluationevaluatorpyfilehomemihircodesinternshipgrowthosresearchai-moduleevaluationevaluatorpy">6.1 Provider Evaluator ([evaluation/evaluator.py](file:///home/mihir/Codes/internship/GrowthOS/research/ai-module/evaluation/evaluator.py))</h3>
+<ul>
+<li><strong>WHAT</strong>: Automated evaluation harness measuring decision accuracy, hallucination rates, and latency.</li>
+<li><strong>HOW</strong>: Evaluates decision providers against ground-truth benchmark cases across 4 metrics:
+<ol>
+<li>Ground-Truth Action Precision (correct action selected).</li>
+<li>Parameter Accuracy (integer paise and limits preserved).</li>
+<li>Evidence Grounding Precision (zero hallucinations).</li>
+<li>Response Latency (<span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">50</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>, <span class="katex"><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal">p</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">95</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>).</li>
+</ol>
+</li>
+<li><strong>WHY</strong>: Continuous automated evaluation prevents prompt regressions and guarantees model reliability across releases.</li>
+</ul>
+
+</div>
+
+</body>
+</html>

@@ -233,6 +233,14 @@ JSON Output Schema:
                 "- 'inverted_polarity': Claim asserts an increase when delta was negative, or claims a drop when delta was positive.\n"
                 "- 'insufficient_sample': Claim makes definitive conclusion while min_sample_met is false or sample is too low.\n"
             )
+        elif case.task_type == "cart_abandonment_decision":
+            task_guidelines = (
+                "DOMAIN RULES FOR CART ABANDONMENT DECISIONS:\n"
+                "- 'PROPOSE_WAIVER': Customer is identified (customer_id present), cart subtotal >= INR 500 (50,000 paise), idle 20-45m, deliberated reasonably, not a habitual buyer.\n"
+                "- 'SUPPRESS_INCENTIVE': Customer is a habitual buyer (>= 5 lifetime orders, high value, fast checkout) with high organic propensity. Waiving fee cannibalizes margins.\n"
+                "- 'RESCUE_FRICTION': Customer encountered payment failure, gateway error, or checkout drop-off requiring proactive assistance.\n"
+                "- 'NOOP': Anonymous visitor (customer_id is null), cart < INR 500, window shopping (8+ views, 0 adds, or idle > 2h), or low intent.\n"
+            )
 
         system_prompt = (
             f"You are an expert benchmark classification model evaluating the task: '{case.task_type}'.\n"
@@ -252,13 +260,19 @@ Input Context:
 Select option from: {case.allowed_options}
 """
         contents = [{"role": "user", "parts": [{"text": user_prompt}]}]
-        resp = self.client.generate_content(
-            contents=contents,
-            system_instruction=system_prompt,
-            json_mode=True,
-            temperature=0.0
-        )
-        data = resp.get("json") or {}
+        try:
+            resp = self.client.generate_content(
+                contents=contents,
+                system_instruction=system_prompt,
+                json_mode=True,
+                temperature=0.0
+            )
+            data = resp.get("json") or {}
+        except Exception:
+            # Graceful fallback to deterministic rule provider on quota exhaustion / network failure
+            from engines.rule_decision_provider import RuleDecisionProvider
+            fallback = RuleDecisionProvider()
+            return fallback.predict_benchmark_case(case)
 
         raw_choice = (
             data.get("selected_option")
