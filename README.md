@@ -1,74 +1,135 @@
-# GrowthOS: AI Growth Brain (Module 4)
+# GrowthOS: Autonomous E-Commerce Growth Operating System
 
-GrowthOS Module 4 is an autonomous e-commerce growth intelligence engine that bridges raw behavioural telemetry with verified, fact-grounded decisions, metric digests, and natural language query capabilities.
-
----
-
-## Key Architecture & Capabilities
-
-1. **Zero-Hallucination Natural Language Query Engine**:
-   - Classifies merchant questions into deterministic analytical intents (`FUNNEL_DROP_OFF`, `PERIOD_COMPARISON`, `METRIC_LOOKUP`, `UNSUPPORTED`).
-   - Translates questions into structured metrics catalog lookups—eliminating free-form unconstrained SQL generation.
-   - Multi-tier response contract:
-     - **Tier 1**: Executive Summary (merchant-facing natural language digest).
-     - **Tier 2**: Analytical Breakdown (exact ratios, dual percentage points & relative changes, excess lost drop-off volume, and two-proportion pooled z-tests).
-     - **Tier 3**: Technical Trace & Audit Envelope (provenance window, metric status, model, provider, degraded flag, and cryptographically verifiable evidence references).
-
-2. **Statistical Metric Digest & Fact-Grounded Narration**:
-   - Automated period-over-period anomaly detection across 11 core e-commerce metrics.
-   - Empirical ranking by **excess lost sessions / orders** ($+23.1$ sessions for Step 2 vs $+18.0$ for Step 1).
-   - Strict anti-hallucination gate auditing all claims against computed numbers and directional deltas before display.
-
-3. **Multi-Provider Decision Engine Behind `DecisionPort`**:
-   - Supports Google Gemini direct API (`gemini-3.5-flash`, `gemini-2.5-flash-lite`), OpenRouter (`google/gemini-2.5-flash`), and deterministic rule fallback.
-   - Automated circuit breaker cooldowns with intelligent free-tier model rotation pool.
-   - Pre-filtering of ineligible carts (sub-INR 300, anonymous sessions, under-idle threshold) to consume zero external API calls.
-
-4. **Closed-Loop Action Governance & Orchestration**:
-   - All proposed actions traverse [ActionOrchestrator](research/ai-module/services/action_orchestrator.py), [PolicyEngine](research/ai-module/services/policy_engine.py), [AuditLedger](research/ai-module/services/audit_ledger.py), and [ApprovalWorkflow](research/ai-module/services/approval_workflow.py).
-   - Enforces randomized holdout controls (10% control group) and frequency limits (max 1 waiver per customer per 7 days).
+GrowthOS is an end-to-end autonomous e-commerce growth platform uniting granular client-side behavior intelligence, deterministic metric analytics, closed-loop advertising orchestration, and policy-governed AI decision synthesis.
 
 ---
 
-## Directory Structure
+## Unified Architecture Overview
 
 ```
-research/ai-module/
-├── adapters/          # Direct HTTP clients for Google Gemini & OpenRouter, SQL storages, consent stores
-├── domain/            # Core business models (metrics, events, actions, evaluation, NLP)
-├── engines/           # Metrics calculation, digest explanation, policy rules, evidence linking
-├── ports/             # Clean hexagonal ports (decision, LLM, storage, consent, identity)
-├── services/          # Orchestrators, approval workflows, audit ledgers, query processors
-├── evaluation/        # Ground-truth datasets & multi-provider benchmark harness
-├── tests/             # Comprehensive pytest test suite (141 tests, 100% pass rate)
-├── demo_gemini_live.py       # Live demonstration runner with failover & circuit breaker protection
-└── demo_openrouter_live.py   # Live OpenRouter demonstration runner
+                               GROWTHOS ARCHITECTURE
+                               
+   +--------------------------------------------------------------------------+
+   |                  MODULE 2: BEHAVIOR INTELLIGENCE & STOREFRONT            |
+   |                                                                          |
+   |   [Next.js Storefront]     [TypeScript SDK]        [Chrome QA Extension] |
+   |   (research/frontend)      (research/sdk)          (research/qa-debugger)|
+   |            |                      |                          |           |
+   |            +----------------------+--------------------------+           |
+   |                                   |                                      |
+   |                       HTTP Batch / HMAC Telemetry                        |
+   +-----------------------------------|--------------------------------------+
+                                       v
+   +--------------------------------------------------------------------------+
+   |                        MODULE 4: AI GROWTH BRAIN                         |
+   |                           (research/ai-module)                           |
+   |                                                                          |
+   |   [Telemetry Ingestion]   --> [MetricsEngine]    --> [DigestEngine]      |
+   |   (HMAC drift verify)         (11 core metrics)      (anomaly detection) |
+   |                                                              |           |
+   |   [EvidenceLinker]        <-- [DecisionManager]  <-- [NLQueryEngine]     |
+   |   (0.5% tolerance audit)      (Gemini / Rules)       (intent parser)     |
+   |                                       |                                  |
+   |                               Action Proposals                           |
+   |                                       v                                  |
+   |   [ActionOrchestrator]    --> [PolicyEngine]     --> [AuditLedger]       |
+   |   (holdout assignment)        (financial limits)     (immutable trail)   |
+   +---------------------------------------|----------------------------------+
+                                           |
+                       Outbound Action Contract / HTTP Port
+                                           v
+   +--------------------------------------------------------------------------+
+   |                  MODULE 3: ADS LAYER & OPTIMIZATION                      |
+   |                          (research/Ads-Module)                           |
+   |                                                                          |
+   |   [PlanningEngine]        --> [ValidationEngine] --> [DeploymentService] |
+   |   (keyword cluster / RSA)     (editorial policy)     (Google Ads API)    |
+   |                                                              |           |
+   |   [Attribution Engine]    <-- [ClickTracker]     <-- [OptimizationEngine]|
+   |   (GCLID 30d lookback)        (offline upload)       (<= 15% budget shift|
+   |                                                       & rollback service)|
+   +--------------------------------------------------------------------------+
+```
+
+---
+
+## Modular Subsystems
+
+### 1. Module 2: Behavior Intelligence SDK & Storefront
+- **Directory**: `research/sdk`, `research/frontend`, `research/merchant-dashboard`, `research/backend-bridge`, `research/qa-debugger`, `research/tests`
+- **Core Role**: Captures millisecond-level customer intent signals (rage clicks, mouse thrashing, typing cadence, scroll milestones, form field dwell) with zero PII leakage (Luhn validation, password redaction, DOM masking).
+- **Storefront**: High-fidelity Domino's Pizza India e-commerce application built on Next.js 16 with integrated QA inspection overlays.
+
+### 2. Module 3: Ads Layer & Autonomous Optimization
+- **Directory**: `research/Ads-Module`
+- **Core Role**: Autonomous campaign management and execution layer.
+- **Key Engines**:
+  - **CampaignPlanningEngine**: Synthesizes structured campaigns, keyword clusters, and Responsive Search Ads (RSA) adhering to strict character constraints (headlines <= 30 chars, descriptions <= 90 chars).
+  - **CampaignValidationEngine**: Pre-flight validation gate checking budget minimums, target CPA safety bounds, and Google Ads editorial policies.
+  - **Closed-Loop Attribution**: GCLID click tracking, 30-day conversion lookback, and offline conversion upload to Google Ads.
+  - **Autonomous Optimization**: Identifies underperforming campaigns and reallocates budget under a strict invariant limiting daily shifts to <= 15%.
+  - **Rollback Service**: Single-click atomic restoration of previous campaign budget allocations.
+
+### 3. Module 4: AI Growth Brain
+- **Directory**: `research/ai-module`
+- **Core Role**: Analytical intelligence and decision engine.
+- **Key Engines**:
+  - **Deterministic MetricsEngine**: Calculates 11 core e-commerce metrics and funnel drop-offs with zero LLM hallucination risk.
+  - **EvidenceLinker**: Enforces mathematical fact verification, ensuring all natural language claims fall within 0.5% relative tolerance of empirical data.
+  - **DecisionManager & Multi-Provider Evaluation**: Integrates Google Gemini (`gemini-2.5-flash`), OpenRouter, and offline rule baselines with automated circuit breakers and Wilson Score confidence bounds.
+  - **Governance Layer**: Enforces financial limits, purpose-specific consent, quiet hours, cooldowns, and immutable audit ledgers.
+
+---
+
+## Directory Layout
+
+```
+GrowthOS/
+├── backend/                       # Legacy backend services
+├── frontend/                      # Root frontend entrypoints
+├── growthos_cli.sh                # Executable script for interactive presentation CLI
+├── pyrightconfig.json             # Pyright static typing configuration
+├── research/
+│   ├── Ads-Module/                # Module 3: Ads Layer, Connectors, Attribution & Optimization
+│   ├── ai-module/                 # Module 4: AI Growth Brain, Analytical Engines, Governance
+│   ├── backend-bridge/            # Module 2: Telemetry Ingestion Bridge & Customer Graph
+│   ├── docs/                      # Architectural specifications and taxonomy definitions
+│   ├── frontend/                  # Module 2: Next.js 16 E-Commerce Storefront
+│   ├── merchant-dashboard/        # Module 2: Next.js Merchant Analytics Dashboard
+│   ├── qa-debugger/               # Module 2: Chrome DevTools Extension
+│   ├── sdk/                       # Module 2: TypeScript Behavior Intelligence SDK
+│   ├── tests/                     # Module 2: Playwright E2E Integration Suite
+│   ├── GrowthOS_overview.md       # Comprehensive System Architecture Whitepaper
+│   ├── README.md                  # Research Directory Documentation
+│   ├── growthos_cli.py            # Unified Presentation CLI for Ads & AI Modules
+│   └── run_full_system_test_suite.py # End-to-End System Test Harness
+└── skills-lock.json               # IDE skills configuration
 ```
 
 ---
 
 ## Quick Start & Verification
 
-### 1. Environment Setup
+### 1. Run Unified System Test Harness
+Validates all subsystems end-to-end (Telemetry -> MetricsEngine -> Gemini LLM -> EvidenceLinker -> CampaignPlanning -> Validation -> Attribution -> Optimization):
 ```bash
-cd research/ai-module
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
-# Configure your GEMINI_API_KEY or OPENROUTER_API_KEY in .env
+./research/ai-module/.venv/bin/python research/run_full_system_test_suite.py
 ```
 
-### 2. Run Test Suite
+### 2. Launch Interactive GrowthOS Presentation CLI
+Interactive terminal demonstrating live Gemini insights, campaign synthesis, validation gates, and budget rebalancing:
 ```bash
-pytest tests/
+./growthos_cli.sh
+# or
+./research/ai-module/.venv/bin/python research/growthos_cli.py
 ```
 
-### 3. Run Live Demonstrations
+### 3. Run Subsystem Unit Test Suites
 ```bash
-# Run with direct Google Gemini integration
-python3 demo_gemini_live.py --require-live
+# Module 4 AI Unit Tests (174 tests)
+./research/ai-module/.venv/bin/pytest research/ai-module/tests/ -v
 
-# Run with OpenRouter integration
-python3 demo_openrouter_live.py --require-live
+# Module 3 Ads Unit Tests (36 tests)
+./research/ai-module/.venv/bin/pytest research/Ads-Module/tests/ -v
 ```
+
