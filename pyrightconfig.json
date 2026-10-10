@@ -1,0 +1,11 @@
+{
+  "include": [
+    "research"
+  ],
+  "extraPaths": [
+    "research/ai-module",
+    "research/Ads-Module",
+    "research/backend-bridge"
+  ],
+  "reportMissingImports": "none"
+}

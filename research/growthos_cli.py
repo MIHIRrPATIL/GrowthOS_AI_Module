@@ -116,8 +116,8 @@ class AdsModuleClient:
         # Fallback to in-process execution
         sys.path.insert(0, str(WORKSPACE_ROOT / "research" / "Ads-Module"))
         try:
-            from engines.planning_engine import CampaignPlanningEngine
-            from domain.plans import PlanGenerationRequest
+            from engines.planning_engine import CampaignPlanningEngine  # type: ignore
+            from domain.plans import PlanGenerationRequest  # type: ignore
             req = PlanGenerationRequest(**payload)
             engine = CampaignPlanningEngine()
             plan = engine.generate_plan(req)
@@ -137,8 +137,8 @@ class AdsModuleClient:
         # In-process validation
         sys.path.insert(0, str(WORKSPACE_ROOT / "research" / "Ads-Module"))
         try:
-            from engines.validation_engine import CampaignValidationEngine
-            from domain.plans import CampaignPlan
+            from engines.validation_engine import CampaignValidationEngine  # type: ignore
+            from domain.plans import CampaignPlan  # type: ignore
             plan = CampaignPlan(**plan_dict)
             engine = CampaignValidationEngine()
             validated = engine.validate_plan(plan)
@@ -275,38 +275,43 @@ class AIModuleRunner:
                 if any(mod.startswith(p) for p in ["domain", "engines", "adapters", "ports", "services"]):
                     del sys.modules[mod]
 
-            from adapters.sql_event_storage import SqlEventStorageAdapter
-            from engines.metrics_engine import MetricsEngine
-            from engines.evidence_linker import EvidenceLinker
-            from engines.nl_query_engine import NLQueryEngine
-            from domain.events import EventEnvelope
+            from adapters.sql_event_storage import SqlEventStorageAdapter  # type: ignore
+            from engines.metrics_engine import MetricsEngine  # type: ignore
+            from engines.evidence_linker import EvidenceLinker  # type: ignore
+            from engines.nl_query_engine import NLQueryEngine  # type: ignore
+            from domain.events import EventEnvelope  # type: ignore
 
             self.storage = SqlEventStorageAdapter(":memory:")
             self._seed_telemetry(self.storage, EventEnvelope)
             self.metrics_engine = MetricsEngine(storage=self.storage)
             self.evidence_linker = EvidenceLinker()
 
+            from adapters.openrouter_client import load_dotenv_if_present  # type: ignore
+            load_dotenv_if_present()
+
             llm_adapter = None
-            if provider_choice == "gemini":
-                from adapters.gemini_client import GeminiClient
-                from adapters.gemini_llm_adapter import GeminiLLMAdapter
-                gemini_key = os.getenv("GEMINI_API_KEY", "").strip() or os.getenv("GOOGLE_API_KEY", "").strip()
-                if gemini_key:
-                    model = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
-                    client = GeminiClient(api_key=gemini_key, model=model)
-                    llm_adapter = GeminiLLMAdapter(client)
-            elif provider_choice == "openrouter":
-                from adapters.openrouter_client import OpenRouterClient
-                from adapters.openrouter_llm_adapter import OpenRouterLLMAdapter
-                or_key = os.getenv("OPENROUTER_API_KEY", "").strip()
-                if or_key:
-                    model = os.getenv("OPENROUTER_MODEL", "google/gemini-2.5-flash")
-                    client = OpenRouterClient(api_key=or_key, model=model)
-                    llm_adapter = OpenRouterLLMAdapter(client)
+            gemini_key = os.getenv("GEMINI_API_KEY", "").strip() or os.getenv("GOOGLE_API_KEY", "").strip()
+            openrouter_key = os.getenv("OPENROUTER_API_KEY", "").strip()
+
+            if provider_choice in ("gemini", "auto", None) and gemini_key:
+                from adapters.gemini_client import GeminiClient  # type: ignore
+                from adapters.gemini_llm_adapter import GeminiLLMAdapter  # type: ignore
+                model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+                client = GeminiClient(api_key=gemini_key, model=model)
+                llm_adapter = GeminiLLMAdapter(client)
+                self.active_provider = f"Google Gemini ({model})"
+            elif provider_choice == "openrouter" and openrouter_key:
+                from adapters.openrouter_client import OpenRouterClient  # type: ignore
+                from adapters.openrouter_llm_adapter import OpenRouterLLMAdapter  # type: ignore
+                model = os.getenv("OPENROUTER_MODEL", "google/gemini-2.5-flash")
+                client = OpenRouterClient(api_key=openrouter_key, model=model)
+                llm_adapter = OpenRouterLLMAdapter(client)
+                self.active_provider = f"OpenRouter ({model})"
 
             if llm_adapter is None:
-                from adapters.mock_llm import MockLLMAdapter
+                from adapters.mock_llm import MockLLMAdapter  # type: ignore
                 llm_adapter = MockLLMAdapter()
+                self.active_provider = "Deterministic Rule Baseline"
 
             self.nl_engine = NLQueryEngine(
                 llm_port=llm_adapter,
@@ -543,7 +548,7 @@ def run_ai_workflow(ai_runner: AIModuleRunner):
     print("  1. Gemini Live API (gemini-3.5-flash / gemini-2.5-flash)")
     print("  2. OpenRouter Live API (google/gemini-2.5-flash)")
     print("  3. Offline Deterministic Provider (Instant, zero latency, no network needed)")
-    prov_choice = prompt_input("Choice (1/2/3)", "3")
+    prov_choice = prompt_input("Choice (1/2/3)", "1")
 
     mode_map = {"1": "gemini", "2": "openrouter", "3": "mock"}
     chosen_mode = mode_map.get(prov_choice, "mock")
@@ -621,10 +626,11 @@ def run_combined_pipeline(ads_client: AdsModuleClient, ai_runner: AIModuleRunner
     print(Style.BOLD + "STEP 1: TELEMETRY INGESTION & ANOMALY DETECTION (Storefront -> AI Brain)" + Style.RESET)
     print("AI Brain monitors checkout telemetry on Domino's Mumbai store...")
     time.sleep(0.6)
-    ai_runner.initialize("mock")
+    ai_runner.initialize("gemini")
+    print(Style.GREEN + f"  Active AI Provider: {ai_runner.active_provider}" + Style.RESET)
     ans = ai_runner.ask("Where are customers dropping off between Step 1 and Step 2?")
     print(f"  Detected Anomaly: Checkout Step 2 drop-off increased to 54.0% (Address -> Payment friction).")
-    print(f"  AI Diagnostic   : {ans.get('executive_summary')}")
+    print(f"  Live Gemini Diagnostic: {ans.get('executive_summary')}")
 
     print("\n" + Style.BOLD + "STEP 2: AUTONOMOUS ACTION SYNTHESIS (AI Brain -> Ads Module)" + Style.RESET)
     print("AI Brain issues a growth action to capture high-intent Friday night delivery demand:")
@@ -643,7 +649,29 @@ def run_combined_pipeline(ads_client: AdsModuleClient, ai_runner: AIModuleRunner
     plan_id = plan.get("plan_id")
     print(f"  Synthesized Search Campaign : '{plan.get('name')}'")
     print(f"  Allocated Daily Budget      : INR {plan.get('daily_budget_inr'):,.2f} ({plan.get('daily_budget_paise'):,} paise)")
-    print(f"  Headlines Generated         : {len(plan.get('ad_copies', [])[0].get('headlines', []))} compliant headlines (<= 30 chars)")
+    print(f"  Target CPA                  : INR {plan.get('target_cpa_inr'):,.2f} ({plan.get('target_cpa_paise'):,} paise)")
+    print(f"  Bidding Strategy            : {plan.get('bidding_strategy')}")
+
+    print("\n  " + Style.BOLD + "Synthesized Keyword Clusters:" + Style.RESET)
+    for cluster in plan.get("keyword_clusters", []):
+        kws = ", ".join([f"'{k.get('text')}' ({k.get('match_type')})" for k in cluster.get("keywords", [])[:3]])
+        print(f"    - [{cluster.get('name')}]: {kws}")
+
+    print(f"    - [Negative Keywords]: {', '.join(plan.get('negative_keywords', [])[:6])}")
+
+    print("\n  " + Style.BOLD + "Responsive Search Ad (RSA) Copy & Character Constraints:" + Style.RESET)
+    for copy in plan.get("ad_copies", []):
+        print(f"    Final Landing URL: {copy.get('final_url')}")
+        print("    Headlines (Strict Constraint: <= 30 chars):")
+        for h in copy.get("headlines", []):
+            count = len(h)
+            status = Style.GREEN + f"[{count}/30 OK]" + Style.RESET if count <= 30 else Style.RED + f"[{count}/30 FAIL]" + Style.RESET
+            print(f"      * {h.ljust(35)} {status}")
+        print("    Descriptions (Strict Constraint: <= 90 chars):")
+        for d in copy.get("descriptions", []):
+            count = len(d)
+            status = Style.GREEN + f"[{count}/90 OK]" + Style.RESET if count <= 90 else Style.RED + f"[{count}/90 FAIL]" + Style.RESET
+            print(f"      * {d[:70]}... {status}")
 
     print("\n" + Style.BOLD + "STEP 3: CAMPAIGN VALIDATION GATE" + Style.RESET)
     should_val = prompt_bool("Execute automated Validation Engine check?", default=True)
