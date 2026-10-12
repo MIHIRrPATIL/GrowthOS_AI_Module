@@ -29,10 +29,19 @@
   - `sim/generators/faults.py`: `FaultInjector` injecting event duplicates, late/out-of-order events, clock skew, and telemetry drops (preserving orders).
   - `sim/golden.py`: Golden scenarios (`null_week`, `step2_spike`, `bot_flood`, `loyalty_cooldown_boundary`).
   - Verified with 7/7 tests in `research/ai-module/tests/test_phase2_invariants_and_faults.py`.
-- [ ] **Phase 3: Closed-Loop Governance, Holdouts & Attribution** (UP NEXT)
-- [ ] **Phase 4: Cross-Module Ads & Loyalty Optimization**
-- [ ] **Phase 5: Chaos Simulation & Service Fault Injection**
-- [ ] **Phase 6: Coverage Tracking, CLI Integration & Golden Regression Suite**
+- [x] **Phase 3: Closed-Loop Governance, Holdouts & Attribution** (COMPLETED)
+  - `sim/generators/customers.py`: `CustomerProfile`, `CustomerGenerator` with pre-policy ITT holdouts and DPDP consent states.
+  - `sim/generators/orders.py`: `VerifiedOrder`, `OrderFeedGenerator` simulating multi-channel verified orders, refunds, and cancellations.
+  - `sim/attribution.py`: `CausalLiftEvaluator` measuring true causal lift and 95% confidence intervals across treated vs holdout control arms.
+- [x] **Phase 4: Cross-Module Ads & Loyalty Optimization** (COMPLETED)
+  - `sim/generators/ads.py`: `AdsSimulator` simulating impressions, clicks, spend, and ROAS; executing <= 15% budget shifts and 1-click rollback.
+  - `sim/oracle/ads.py`: `ExactAdsOracle` verifying spend, CAC, ROAS, and unified merchant growth spend caps (Ads + Loyalty subsidies).
+- [x] **Phase 5: Chaos Simulation & Service Fault Injection** (COMPLETED)
+  - `sim/chaos.py`: `ChaosSimulator` validating timeout-after-success idempotency, circuit breaker trip and recovery, and hostile LLM rejection.
+- [x] **Phase 6: Coverage Tracking, CLI Integration & Golden Regression Suite** (COMPLETED)
+  - `sim/coverage.py`: `CoverageTracker` tracking all-pairs categorical and numerical dimensions (achieving >= 90% pairwise coverage).
+  - `sim/regression.py`: `RegressionSeedStore` persisting and minimizing failing seeds for automated reproduction.
+  - Exit criterion met: 200-seed end-to-end batch simulation passing with 100% success rate in `test_phase3_to_6_full_simulator_suite.py`.
 
 ## Completed Remediations (Committed in 1e84c12)
 - Pre-policy ITT holdout assignment implemented (`HoldoutEngine`).

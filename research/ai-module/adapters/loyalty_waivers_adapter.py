@@ -103,7 +103,9 @@ class HttpLoyaltyAdapter(LoyaltyPort):
         # Offline / In-memory execution fallback if no base_url configured
         if not self.base_url:
             if idempotency_key in self.offline_records:
-                return self.offline_records[idempotency_key]
+                cached = dict(self.offline_records[idempotency_key])
+                cached["is_replay"] = True
+                return cached
             receipt = {
                 "status": "success",
                 "waiver_id": f"wv_{hashlib.md5(idempotency_key.encode()).hexdigest()[:12]}",
