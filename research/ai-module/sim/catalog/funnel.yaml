@@ -1,0 +1,46 @@
+version: "v1"
+description: "E-Commerce Funnel conversion parameters and step transitions"
+
+funnel_steps:
+  - id: "step_1_view"
+    name: "Product & Menu Views"
+  - id: "step_2_cart"
+    name: "Add to Cart"
+  - id: "step_3_checkout"
+    name: "Initiate Checkout"
+  - id: "step_4_payment"
+    name: "Payment Gateway"
+  - id: "step_5_order"
+    name: "Order Completed"
+
+conversion_baselines:
+  qsr:
+    view_to_cart: 0.32
+    cart_to_checkout: 0.70
+    checkout_to_payment: 0.88
+    payment_to_order: 0.94
+  fashion:
+    view_to_cart: 0.12
+    cart_to_checkout: 0.55
+    checkout_to_payment: 0.78
+    payment_to_order: 0.89
+  electronics:
+    view_to_cart: 0.08
+    cart_to_checkout: 0.45
+    checkout_to_payment: 0.75
+    payment_to_order: 0.92
+  grocery:
+    view_to_cart: 0.45
+    cart_to_checkout: 0.80
+    checkout_to_payment: 0.92
+    payment_to_order: 0.96
+  d2c_subscription:
+    view_to_cart: 0.18
+    cart_to_checkout: 0.60
+    checkout_to_payment: 0.82
+    payment_to_order: 0.91
+
+friction_rates:
+  rage_click_rate_mobile: 0.04
+  rage_click_rate_desktop: 0.015
+  payment_timeout_rate: 0.035

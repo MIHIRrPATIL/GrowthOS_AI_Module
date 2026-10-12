@@ -1,0 +1,100 @@
+version: "v1"
+description: "Vertical catalog profiles and economics for Indian commerce tenants"
+
+verticals:
+  qsr:
+    name: "Quick Service Restaurant & Food Delivery"
+    aov_paise_min: 35000
+    aov_paise_max: 85000
+    delivery_fee_paise_min: 3500
+    delivery_fee_paise_max: 6000
+    free_delivery_threshold_paise: 50000
+    gross_margin_min: 0.60
+    gross_margin_max: 0.75
+    payment_mix:
+      upi: 0.62
+      card: 0.18
+      wallet: 0.08
+      cod: 0.12
+  fashion:
+    name: "Apparel & Footwear D2C"
+    aov_paise_min: 120000
+    aov_paise_max: 320000
+    delivery_fee_paise_min: 5000
+    delivery_fee_paise_max: 10000
+    free_delivery_threshold_paise: 150000
+    gross_margin_min: 0.50
+    gross_margin_max: 0.65
+    payment_mix:
+      upi: 0.50
+      card: 0.25
+      wallet: 0.05
+      cod: 0.20
+  electronics:
+    name: "Consumer Electronics & Gadgets"
+    aov_paise_min: 250000
+    aov_paise_max: 850000
+    delivery_fee_paise_min: 0
+    delivery_fee_paise_max: 15000
+    free_delivery_threshold_paise: 300000
+    gross_margin_min: 0.15
+    gross_margin_max: 0.30
+    payment_mix:
+      upi: 0.45
+      card: 0.40
+      wallet: 0.10
+      cod: 0.05
+  grocery:
+    name: "Quick Commerce & Daily Essentials"
+    aov_paise_min: 45000
+    aov_paise_max: 110000
+    delivery_fee_paise_min: 2500
+    delivery_fee_paise_max: 4500
+    free_delivery_threshold_paise: 75000
+    gross_margin_min: 0.20
+    gross_margin_max: 0.35
+    payment_mix:
+      upi: 0.70
+      card: 0.15
+      wallet: 0.10
+      cod: 0.05
+  d2c_subscription:
+    name: "D2C Health & Wellness Subscription"
+    aov_paise_min: 80000
+    aov_paise_max: 180000
+    delivery_fee_paise_min: 0
+    delivery_fee_paise_max: 5000
+    free_delivery_threshold_paise: 100000
+    gross_margin_min: 0.55
+    gross_margin_max: 0.70
+    payment_mix:
+      upi: 0.55
+      card: 0.35
+      wallet: 0.05
+      cod: 0.05
+
+cities:
+  - name: "Mumbai"
+    tier: 1
+    state: "MH"
+  - name: "Bengaluru"
+    tier: 1
+    state: "KA"
+  - name: "Delhi NCR"
+    tier: 1
+    state: "DL"
+  - name: "Hyderabad"
+    tier: 1
+    state: "TG"
+  - name: "Pune"
+    tier: 1
+    state: "MH"
+  - name: "Chennai"
+    tier: 1
+    state: "TN"
+  - name: "Kolkata"
+    tier: 1
+    state: "WB"
+  - name: "Ahmedabad"
+    tier: 2
+    state: "GJ"

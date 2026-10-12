@@ -1,0 +1,31 @@
+version: "v1"
+description: "Module 3 Ads acquisition baselines, quality score curves, and CPC bounds"
+
+platforms:
+  google:
+    types: ["search", "shopping", "performance"]
+    cpc_paise_min: 800       # 8 INR
+    cpc_paise_max: 4500      # 45 INR
+    ctr_min: 0.025
+    ctr_max: 0.085
+    baseline_roas_min: 1.8
+    baseline_roas_max: 4.2
+  meta:
+    types: ["retargeting", "social_lookalike", "catalog_sales"]
+    cpc_paise_min: 500       # 5 INR
+    cpc_paise_max: 3200      # 32 INR
+    ctr_min: 0.012
+    ctr_max: 0.055
+    baseline_roas_min: 1.2
+    baseline_roas_max: 3.5
+
+quality_scores:
+  min: 1.0
+  max: 10.0
+  mean: 7.2
+  std: 1.4
+
+optimization:
+  max_daily_budget_shift_pct: 15.0
+  min_campaign_days_before_shift: 3
+  roas_threshold_pause: 1.0

@@ -17,8 +17,14 @@
   - `sim/storage.py`: Run artifact persistence under `runs/DATE_SEED/`.
   - `research/growthos_cli.py`: Integrated CLI flags (`--seed`, `--mode`, `--scenario`, `--freeze`, `--size`, `--reveal`, `--sim-only`).
   - Verified with 8/8 tests in `research/ai-module/tests/test_scenario_reproducibility.py`.
-- [ ] **Phase 1: Catalogs & Multiverse Synthetic Generators** (UP NEXT)
-- [ ] **Phase 2: Invariant Engine & Data Fault Injection**
+- [x] **Phase 1: Catalogs & Multiverse Synthetic Generators** (COMPLETED)
+  - `sim/catalog/`: `tenants.yaml`, `loyalty.yaml`, `funnel.yaml`, `ads.yaml`.
+  - `sim/generators/loyalty.py`: `SimulatedCustomer`, `LoyaltyGenerator` tracking true customer points ledger, tier transitions, and delivery fee waiver actions.
+  - `sim/generators/funnel.py`: `SimulatedSession`, `FunnelGenerator` simulating per-step conversions, cart values, fee waiver applications, and checkout points earn.
+  - `sim/oracle/metrics.py`: `ExactMetricsOracle` computing exact counts and revenue.
+  - `sim/oracle/loyalty.py`: `ExactLoyaltyOracle` verifying point conservation, non-negativity, and cooldown compliance.
+  - Exit criterion met: Zero oracle mismatches across 200 random seeds in `test_phase1_generators_and_oracles.py`.
+- [ ] **Phase 2: Invariant Engine & Data Fault Injection** (UP NEXT)
 - [ ] **Phase 3: Closed-Loop Governance, Holdouts & Attribution**
 - [ ] **Phase 4: Cross-Module Ads & Loyalty Optimization**
 - [ ] **Phase 5: Chaos Simulation & Service Fault Injection**

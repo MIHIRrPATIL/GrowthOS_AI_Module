@@ -1,0 +1,68 @@
+version: "v1"
+description: "Module 1 Loyalty & Rewards Platform specifications and vertical rules"
+
+loyalty_profiles:
+  qsr:
+    points_earn_ratio: 0.10             # 1 pt per 10 INR spent
+    points_burn_rate_paise: 100         # 1 pt = 100 paise (1 INR)
+    delivery_fee_waiver_cost_points: 40 # 40 pts to waive fee
+    daily_waiver_budget_paise: 250000   # 2,500 INR daily subsidy cap
+    waiver_cooldown_hours: 48           # 48 hours between customer waivers
+    max_bonus_points_per_grant: 200
+    tiers:
+      Bronze: 0
+      Silver: 500
+      Gold: 1500
+      Platinum: 5000
+
+  fashion:
+    points_earn_ratio: 0.05             # 1 pt per 20 INR spent
+    points_burn_rate_paise: 100
+    delivery_fee_waiver_cost_points: 60
+    daily_waiver_budget_paise: 350000
+    waiver_cooldown_hours: 72
+    max_bonus_points_per_grant: 300
+    tiers:
+      Bronze: 0
+      Silver: 800
+      Gold: 2500
+      Platinum: 8000
+
+  electronics:
+    points_earn_ratio: 0.02             # 1 pt per 50 INR spent
+    points_burn_rate_paise: 100
+    delivery_fee_waiver_cost_points: 80
+    daily_waiver_budget_paise: 400000
+    waiver_cooldown_hours: 168          # 7 days
+    max_bonus_points_per_grant: 500
+    tiers:
+      Bronze: 0
+      Silver: 1000
+      Gold: 3000
+      Platinum: 10000
+
+  grocery:
+    points_earn_ratio: 0.15             # 1 pt per 6.67 INR spent
+    points_burn_rate_paise: 100
+    delivery_fee_waiver_cost_points: 30
+    daily_waiver_budget_paise: 180000
+    waiver_cooldown_hours: 24
+    max_bonus_points_per_grant: 150
+    tiers:
+      Bronze: 0
+      Silver: 400
+      Gold: 1200
+      Platinum: 4000
+
+  d2c_subscription:
+    points_earn_ratio: 0.10
+    points_burn_rate_paise: 100
+    delivery_fee_waiver_cost_points: 50
+    daily_waiver_budget_paise: 200000
+    waiver_cooldown_hours: 48
+    max_bonus_points_per_grant: 250
+    tiers:
+      Bronze: 0
+      Silver: 500
+      Gold: 1500
+      Platinum: 5000
