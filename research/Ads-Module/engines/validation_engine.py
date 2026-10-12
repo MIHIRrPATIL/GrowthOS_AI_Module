@@ -39,6 +39,10 @@ class CampaignValidationEngine:
         self.min_budget_paise = min_budget_paise
         self.max_budget_paise = max_budget_paise
 
+    def validate_plan(self, plan: CampaignPlan) -> ValidationResult:
+        """Alias for validate() to maintain caller compatibility."""
+        return self.validate(plan)
+
     def validate(self, plan: CampaignPlan) -> ValidationResult:
         errors: List[str] = []
         warnings: List[str] = []

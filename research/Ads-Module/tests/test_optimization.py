@@ -176,6 +176,45 @@ def test_optimization_policy_rejects_excessive_shift(storage, optimization_servi
         optimization_service.apply_proposal(prop.proposal_id)
 
 
+def test_optimization_policy_rejects_cumulative_24h_excessive_shift(storage, optimization_service):
+    """
+    Validates that multiple individually valid shifts on the same campaign cannot
+    cumulatively exceed 15% across a 24-hour window.
+    """
+    ws = "ws_cumul_test"
+    # First shift of 10%
+    prop1 = OptimizationProposal(
+        workspace_id=ws,
+        account_id="8023466278",
+        proposal_type=OptimizationProposalType.SHIFT_BUDGET,
+        source_campaign_id="camp_cumul",
+        target_campaign_id="camp_w",
+        shift_amount_paise=20000,
+        shift_pct=10.0,
+        rationale="Shift 10% daily budget"
+    )
+    storage.save_proposal(prop1)
+    applied1 = optimization_service.apply_proposal(prop1.proposal_id)
+    assert applied1.status == ProposalStatus.APPLIED
+
+    # Second shift of 8% on the same campaign (cumulative = 18% > 15%)
+    prop2 = OptimizationProposal(
+        workspace_id=ws,
+        account_id="8023466278",
+        proposal_type=OptimizationProposalType.SHIFT_BUDGET,
+        source_campaign_id="camp_cumul",
+        target_campaign_id="camp_w",
+        shift_amount_paise=16000,
+        shift_pct=8.0,
+        rationale="Shift additional 8% daily budget"
+    )
+    storage.save_proposal(prop2)
+
+    with pytest.raises(ValueError, match="Cumulative 24-hour budget shift"):
+        optimization_service.apply_proposal(prop2.proposal_id)
+
+
+
 # =============================================================================
 # 3. REST API Integration Tests
 # =============================================================================

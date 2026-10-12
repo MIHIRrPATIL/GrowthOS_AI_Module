@@ -22,6 +22,7 @@ from datetime import datetime, timezone, timedelta
 import math
 import statistics
 import uuid
+import re
 
 from ports.storage import EventStoragePort
 from ports.identity import IdentityResolutionPort
@@ -133,6 +134,7 @@ class DigestEngine:
                 avg_denom = int(sum(denominators) / len(denominators))
                 avg_num = int(round(median_val * avg_denom))
                 avg_num = max(0, min(avg_num, avg_denom))
+                sample_var = float(statistics.variance(values)) if len(values) > 1 else 0.0
                 min_met = avg_denom >= m_def.min_sample_threshold
                 status_str: Literal["valid", "insufficient_sample", "zero_denominator"] = "valid" if (avg_denom > 0 and min_met) else ("insufficient_sample" if avg_denom > 0 else "zero_denominator")
 
@@ -153,7 +155,7 @@ class DigestEngine:
                     sample_size=avg_denom,
                     min_sample_threshold=m_def.min_sample_threshold,
                     min_sample_met=min_met,
-                    evidence_ref=f"rolling_median:{prior_periods}_periods"
+                    evidence_ref=f"rolling_median:{prior_periods}_periods:var={sample_var:.8f}"
                 )
 
         return rolling_baseline
@@ -284,20 +286,34 @@ class DigestEngine:
                 abs_delta = abs((curr_val - prior_val) / abs(prior_val) * 100.0)
                 delta_pp = (curr_val - prior_val) * 100.0 if curr_metric.unit == "ratio" else None
 
-            # Two-proportion z-test (for ratio metrics with sample >= 10 on both windows)
+            # Statistical significance evaluation (for ratio metrics with sample >= 10 on both windows)
             is_stat_sig: Optional[bool] = None
             if curr_metric.unit == "ratio" and curr_metric.denominator and prior_metric.denominator:
                 n1, n2 = curr_metric.denominator, prior_metric.denominator
-                if n1 >= 10 and n2 >= 10 and curr_metric.numerator is not None and prior_metric.numerator is not None:
-                    k1, k2 = curr_metric.numerator, prior_metric.numerator
-                    p1 = k1 / n1
-                    p2 = k2 / n2
-                    p_pooled = (k1 + k2) / (n1 + n2)
-                    if 0.0 < p_pooled < 1.0:
-                        se = math.sqrt(p_pooled * (1.0 - p_pooled) * (1.0 / n1 + 1.0 / n2))
-                        if se > 0:
-                            z = (p1 - p2) / se
+                if n1 >= 10 and n2 >= 10:
+                    if baseline_type_str == "rolling_median":
+                        # Multi-period rolling baseline: use empirical time-series variance across prior periods
+                        var_match = re.search(r"var=([0-9\.]+)", prior_metric.evidence_ref or "")
+                        s2 = float(var_match.group(1)) if var_match else 0.0
+                        p1 = curr_val
+                        p_base = prior_val
+                        # Variance of the difference: empirical time-series variance + current window binomial sampling variance
+                        se_curr2 = (p1 * (1.0 - p1)) / n1 if n1 > 0 else 0.0
+                        se_diff = math.sqrt(s2 + se_curr2)
+                        if se_diff > 0:
+                            z = (p1 - p_base) / se_diff
                             is_stat_sig = abs(z) >= 1.96  # p < 0.05
+                    elif curr_metric.numerator is not None and prior_metric.numerator is not None:
+                        # Single prior window: standard two-proportion pooled z-test
+                        k1, k2 = curr_metric.numerator, prior_metric.numerator
+                        p1 = k1 / n1
+                        p2 = k2 / n2
+                        p_pooled = (k1 + k2) / (n1 + n2)
+                        if 0.0 < p_pooled < 1.0:
+                            se = math.sqrt(p_pooled * (1.0 - p_pooled) * (1.0 / n1 + 1.0 / n2))
+                            if se > 0:
+                                z = (p1 - p2) / se
+                                is_stat_sig = abs(z) >= 1.96  # p < 0.05
 
             # Determine whether shift qualifies for a flag
             should_flag = False

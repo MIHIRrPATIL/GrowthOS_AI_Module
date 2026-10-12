@@ -91,6 +91,64 @@ def verify_hmac_signature(
     return True, None
 
 
+def generate_ephemeral_client_token(
+    tenant_id: str,
+    session_id: str,
+    secret_key: str,
+    ttl_seconds: int = 3600,
+    current_time: Optional[datetime] = None
+) -> str:
+    """
+    Generates a short-lived token that a merchant's backend server can issue to a client browser.
+    Allows the browser to authenticate telemetry batches without exposing the secret key.
+    Format: <tenant_id>:<session_id>:<expiry_epoch>:<hmac_signature>
+    """
+    now = current_time or datetime.now(timezone.utc)
+    expiry = int(now.timestamp()) + ttl_seconds
+    token_body = f"{tenant_id}:{session_id}:{expiry}"
+    digest = hmac.new(secret_key.encode("utf-8"), token_body.encode("utf-8"), hashlib.sha256).hexdigest()
+    return f"{token_body}:{digest}"
+
+
+def verify_ephemeral_client_token(
+    token: str,
+    tenant_id: str,
+    secret_key: str,
+    session_id: Optional[str] = None,
+    current_time: Optional[datetime] = None
+) -> Tuple[bool, Optional[str]]:
+    """
+    Verifies an ephemeral client session token.
+    Checks signature, expiry, tenant matching, and optional session binding.
+    """
+    parts = token.strip().split(":")
+    if len(parts) != 4:
+        return False, "Invalid token format (expected tenant:session:expiry:signature)"
+
+    tok_tenant, tok_session, tok_expiry_str, tok_sig = parts
+    if tok_tenant != tenant_id:
+        return False, f"Token tenant '{tok_tenant}' does not match request tenant '{tenant_id}'"
+
+    if session_id and tok_session != session_id:
+        return False, f"Token session '{tok_session}' does not match batch session '{session_id}'"
+
+    try:
+        expiry = int(tok_expiry_str)
+    except ValueError:
+        return False, "Invalid token expiry format"
+
+    now = current_time or datetime.now(timezone.utc)
+    if now.timestamp() > expiry:
+        return False, "Ephemeral client token has expired"
+
+    token_body = f"{tok_tenant}:{tok_session}:{tok_expiry_str}"
+    expected_digest = hmac.new(secret_key.encode("utf-8"), token_body.encode("utf-8"), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(tok_sig, expected_digest):
+        return False, "Invalid token signature"
+
+    return True, None
+
+
 # ==============================================================================
 # Pydantic Schemas for Inbound Telemetry Payload
 # ==============================================================================
@@ -211,24 +269,54 @@ class HttpTelemetryAdapter:
                 "message": "Header 'X-Tenant-ID' is required for all telemetry ingestion."
             }
 
-        # 4. HMAC Security & Anti-Replay Drift Check
+        # 4. Ingestion Authentication: Server-to-Server HMAC OR Ephemeral Client Session Token
         if self.enforce_signatures:
             sig_header = norm_headers.get("x-growthos-signature", "").strip()
             ts_header = norm_headers.get("x-growthos-timestamp", "").strip()
+            auth_header = norm_headers.get("authorization", "").strip()
+            session_tok_header = norm_headers.get("x-growthos-session-token", "").strip()
             secret_key = self.get_tenant_secret(tenant_id)
 
-            is_valid, sig_err = verify_hmac_signature(
-                payload_bytes=body_bytes,
-                signature_header=sig_header,
-                timestamp_header=ts_header,
-                secret_key=secret_key,
-                max_drift_seconds=self.max_drift_seconds,
-                current_time=current_time
-            )
-            if not is_valid:
+            authenticated = False
+            auth_error = None
+
+            # Path A: First-Party Reverse Proxy / Server-to-Server HMAC Signature
+            if sig_header and ts_header:
+                is_valid, sig_err = verify_hmac_signature(
+                    payload_bytes=body_bytes,
+                    signature_header=sig_header,
+                    timestamp_header=ts_header,
+                    secret_key=secret_key,
+                    max_drift_seconds=self.max_drift_seconds,
+                    current_time=current_time
+                )
+                if is_valid:
+                    authenticated = True
+                else:
+                    auth_error = sig_err
+
+            # Path B: Direct Browser Ingestion via Ephemeral Session Token (no shared secret exposed)
+            client_token = session_tok_header
+            if not client_token and auth_header.startswith("Bearer "):
+                client_token = auth_header[7:].strip()
+
+            if not authenticated and client_token:
+                is_valid, tok_err = verify_ephemeral_client_token(
+                    token=client_token,
+                    tenant_id=tenant_id,
+                    secret_key=secret_key,
+                    current_time=current_time
+                )
+                if is_valid:
+                    authenticated = True
+                    auth_error = None
+                else:
+                    auth_error = tok_err
+
+            if not authenticated:
                 return 401, resp_headers, {
                     "error": "Unauthorized",
-                    "message": sig_err or "Authentication failed"
+                    "message": auth_error or "Authentication failed: Missing or invalid signature/token"
                 }
 
         # 5. Payload JSON Parsing

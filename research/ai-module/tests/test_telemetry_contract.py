@@ -410,3 +410,80 @@ def test_httpx_wsgi_transport_end_to_end(test_setup):
         assert data["status"] == "success"
         assert data["batch_id"] == "batch_wsgi_client"
         assert data["accepted"] == 1
+
+
+def test_ephemeral_client_session_token_authentication(test_setup):
+    from adapters.http_telemetry_adapter import generate_ephemeral_client_token
+
+    adapter = test_setup["adapter"]
+    tenant_id = test_setup["tenant_id"]
+    secret_key = test_setup["secret_key"]
+    session_id = "sess_browser_user_77"
+
+    # Merchant backend issues short-lived token to browser without giving out secret_key
+    client_token = generate_ephemeral_client_token(
+        tenant_id=tenant_id,
+        session_id=session_id,
+        secret_key=secret_key,
+        ttl_seconds=1800
+    )
+
+    batch_payload = {
+        "batch_id": "batch_browser_token",
+        "events": [
+            {
+                "event_id": "evt_browser_token_1",
+                "session_id": session_id,
+                "event_name": "page.viewed",
+                "timestamp": "2026-10-09T14:00:00Z"
+            }
+        ]
+    }
+    body_bytes = json.dumps(batch_payload).encode("utf-8")
+
+    # Ingest using Bearer Authorization header
+    headers = {
+        "X-Tenant-ID": tenant_id,
+        "Authorization": f"Bearer {client_token}",
+        "Content-Type": "application/json"
+    }
+    code, _, resp = adapter.handle_request(method="POST", path="/v1/telemetry/events", headers=headers, body_bytes=body_bytes)
+    assert code == 200
+    assert resp["status"] == "success"
+    assert resp["accepted"] == 1
+
+
+def test_ephemeral_client_token_rejection_on_expired_or_tampered(test_setup):
+    from adapters.http_telemetry_adapter import generate_ephemeral_client_token
+
+    adapter = test_setup["adapter"]
+    tenant_id = test_setup["tenant_id"]
+    secret_key = test_setup["secret_key"]
+
+    # 1. Expired token (ttl = -10 seconds)
+    expired_token = generate_ephemeral_client_token(
+        tenant_id=tenant_id,
+        session_id="sess_exp",
+        secret_key=secret_key,
+        ttl_seconds=-10
+    )
+    headers = {
+        "X-Tenant-ID": tenant_id,
+        "Authorization": f"Bearer {expired_token}",
+        "Content-Type": "application/json"
+    }
+    code, _, resp = adapter.handle_request(
+        method="POST", path="/v1/telemetry/events", headers=headers,
+        body_bytes=json.dumps({"batch_id": "b1", "events": []}).encode("utf-8")
+    )
+    assert code == 401
+    assert "expired" in resp["message"].lower()
+
+    # 2. Tampered token
+    tampered_token = expired_token[:-4] + "dead"
+    headers["Authorization"] = f"Bearer {tampered_token}"
+    code, _, resp = adapter.handle_request(
+        method="POST", path="/v1/telemetry/events", headers=headers,
+        body_bytes=json.dumps({"batch_id": "b2", "events": []}).encode("utf-8")
+    )
+    assert code == 401

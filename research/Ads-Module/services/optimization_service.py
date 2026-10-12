@@ -42,12 +42,36 @@ class OptimizationService:
                 f"Proposal must be in PROPOSED or APPROVED state."
             )
 
-        # Enforce 15% maximum daily shift invariant
+        # Enforce 15% maximum daily shift invariant (single and cumulative 24h)
         if proposal.proposal_type == OptimizationProposalType.SHIFT_BUDGET:
             if proposal.shift_pct and proposal.shift_pct > 15.0:
                 raise ValueError(
                     f"Policy violation: Budget shift of {proposal.shift_pct:.1f}% "
                     f"exceeds maximum allowed daily limit of 15.0%."
+                )
+
+            # Cumulative 24-hour check across all sources for source campaign
+            now_dt = datetime.now(timezone.utc)
+            applied_proposals = self.storage.list_proposals(
+                workspace_id=proposal.workspace_id,
+                status=ProposalStatus.APPLIED
+            )
+            recent_shifts_pct = 0.0
+            for ap in applied_proposals:
+                if ap.source_campaign_id == proposal.source_campaign_id and ap.applied_at:
+                    try:
+                        app_dt = datetime.fromisoformat(ap.applied_at)
+                        if app_dt.tzinfo is None:
+                            app_dt = app_dt.replace(tzinfo=timezone.utc)
+                        if (now_dt - app_dt).total_seconds() <= 86400.0:
+                            recent_shifts_pct += (ap.shift_pct or 0.0)
+                    except (ValueError, TypeError):
+                        pass
+
+            if recent_shifts_pct + (proposal.shift_pct or 0.0) > 15.0:
+                raise ValueError(
+                    f"Policy violation: Cumulative 24-hour budget shift for campaign '{proposal.source_campaign_id}' "
+                    f"({recent_shifts_pct + (proposal.shift_pct or 0.0):.1f}%) exceeds maximum allowed limit of 15.0%."
                 )
 
         now_str = datetime.now(timezone.utc).isoformat()

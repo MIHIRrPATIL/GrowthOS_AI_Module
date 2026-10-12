@@ -239,6 +239,20 @@ class ActionPlan(BaseModel):
         return f"plan_{h}"
 
 
+def is_holdout_allocated(tenant_id: str, entity_id: str, holdout_pct: int = 10, salt: str = "holdout_salt") -> bool:
+    """
+    Deterministic salted SHA-256 assignment to causal control holdout group.
+    Ensures pre-policy, pre-mode unbiased counterfactual population across all execution modes.
+    """
+    if holdout_pct <= 0:
+        return False
+    if holdout_pct >= 100:
+        return True
+    key = f"{tenant_id}:{entity_id}:{salt}".encode("utf-8")
+    h = hashlib.sha256(key).hexdigest()
+    return (int(h[:8], 16) % 100) < holdout_pct
+
+
 class AuditRecord(BaseModel):
     """
     Append-only ledger entry tracking every reasoning, policy check, decision, and dispatch.

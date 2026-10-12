@@ -116,12 +116,41 @@ class ActionProposer:
         plans: List[ActionPlan] = []
 
         for c in candidates:
-            # 1. Check holdout cohort suppression
+            # 1. Derive deterministic plan ID to prevent rerun duplicates
+            plan_id = ActionPlan.generate_plan_id(
+                tenant_id=context.tenant_id,
+                signal_dedupe_key=context.signal_dedupe_key,
+                action_type=c.action_type.value,
+                target_id=c.target_id
+            )
+
+            # 2. Check holdout cohort allocation
             if c.is_holdout:
+                holdout_plan = ActionPlan(
+                    plan_id=plan_id,
+                    tenant_id=context.tenant_id,
+                    signal_dedupe_key=context.signal_dedupe_key,
+                    customer_id=c.customer_id,
+                    anonymous_id=c.anonymous_id,
+                    action_type=c.action_type,
+                    target_module=c.target_module,
+                    parameters=c.parameters.model_dump(),
+                    reasoning_summary=c.reasoning_summary,
+                    evidence_citations=c.evidence_citations,
+                    priority_score=c.priority_score,
+                    calibrated_probability=c.calibrated_probability,
+                    confidence_score=c.priority_score,
+                    status="holdout",
+                    version=1,
+                    is_holdout=True,
+                    created_at=now.isoformat(),
+                    expires_at=(now + timedelta(hours=24)).isoformat()
+                )
+                self.action_storage.save_plan(holdout_plan)
                 self.audit_ledger.record_audit(
                     AuditRecord(
                         tenant_id=context.tenant_id,
-                        plan_id="HOLD_OUT_CONTROL",
+                        plan_id=plan_id,
                         actor="ai_growth_brain",
                         event_type="candidate_holdout_suppressed",
                         details={
@@ -132,14 +161,6 @@ class ActionProposer:
                     )
                 )
                 continue
-
-            # 2. Derive deterministic plan ID to prevent rerun duplicates
-            plan_id = ActionPlan.generate_plan_id(
-                tenant_id=context.tenant_id,
-                signal_dedupe_key=context.signal_dedupe_key,
-                action_type=c.action_type.value,
-                target_id=c.target_id
-            )
 
             # 3. Check for existing active plan
             existing = self.action_storage.get_plan(context.tenant_id, plan_id)

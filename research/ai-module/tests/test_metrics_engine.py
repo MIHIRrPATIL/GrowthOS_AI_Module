@@ -17,6 +17,7 @@ from adapters.sql_event_storage import SqlEventStorageAdapter
 from engines.metrics_engine import MetricsEngine
 from engines.vertical_templates import get_vertical_template
 from domain.events import EventEnvelope, DeviceMetadata
+from domain.orders import ServerOrder
 from domain.metrics import TimeWindow
 
 
@@ -1016,4 +1017,143 @@ def test_test_and_bot_traffic_exclusion(storage, engine):
     assert m_raw.denominator == 3
     assert m_raw.numerator == 1
     assert m_raw.value == pytest.approx(1.0 / 3.0, abs=1e-6)
+
+
+def test_server_order_conversion_reconciliation(storage, engine):
+    """
+    Verifies that when a client session drops the client-side purchase event
+    (e.g., tab closed upon payment redirect, ad blocker), an authoritative
+    ServerOrder reconciles the session as converted.
+    """
+    t_start = datetime(2026, 10, 1, 10, 0, tzinfo=timezone.utc)
+    t_end = datetime(2026, 10, 1, 12, 0, tzinfo=timezone.utc)
+    window = TimeWindow(start=t_start, end=t_end)
+
+    # User adds item to cart and starts checkout, but never fires purchase.completed
+    events = [
+        EventEnvelope(
+            tenant_id="ws_reconcile",
+            session_id="s_drop_browser",
+            event_name="page.viewed",
+            occurred_at=(t_start + timedelta(minutes=5)).isoformat()
+        ),
+        EventEnvelope(
+            tenant_id="ws_reconcile",
+            session_id="s_drop_browser",
+            event_name="cart.item_added",
+            occurred_at=(t_start + timedelta(minutes=10)).isoformat()
+        ),
+        EventEnvelope(
+            tenant_id="ws_reconcile",
+            session_id="s_drop_browser",
+            event_name="checkout.started",
+            occurred_at=(t_start + timedelta(minutes=15)).isoformat()
+        ),
+    ]
+    storage.store_batch(events)
+
+    # Insert authoritative server order verified via payment webhook
+    server_order = ServerOrder(
+        tenant_id="ws_reconcile",
+        order_id="ord_srv_001",
+        customer_id="cust_999",
+        session_id="s_drop_browser",
+        total_paid_paise=129900,
+        total_paid_inr=1299.00,
+        subtotal_paise=129900,
+        discount_paise=0,
+        tax_paise=0,
+        payment_status="captured",
+        occurred_at=(t_start + timedelta(minutes=20)).isoformat(),
+        received_at=(t_start + timedelta(minutes=20)).isoformat()
+    )
+    storage.store_order(server_order)
+
+    # 1. Checkout conversion rate should be 1/1 = 100%
+    m_conv = engine.calculate_metric("ws_reconcile", "ecommerce", "checkout_conversion_rate", window)
+    assert m_conv.denominator == 1
+    assert m_conv.numerator == 1
+    assert m_conv.value == pytest.approx(1.0, abs=1e-6)
+
+    # 2. Cart abandonment rate should be 0/1 = 0% (mature session with server conversion)
+    m_cart = engine.calculate_metric(
+        "ws_reconcile",
+        "ecommerce",
+        "cart_abandonment_rate",
+        window,
+        as_of=t_start + timedelta(minutes=60)
+    )
+    assert m_cart.denominator == 1
+    assert m_cart.numerator == 0
+    assert m_cart.value == pytest.approx(0.0, abs=1e-6)
+
+
+def test_calculate_server_revenue_metrics(storage, engine):
+    """
+    Verifies exact integer paise and INR aggregations from authoritative server orders.
+    """
+    t_start = datetime(2026, 10, 1, 10, 0, tzinfo=timezone.utc)
+    t_end = datetime(2026, 10, 1, 12, 0, tzinfo=timezone.utc)
+    window = TimeWindow(start=t_start, end=t_end)
+
+    orders = [
+        ServerOrder(
+            tenant_id="ws_rev_test",
+            order_id="ord_01",
+            customer_id="cust_1",
+            session_id="s_1",
+            total_paid_paise=150000,
+            total_paid_inr=1500.00,
+            subtotal_paise=160000,
+            discount_paise=10000,
+            tax_paise=0,
+            payment_status="captured",
+            occurred_at=(t_start + timedelta(minutes=10)).isoformat(),
+            received_at=(t_start + timedelta(minutes=10)).isoformat()
+        ),
+        ServerOrder(
+            tenant_id="ws_rev_test",
+            order_id="ord_02",
+            customer_id="cust_2",
+            session_id="s_2",
+            total_paid_paise=250000,
+            total_paid_inr=2500.00,
+            subtotal_paise=270000,
+            discount_paise=20000,
+            tax_paise=0,
+            payment_status="captured",
+            occurred_at=(t_start + timedelta(minutes=30)).isoformat(),
+            received_at=(t_start + timedelta(minutes=30)).isoformat()
+        ),
+        # Failed payment order should be excluded by default captured filter
+        ServerOrder(
+            tenant_id="ws_rev_test",
+            order_id="ord_failed",
+            customer_id="cust_3",
+            session_id="s_3",
+            total_paid_paise=99900,
+            total_paid_inr=999.00,
+            subtotal_paise=99900,
+            discount_paise=0,
+            tax_paise=0,
+            payment_status="failed",
+            occurred_at=(t_start + timedelta(minutes=40)).isoformat(),
+            received_at=(t_start + timedelta(minutes=40)).isoformat()
+        ),
+    ]
+    for o in orders:
+        storage.store_order(o)
+
+    rev_metrics = engine.calculate_server_revenue_metrics("ws_rev_test", window)
+
+    assert rev_metrics["order_count"] == 2
+    assert rev_metrics["total_revenue_paise"] == 400000
+    assert rev_metrics["total_revenue_inr"] == 4000.00
+    assert rev_metrics["subtotal_paise"] == 430000
+    assert rev_metrics["discount_paise"] == 30000
+    assert rev_metrics["aov_paise"] == 200000
+    assert rev_metrics["aov_inr"] == 2000.00
+    assert rev_metrics["unique_customers_count"] == 2
+    assert rev_metrics["unique_sessions_count"] == 2
+
 

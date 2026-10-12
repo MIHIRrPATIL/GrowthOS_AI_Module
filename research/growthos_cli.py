@@ -24,6 +24,29 @@ WORKSPACE_ROOT = Path(__file__).resolve().parent.parent
 if str(WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(WORKSPACE_ROOT))
 
+AI_DIR = str(WORKSPACE_ROOT / "research" / "ai-module")
+ADS_DIR = str(WORKSPACE_ROOT / "research" / "Ads-Module")
+
+def use_ai_module():
+    while ADS_DIR in sys.path:
+        sys.path.remove(ADS_DIR)
+    while AI_DIR in sys.path:
+        sys.path.remove(AI_DIR)
+    sys.path.insert(0, AI_DIR)
+    for mod in list(sys.modules.keys()):
+        if any(mod.startswith(p) for p in ["domain", "engines", "adapters", "ports", "services", "storage", "attribution", "connectors", "normalization", "events"]):
+            del sys.modules[mod]
+
+def use_ads_module():
+    while AI_DIR in sys.path:
+        sys.path.remove(AI_DIR)
+    while ADS_DIR in sys.path:
+        sys.path.remove(ADS_DIR)
+    sys.path.insert(0, ADS_DIR)
+    for mod in list(sys.modules.keys()):
+        if any(mod.startswith(p) for p in ["domain", "engines", "adapters", "ports", "services", "storage", "attribution", "connectors", "normalization", "events"]):
+            del sys.modules[mod]
+
 # ANSI Color codes for clean presentation
 class Style:
     RESET = "\033[0m"
@@ -114,7 +137,7 @@ class AdsModuleClient:
                     return res.json()
         
         # Fallback to in-process execution
-        sys.path.insert(0, str(WORKSPACE_ROOT / "research" / "Ads-Module"))
+        use_ads_module()
         try:
             from engines.planning_engine import CampaignPlanningEngine  # type: ignore
             from domain.plans import PlanGenerationRequest  # type: ignore
@@ -122,9 +145,8 @@ class AdsModuleClient:
             engine = CampaignPlanningEngine()
             plan = engine.generate_plan(req)
             return plan.model_dump()
-        finally:
-            if str(WORKSPACE_ROOT / "research" / "Ads-Module") in sys.path:
-                sys.path.remove(str(WORKSPACE_ROOT / "research" / "Ads-Module"))
+        except Exception as e:
+            raise e
 
     def validate_plan(self, plan_id: str, plan_dict: Dict[str, Any]) -> Dict[str, Any]:
         if self.is_live_api:
@@ -135,17 +157,24 @@ class AdsModuleClient:
                     return res.json()
 
         # In-process validation
-        sys.path.insert(0, str(WORKSPACE_ROOT / "research" / "Ads-Module"))
+        use_ads_module()
         try:
             from engines.validation_engine import CampaignValidationEngine  # type: ignore
-            from domain.plans import CampaignPlan  # type: ignore
+            from domain.plans import CampaignPlan, PlanStatus  # type: ignore
             plan = CampaignPlan(**plan_dict)
             engine = CampaignValidationEngine()
-            validated = engine.validate_plan(plan)
-            return validated.model_dump()
-        finally:
-            if str(WORKSPACE_ROOT / "research" / "Ads-Module") in sys.path:
-                sys.path.remove(str(WORKSPACE_ROOT / "research" / "Ads-Module"))
+            val_res = engine.validate(plan)
+            if val_res.is_valid:
+                plan.status = PlanStatus.AWAITING_APPROVAL
+                plan.validation_errors = []
+                plan.validation_warnings = val_res.warnings
+            else:
+                plan.status = PlanStatus.VALIDATION_FAILED
+                plan.validation_errors = val_res.errors
+                plan.validation_warnings = val_res.warnings
+            return plan.model_dump(mode="json")
+        except Exception as e:
+            raise e
 
     def approve_plan(self, plan_id: str, approver: str, notes: str) -> Dict[str, Any]:
         if self.is_live_api:

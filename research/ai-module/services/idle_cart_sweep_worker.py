@@ -28,7 +28,7 @@ import uuid
 from ports.storage import EventStoragePort
 from ports.identity import IdentityResolutionPort
 from services.action_orchestrator import ActionOrchestrator
-from domain.actions import ActionPlan, ActionType, ExecutionMode
+from domain.actions import ActionPlan, ActionType, ExecutionMode, is_holdout_allocated
 from engines.heuristic_scoring import (
     score_purchase_propensity,
     score_customer_cltv,
@@ -176,6 +176,7 @@ class IdleCartSweepWorker:
                 )
 
             dedupe_key = f"sweep:{tenant_id}:{session_id}:{action_type.value}"
+            in_holdout = is_holdout_allocated(tenant_id, canonical_cust, holdout_pct=10)
 
             plan = ActionPlan(
                 plan_id=f"plan_{uuid.uuid4().hex[:12]}",
@@ -194,7 +195,8 @@ class IdleCartSweepWorker:
                 priority_score=prop_res.score,
                 calibrated_probability=prop_res.score,
                 signal_dedupe_key=dedupe_key,
-                execution_mode=ExecutionMode.AUTONOMOUS
+                execution_mode=ExecutionMode.AUTONOMOUS,
+                is_holdout=in_holdout
             )
 
             # 4. Route through Governance & Orchestration Layer

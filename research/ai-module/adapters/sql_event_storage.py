@@ -11,6 +11,7 @@ from datetime import datetime, timezone, timedelta
 
 from ports.storage import EventStoragePort
 from domain.events import EventEnvelope
+from domain.orders import ServerOrder
 from domain.metrics import TimeWindow
 from domain.identity import IngestionBatchResult
 
@@ -69,6 +70,40 @@ class SqlEventStorageAdapter(EventStoragePort):
 
         CREATE INDEX IF NOT EXISTS idx_events_tenant_session 
             ON events (tenant_id, session_id, occurred_at);
+
+        CREATE TABLE IF NOT EXISTS server_orders (
+            tenant_id TEXT NOT NULL,
+            order_id TEXT NOT NULL,
+            customer_id TEXT,
+            session_id TEXT,
+            anonymous_id TEXT,
+            source TEXT NOT NULL DEFAULT 'server_webhook',
+            currency TEXT NOT NULL DEFAULT 'INR',
+            subtotal_paise INTEGER NOT NULL,
+            discount_paise INTEGER NOT NULL DEFAULT 0,
+            tax_paise INTEGER NOT NULL DEFAULT 0,
+            total_paid_paise INTEGER NOT NULL,
+            total_paid_inr REAL NOT NULL,
+            payment_status TEXT NOT NULL DEFAULT 'captured',
+            gateway_reference TEXT,
+            occurred_at TEXT NOT NULL,
+            received_at TEXT NOT NULL,
+            metadata TEXT NOT NULL DEFAULT '{}',
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            PRIMARY KEY (tenant_id, order_id)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_server_orders_tenant_occurred 
+            ON server_orders (tenant_id, occurred_at);
+
+        CREATE INDEX IF NOT EXISTS idx_server_orders_tenant_received 
+            ON server_orders (tenant_id, received_at);
+
+        CREATE INDEX IF NOT EXISTS idx_server_orders_tenant_customer 
+            ON server_orders (tenant_id, customer_id, occurred_at);
+
+        CREATE INDEX IF NOT EXISTS idx_server_orders_tenant_session 
+            ON server_orders (tenant_id, session_id);
         """)
         self._conn.commit()
 
@@ -369,5 +404,123 @@ class SqlEventStorageAdapter(EventStoragePort):
 
         return results
 
+    def store_order(self, order: ServerOrder) -> bool:
+        """
+        Stores an authoritative server-verified order.
+        Returns True if inserted, or False if deduplicated.
+        """
+        cursor = self._conn.cursor()
+        try:
+            cursor.execute(
+                """
+                INSERT INTO server_orders (
+                    tenant_id, order_id, customer_id, session_id, anonymous_id,
+                    source, currency, subtotal_paise, discount_paise, tax_paise,
+                    total_paid_paise, total_paid_inr, payment_status, gateway_reference,
+                    occurred_at, received_at, metadata, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+                ON CONFLICT(tenant_id, order_id) DO NOTHING;
+                """,
+                (
+                    order.tenant_id,
+                    order.order_id,
+                    order.customer_id,
+                    order.session_id,
+                    order.anonymous_id,
+                    order.source,
+                    order.currency,
+                    order.subtotal_paise,
+                    order.discount_paise,
+                    order.tax_paise,
+                    order.total_paid_paise,
+                    order.total_paid_inr,
+                    order.payment_status,
+                    order.gateway_reference,
+                    order.occurred_at,
+                    order.received_at,
+                    json.dumps(order.metadata)
+                )
+            )
+            self._conn.commit()
+            return cursor.rowcount > 0
+        except sqlite3.Error:
+            return False
+
+    def store_orders_batch(self, orders: List[ServerOrder]) -> int:
+        """
+        Batch stores server orders, returning count of inserted records.
+        """
+        inserted = 0
+        for o in orders:
+            if self.store_order(o):
+                inserted += 1
+        return inserted
+
+    def query_orders(
+        self,
+        tenant_id: str,
+        window: TimeWindow,
+        as_of: Optional[datetime] = None,
+        customer_id: Optional[str] = None,
+        payment_status: str = "captured",
+        limit: int = 10000
+    ) -> List[ServerOrder]:
+        """
+        Queries verified server orders strictly scoped by tenant and window.
+        """
+        cursor = self._conn.cursor()
+        watermark = as_of or window.end
+        watermark_iso = watermark.isoformat()
+        start_iso = window.start.isoformat()
+        end_iso = window.end.isoformat()
+
+        query = """
+            SELECT * FROM server_orders
+            WHERE tenant_id = ?
+              AND occurred_at >= ?
+              AND occurred_at <= ?
+              AND received_at <= ?
+        """
+        params: List[Any] = [tenant_id, start_iso, end_iso, watermark_iso]
+
+        if payment_status:
+            query += " AND payment_status = ?"
+            params.append(payment_status)
+
+        if customer_id:
+            query += " AND customer_id = ?"
+            params.append(customer_id)
+
+        query += " ORDER BY occurred_at ASC LIMIT ?"
+        params.append(limit)
+
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        orders: List[ServerOrder] = []
+        for r in rows:
+            orders.append(
+                ServerOrder(
+                    tenant_id=r["tenant_id"],
+                    order_id=r["order_id"],
+                    customer_id=r["customer_id"],
+                    session_id=r["session_id"],
+                    anonymous_id=r["anonymous_id"],
+                    source=r["source"],
+                    currency=r["currency"],
+                    subtotal_paise=r["subtotal_paise"],
+                    discount_paise=r["discount_paise"],
+                    tax_paise=r["tax_paise"],
+                    total_paid_paise=r["total_paid_paise"],
+                    total_paid_inr=r["total_paid_inr"],
+                    payment_status=r["payment_status"],
+                    gateway_reference=r["gateway_reference"],
+                    occurred_at=r["occurred_at"],
+                    received_at=r["received_at"],
+                    metadata=json.loads(r["metadata"]) if r["metadata"] else {}
+                )
+            )
+        return orders
+
     def close(self) -> None:
         self._conn.close()
+

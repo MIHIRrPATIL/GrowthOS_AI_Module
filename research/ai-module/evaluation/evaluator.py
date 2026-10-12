@@ -152,7 +152,50 @@ class BenchmarkEvaluator:
         total_cost = sum(p.cost_usd for p in predictions)
         cost_per_1000 = (total_cost / n) * 1000.0
 
-        # 6. Autonomy Gating Rule: Accuracy >= 0.90, ECE <= 0.10, p95 <= 500ms
+        # 6. Counterfactual Regret & Net Value Added (if empirical lift outcomes exist)
+        total_regret_paise: Optional[int] = None
+        net_value_added_inr: Optional[float] = None
+        has_empirical_outcomes = any(c.converted_without_intervention is not None for c in cases)
+
+        if has_empirical_outcomes:
+            total_regret_paise = 0
+            net_margin_paise = 0
+            default_waiver_cost_paise = 5000  # INR 50 standard fee waiver
+
+            for c, p in zip(cases, predictions):
+                cart_paise = c.input_context.get("cart_subtotal_paise", 0)
+                gross_margin_paise = int(round(cart_paise * 0.25))  # 25% gross margin baseline
+                optimal_margin = c.margin_impact_paise if c.margin_impact_paise is not None else 0
+
+                actual_margin = 0
+                selected = p.selected_option
+
+                if selected in ("PROPOSE_WAIVER", "waive_delivery_fee"):
+                    if c.converted_without_intervention:
+                        # Cannibalization: customer would buy anyway, lost the waiver fee
+                        actual_margin = gross_margin_paise - default_waiver_cost_paise
+                    elif c.converted_with_intervention:
+                        # True incremental conversion
+                        actual_margin = gross_margin_paise - default_waiver_cost_paise
+                    else:
+                        # Ineffective discount: customer did not convert, wasted fee
+                        actual_margin = -default_waiver_cost_paise
+                else:
+                    # No waiver / NOOP / Suppressed
+                    if c.converted_without_intervention:
+                        # Organic conversion preserved without margin loss!
+                        actual_margin = gross_margin_paise
+                    else:
+                        # Did not convert without intervention
+                        actual_margin = 0
+
+                regret = max(0, optimal_margin - actual_margin)
+                total_regret_paise += regret
+                net_margin_paise += actual_margin
+
+            net_value_added_inr = round(net_margin_paise / 100.0, 2)
+
+        # 7. Autonomy Gating Rule: Accuracy >= 0.90, ECE <= 0.10, p95 <= 500ms
         is_autonomous_eligible = (
             accuracy >= 0.90 and
             calibration.expected_calibration_error <= 0.10 and
@@ -172,8 +215,11 @@ class BenchmarkEvaluator:
             cost_per_1000_usd=round(cost_per_1000, 4),
             is_eligible_for_autonomous=is_autonomous_eligible,
             accuracy_ci_lower_95=ci_lower,
-            accuracy_ci_upper_95=ci_upper
+            accuracy_ci_upper_95=ci_upper,
+            total_regret_paise=total_regret_paise,
+            net_value_added_inr=net_value_added_inr
         )
+
 
     def _calc_percentile(self, values: List[float], p: float) -> float:
         if not values:

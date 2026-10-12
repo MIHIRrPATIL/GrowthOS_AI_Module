@@ -7,6 +7,7 @@ from abc import ABC, abstractmethod
 from typing import List, Optional
 from datetime import datetime
 from domain.events import EventEnvelope
+from domain.orders import ServerOrder
 from domain.metrics import TimeWindow
 from domain.identity import IngestionBatchResult
 
@@ -90,3 +91,25 @@ class EventStoragePort(ABC):
         Queries sessions with unpurchased cart activity idle for at least idle_threshold_minutes.
         """
         return []
+
+    def store_order(self, order: ServerOrder) -> bool:
+        """
+        Stores an authoritative server-verified order.
+        Returns True if inserted, or False if deduplicated.
+        """
+        return True
+
+    def query_orders(
+        self,
+        tenant_id: str,
+        window: TimeWindow,
+        as_of: Optional[datetime] = None,
+        customer_id: Optional[str] = None,
+        payment_status: str = "captured",
+        limit: int = 10000
+    ) -> List[ServerOrder]:
+        """
+        Queries verified server orders within the given window and watermark.
+        """
+        return []
+

@@ -156,9 +156,14 @@ class EvidenceLinker:
             if expected_val is None:
                 return False, [], f"Metric '{metric_name}' has undefined value (zero denominator)"
 
-            # Tolerance check
-            if abs(claimed_val - expected_val) > max(self.tolerance, 0.001):
-                return False, [], f"Metric '{metric_name}' value mismatch (claimed {claimed_val}, expected {expected_val})"
+            # Type-aware tolerance check: discrete counts and currency require exact match (Delta = 0)
+            unit = fact.get("unit", "ratio")
+            if unit in ("count", "currency_inr"):
+                if abs(claimed_val - expected_val) > 0.0:
+                    return False, [], f"Discrete metric '{metric_name}' requires exact integer match (claimed {claimed_val}, expected {expected_val})"
+            else:
+                if abs(claimed_val - expected_val) > max(self.tolerance, 0.001):
+                    return False, [], f"Metric '{metric_name}' value mismatch (claimed {claimed_val}, expected {expected_val})"
 
             # Polarity check if direction words are used
             if not self._check_polarity(sentence_lower, fact.get("pct_change"), fact.get("polarity")):
@@ -306,7 +311,8 @@ class EvidenceLinker:
                     "min_sample_met": m.min_sample_met,
                     "prior_value": None,
                     "pct_change": None,
-                    "polarity": None
+                    "polarity": None,
+                    "unit": getattr(m, "unit", "ratio")
                 }
             else:
                 # Prior window comparison
@@ -327,7 +333,8 @@ class EvidenceLinker:
                 "sample_size": sample,
                 "min_sample_met": getattr(f, "min_sample_met", True),
                 "is_significant": is_sig,
-                "polarity": getattr(f, "polarity", None)
+                "polarity": getattr(f, "polarity", None),
+                "unit": getattr(f, "unit", "ratio")
             }
 
         for a in anomalies:

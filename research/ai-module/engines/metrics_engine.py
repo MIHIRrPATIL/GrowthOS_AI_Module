@@ -119,7 +119,8 @@ class MetricsEngine:
             metric_def=metric_def,
             events=normalized_events,
             window=window,
-            watermark=watermark
+            watermark=watermark,
+            tenant_id=tenant_id
         )
 
         # 7. Evaluate Ratio Invariants & Status
@@ -265,7 +266,8 @@ class MetricsEngine:
         metric_def: MetricDefinition,
         events: List[EventEnvelope],
         window: TimeWindow,
-        watermark: datetime
+        watermark: datetime,
+        tenant_id: Optional[str] = None
     ) -> Tuple[int, int]:
         """
         Dispatches calculation based on entity type:
@@ -273,7 +275,7 @@ class MetricsEngine:
         - customer / application: slow funnels, cohort window tracking from start event.
         """
         if metric_def.entity == "session":
-            return self._compute_session_counts(metric_def, events, window, watermark)
+            return self._compute_session_counts(metric_def, events, window, watermark, tenant_id=tenant_id)
         else:
             return self._compute_cohort_counts(metric_def, events, window, watermark)
 
@@ -282,7 +284,8 @@ class MetricsEngine:
         metric_def: MetricDefinition,
         events: List[EventEnvelope],
         window: TimeWindow,
-        watermark: datetime
+        watermark: datetime,
+        tenant_id: Optional[str] = None
     ) -> Tuple[int, int]:
         """
         Session-level funnel calculation.
@@ -329,9 +332,26 @@ class MetricsEngine:
                     elif step_nm in ("2", "payment", "charges", "step_2", "step_2_charges"):
                         session_steps[sid].add(2)
 
+        # Reconcile server orders if tenant_id is available
+        server_order_sessions: Set[str] = set()
+        if tenant_id and hasattr(self.storage, "query_orders"):
+            try:
+                server_orders = self.storage.query_orders(
+                    tenant_id=tenant_id,
+                    window=window,
+                    as_of=watermark,
+                    payment_status="captured"
+                )
+                server_order_sessions = {o.session_id for o in server_orders if o.session_id}
+            except Exception:
+                server_order_sessions = set()
+
         # Helper: check maturity for drop-off / abandonment
         maturity_limit = min(window.end, watermark) - timedelta(minutes=metric_def.maturity_window_minutes or 0)
         def is_mature(sid: str, completion_events: Set[str]) -> bool:
+            # If converted via verified server order, session is mature and converted
+            if sid in server_order_sessions:
+                return True
             evts = attributed_sessions[sid]
             # If already converted, session is complete
             if any(e.event_name in completion_events for e in evts):
@@ -351,7 +371,7 @@ class MetricsEngine:
             completed_events = {"purchase.completed", "subscription.activated", "order.completed"}
             # Apply maturity rule to cart abandonment denominator
             mature_cart_sessions = {sid for sid in cart_sessions if is_mature(sid, completed_events)}
-            purchased_sessions = {sid for sid, evts in session_event_names.items() if any(c in evts for c in completed_events)}
+            purchased_sessions = {sid for sid, evts in session_event_names.items() if any(c in evts for c in completed_events)} | (server_order_sessions & mature_cart_sessions)
             abandoned = mature_cart_sessions - purchased_sessions
             return len(abandoned), len(mature_cart_sessions)
 
@@ -359,7 +379,7 @@ class MetricsEngine:
             checkout_sessions = {sid for sid, evts in session_event_names.items() if "checkout.started" in evts}
             completed_events = {"purchase.completed", "subscription.activated", "order.completed"}
             mature_checkout_sessions = {sid for sid in checkout_sessions if is_mature(sid, completed_events)}
-            purchased_sessions = {sid for sid, evts in session_event_names.items() if any(c in evts for c in completed_events)}
+            purchased_sessions = {sid for sid, evts in session_event_names.items() if any(c in evts for c in completed_events)} | (server_order_sessions & mature_checkout_sessions)
             drop_offs = mature_checkout_sessions - purchased_sessions
             return len(drop_offs), len(mature_checkout_sessions)
 
@@ -379,18 +399,18 @@ class MetricsEngine:
 
         elif m_name == "checkout_step_3_drop_off_rate":
             step_2_sessions = {sid for sid, steps in session_steps.items() if 2 in steps}
-            purchased_sessions = {sid for sid, evts in session_event_names.items() if "purchase.completed" in evts}
+            purchased_sessions = {sid for sid, evts in session_event_names.items() if "purchase.completed" in evts} | (server_order_sessions & step_2_sessions)
             drop_offs = step_2_sessions - purchased_sessions
             return len(drop_offs), len(step_2_sessions)
 
         elif m_name == "checkout_conversion_rate":
             checkout_sessions = {sid for sid, evts in session_event_names.items() if "checkout.started" in evts}
-            purchased_sessions = {sid for sid, evts in session_event_names.items() if "purchase.completed" in evts}
+            purchased_sessions = {sid for sid, evts in session_event_names.items() if "purchase.completed" in evts} | (server_order_sessions & checkout_sessions)
             return len(purchased_sessions & checkout_sessions), len(checkout_sessions)
 
         elif m_name == "overall_conversion_rate":
             visiting_sessions = {sid for sid, evts in session_event_names.items() if "page.viewed" in evts or "product.viewed" in evts}
-            purchased_sessions = {sid for sid, evts in session_event_names.items() if "purchase.completed" in evts}
+            purchased_sessions = {sid for sid, evts in session_event_names.items() if "purchase.completed" in evts} | (server_order_sessions & visiting_sessions)
             denom = len(visiting_sessions) if visiting_sessions else total_sessions
             return len(purchased_sessions & visiting_sessions), denom
 
@@ -595,4 +615,60 @@ class MetricsEngine:
             blended_cac_inr=blended_cac_inr,
             campaign_count=len(unique_campaigns)
         )
+
+    def calculate_server_revenue_metrics(
+        self,
+        tenant_id: str,
+        window: TimeWindow,
+        as_of: Optional[datetime] = None,
+        payment_status: str = "captured"
+    ) -> Dict[str, Any]:
+        """
+        Calculates deterministic grounded revenue and order volume metrics
+        from verified server-side orders, eliminating browser event spoofing.
+        """
+        watermark = as_of or window.end
+        if watermark.tzinfo is None:
+            watermark = watermark.replace(tzinfo=timezone.utc)
+
+        if hasattr(self.storage, "query_orders"):
+            orders = self.storage.query_orders(
+                tenant_id=tenant_id,
+                window=window,
+                as_of=watermark,
+                payment_status=payment_status,
+                limit=100000
+            )
+        else:
+            orders = []
+
+        order_count = len(orders)
+        total_revenue_paise = sum(o.total_paid_paise for o in orders)
+        total_revenue_inr = round(total_revenue_paise / 100.0, 2)
+        subtotal_paise = sum(o.subtotal_paise for o in orders)
+        discount_paise = sum(o.discount_paise for o in orders)
+        tax_paise = sum(o.tax_paise for o in orders)
+
+        aov_paise = int(round(total_revenue_paise / order_count)) if order_count > 0 else 0
+        aov_inr = round(aov_paise / 100.0, 2)
+
+        unique_customers = {o.customer_id for o in orders if o.customer_id}
+        unique_sessions = {o.session_id for o in orders if o.session_id}
+
+        return {
+            "tenant_id": tenant_id,
+            "order_count": order_count,
+            "total_revenue_paise": total_revenue_paise,
+            "total_revenue_inr": total_revenue_inr,
+            "subtotal_paise": subtotal_paise,
+            "discount_paise": discount_paise,
+            "tax_paise": tax_paise,
+            "aov_paise": aov_paise,
+            "aov_inr": aov_inr,
+            "unique_customers_count": len(unique_customers),
+            "unique_sessions_count": len(unique_sessions),
+            "window_start": window.start.isoformat(),
+            "window_end": window.end.isoformat(),
+            "as_of": watermark.isoformat()
+        }
 

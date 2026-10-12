@@ -58,6 +58,9 @@ def generate_gray_zone_cases() -> List[Dict[str, Any]]:
             },
             "allowed_options": ["PROPOSE_WAIVER", "SUPPRESS_INCENTIVE", "RESCUE_FRICTION", "NOOP"],
             "ground_truth": "PROPOSE_WAIVER",
+            "converted_without_intervention": False,
+            "converted_with_intervention": True,
+            "margin_impact_paise": int(round(cart_paise * 0.25)) - 5000,
             "rationale": f"Identified customer with cart INR {cart_paise / 100:.2f} (exceeds INR 500 threshold), idle for {idle_m}m, deliberated {views} views for {adds} adds. Qualifies for fee waiver."
         })
 
@@ -89,6 +92,9 @@ def generate_gray_zone_cases() -> List[Dict[str, Any]]:
             },
             "allowed_options": ["PROPOSE_WAIVER", "SUPPRESS_INCENTIVE", "RESCUE_FRICTION", "NOOP"],
             "ground_truth": "NOOP",
+            "converted_without_intervention": False,
+            "converted_with_intervention": False,
+            "margin_impact_paise": 0,
             "rationale": f"Cart subtotal INR {cart_paise / 100:.2f} is below the merchant policy threshold of INR 500.00. Proposing a waiver is strictly prohibited."
         })
 
@@ -118,6 +124,9 @@ def generate_gray_zone_cases() -> List[Dict[str, Any]]:
             },
             "allowed_options": ["PROPOSE_WAIVER", "SUPPRESS_INCENTIVE", "RESCUE_FRICTION", "NOOP"],
             "ground_truth": "NOOP",
+            "converted_without_intervention": False,
+            "converted_with_intervention": False,
+            "margin_impact_paise": 0,
             "rationale": "Anonymous guest with no linked customer_id. Outbound communication and fee waivers are prohibited under invariant 14."
         })
 
@@ -161,6 +170,9 @@ def generate_habitual_converter_cases() -> List[Dict[str, Any]]:
             },
             "allowed_options": ["PROPOSE_WAIVER", "SUPPRESS_INCENTIVE", "RESCUE_FRICTION", "NOOP"],
             "ground_truth": "SUPPRESS_INCENTIVE",
+            "converted_without_intervention": True,
+            "converted_with_intervention": True,
+            "margin_impact_paise": int(round(cart_paise * 0.25)),
             "rationale": f"Habitual customer with {past_orders} lifetime orders, high cart value (INR {cart_paise / 100:.2f}), and organic purchase propensity >= 0.85. Proposing an incentive causes unnecessary margin cannibalization."
         })
     return cases
@@ -202,6 +214,9 @@ def generate_payment_friction_cases() -> List[Dict[str, Any]]:
             },
             "allowed_options": ["PROPOSE_WAIVER", "SUPPRESS_INCENTIVE", "RESCUE_FRICTION", "NOOP"],
             "ground_truth": "RESCUE_FRICTION",
+            "converted_without_intervention": False,
+            "converted_with_intervention": True,
+            "margin_impact_paise": int(round(cart_paise * 0.25)),
             "rationale": f"High intent buyer halted by technical error {err} at payment gateway. Immediate rescue outreach or alternate payment link required, not standard discount."
         })
     return cases
@@ -242,6 +257,9 @@ def generate_long_browse_cases() -> List[Dict[str, Any]]:
             },
             "allowed_options": ["PROPOSE_WAIVER", "SUPPRESS_INCENTIVE", "RESCUE_FRICTION", "NOOP"],
             "ground_truth": "NOOP",
+            "converted_without_intervention": False,
+            "converted_with_intervention": False,
+            "margin_impact_paise": 0,
             "rationale": f"High browse ratio ({views} views to {adds} adds) indicates window shopping or low purchase conviction (propensity <= 0.15). Do not spend notification budget or offer discounts."
         })
     return cases

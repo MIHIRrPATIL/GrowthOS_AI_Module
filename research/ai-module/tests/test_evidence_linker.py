@@ -197,3 +197,44 @@ def test_digest_explanation_engine_captures_hallucinations_in_unsupported_list(s
     # Second hallucinated sentence is pruned and logged
     assert len(explanation.unsupported_claims_dropped) == 1
     assert "Unknown metric 'churn_rate'" in explanation.unsupported_claims_dropped[0]
+
+
+def test_evidence_linker_enforces_exact_match_on_discrete_counts():
+    """
+    Validates that discrete count and currency metrics require exact matching (Delta = 0).
+    A continuous tolerance of 0.5% must not allow off-by-one errors on counts.
+    """
+    flagged_time = datetime(2026, 10, 5, 12, 0, 0, tzinfo=timezone.utc)
+    flags = [
+        DigestFlag(
+            dedupe_key="tenant_test:order_count:week_over_week:20261005",
+            tenant_id="tenant_test",
+            metric_name="order_count",
+            period="week_over_week",
+            polarity="higher_is_better",
+            current_value=42.0,
+            prior_value=40.0,
+            current_sample_size=42,
+            prior_sample_size=40,
+            unit="count",
+            threshold_pct=5.0,
+            severity="low",
+            adverse=False,
+            flagged_at=flagged_time,
+            status="active"
+        )
+    ]
+    linker = EvidenceLinker(tolerance=0.05)  # Even with 5% tolerance
+
+    # Exact claim: 42.0 matches
+    exact_text = "We recorded 42 completed orders [citation: metric=order_count value=42.0 sample=42]."
+    v_text, cits, dropped = linker.verify_and_link(exact_text, flags=flags)
+    assert len(dropped) == 0
+    assert len(cits) == 1
+
+    # Off-by-one claim: 43.0 (which is within 2.4% < 5%) must be rejected for discrete count!
+    inexact_text = "We recorded 43 completed orders [citation: metric=order_count value=43.0 sample=43]."
+    v_text, cits, dropped = linker.verify_and_link(inexact_text, flags=flags)
+    assert len(dropped) == 1
+    assert "requires exact integer match" in dropped[0]
+

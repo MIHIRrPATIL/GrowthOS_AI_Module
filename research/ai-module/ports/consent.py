@@ -33,3 +33,10 @@ class ConsentPort(ABC):
         Records or updates customer consent with audit metadata.
         """
         pass
+
+    def has_consent(self, tenant_id: str, customer_id: str, purpose: str) -> bool:
+        """
+        Returns True if customer has active, unrevoked consent for the specified purpose.
+        Defaults to False (fail-closed) if absent.
+        """
+        return bool(self.get_consent(tenant_id, customer_id).get(purpose, False))

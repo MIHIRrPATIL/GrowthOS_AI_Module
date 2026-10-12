@@ -207,3 +207,75 @@ BEFORE DELETE ON audit_ledger
 BEGIN
     SELECT RAISE(FAIL, 'SECURITY ERROR: audit_ledger is strictly append-only; DELETE is prohibited');
 END;
+
+
+-- 11. Customer Consent Store (DPDP / GDPR Compliance Ground Truth)
+CREATE TABLE IF NOT EXISTS customer_consent (
+    tenant_id TEXT NOT NULL,
+    customer_id TEXT NOT NULL,
+    purpose TEXT NOT NULL, -- whatsapp_marketing, email_marketing, ad_retargeting, profiling
+    status TEXT NOT NULL DEFAULT 'granted', -- granted, revoked, expired
+    notice_version TEXT NOT NULL DEFAULT '1.0',
+    granted_at TEXT NOT NULL,
+    revoked_at TEXT,
+    expires_at TEXT,
+    evidence_event_id TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (tenant_id, customer_id, purpose)
+);
+
+CREATE INDEX IF NOT EXISTS idx_consent_tenant_customer 
+    ON customer_consent (tenant_id, customer_id, purpose, status);
+
+CREATE TABLE IF NOT EXISTS consent_audit_log (
+    log_id TEXT NOT NULL,
+    tenant_id TEXT NOT NULL,
+    customer_id TEXT NOT NULL,
+    purpose TEXT NOT NULL,
+    action TEXT NOT NULL, -- OPT_IN, OPT_OUT, REVOKED, EXPIRED
+    ip_address TEXT,
+    user_agent TEXT,
+    evidence_event_id TEXT,
+    timestamp TEXT NOT NULL,
+    PRIMARY KEY (tenant_id, log_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_consent_audit_lookup 
+    ON consent_audit_log (tenant_id, customer_id, timestamp);
+
+
+-- 12. Authoritative Server Orders (Ground Truth for Revenue & Conversion)
+CREATE TABLE IF NOT EXISTS server_orders (
+    tenant_id TEXT NOT NULL,
+    order_id TEXT NOT NULL,
+    customer_id TEXT,
+    session_id TEXT,
+    anonymous_id TEXT,
+    source TEXT NOT NULL DEFAULT 'server_webhook', -- razorpay, stripe, shopify, oms
+    currency TEXT NOT NULL DEFAULT 'INR',
+    subtotal_paise INTEGER NOT NULL,
+    discount_paise INTEGER NOT NULL DEFAULT 0,
+    tax_paise INTEGER NOT NULL DEFAULT 0,
+    total_paid_paise INTEGER NOT NULL,
+    total_paid_inr REAL NOT NULL,
+    payment_status TEXT NOT NULL DEFAULT 'captured', -- captured, refunded, failed
+    gateway_reference TEXT,
+    occurred_at TEXT NOT NULL,
+    received_at TEXT NOT NULL,
+    metadata TEXT NOT NULL DEFAULT '{}',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (tenant_id, order_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_server_orders_tenant_occurred 
+    ON server_orders (tenant_id, occurred_at);
+
+CREATE INDEX IF NOT EXISTS idx_server_orders_tenant_received 
+    ON server_orders (tenant_id, received_at);
+
+CREATE INDEX IF NOT EXISTS idx_server_orders_tenant_customer 
+    ON server_orders (tenant_id, customer_id, occurred_at);
+
+CREATE INDEX IF NOT EXISTS idx_server_orders_tenant_session 
+    ON server_orders (tenant_id, session_id);

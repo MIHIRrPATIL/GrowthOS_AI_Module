@@ -22,6 +22,9 @@ class DecisionBenchmarkCase(BaseModel):
     description: str
     category: Optional[str] = None
     rationale: Optional[str] = None
+    converted_without_intervention: Optional[bool] = Field(default=None, description="Did organic holdout convert without treatment?")
+    converted_with_intervention: Optional[bool] = Field(default=None, description="Did customer convert when intervention was applied?")
+    margin_impact_paise: Optional[int] = Field(default=None, description="Net margin impact in paise of the optimal intervention")
 
 
 class ProviderPrediction(BaseModel):
@@ -73,3 +76,6 @@ class ProviderPerformanceSummary(BaseModel):
     )
     accuracy_ci_lower_95: Optional[float] = None
     accuracy_ci_upper_95: Optional[float] = None
+    total_regret_paise: Optional[int] = Field(default=None, description="Cumulative counterfactual regret in paise from suboptimal actions")
+    net_value_added_inr: Optional[float] = Field(default=None, description="Net incremental margin value added in INR")
+

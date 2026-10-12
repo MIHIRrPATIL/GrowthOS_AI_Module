@@ -68,6 +68,25 @@ class ActionOrchestrator:
         """
         now = self.clock()
 
+        # 0. Check Upstream Pre-Policy Causal Holdout Allocation
+        if plan.is_holdout:
+            plan.status = "holdout"
+            self.action_storage.save_plan(plan)
+            self.audit_ledger.record_audit(
+                AuditRecord(
+                    tenant_id=plan.tenant_id,
+                    plan_id=plan.plan_id,
+                    actor="orchestrator",
+                    event_type="holdout_control_allocated",
+                    details={
+                        "action_type": plan.action_type.value,
+                        "customer_id": plan.customer_id,
+                        "reason": "customer_allocated_to_causal_control_holdout"
+                    }
+                )
+            )
+            return plan
+
         # 1. Fetch active tenant policy rule (Do not trust caller's rule)
         rule = self.action_storage.get_policy_rule(plan.tenant_id)
         if not rule:

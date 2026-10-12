@@ -82,19 +82,20 @@ def format_markdown_table(summaries: List[ProviderPerformanceSummary]) -> str:
     Renders comparative performance scorecard in Markdown.
     """
     lines = [
-        "| Provider | Sample | Accuracy (95% Wilson CI) | Macro F1 | ECE | Brier | p50 (ms) | p95 (ms) | Cost / 1k | Autonomous? |",
-        "| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |"
+        "| Provider | Sample | Accuracy (95% Wilson CI) | Macro F1 | ECE | Regret (INR) | Net Value (INR) | Cost / 1k | Autonomous? |",
+        "| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |"
     ]
     for s in summaries:
         ci_str = f"[{s.accuracy_ci_lower_95:.3f}, {s.accuracy_ci_upper_95:.3f}]" if s.accuracy_ci_lower_95 is not None else "N/A"
         acc_str = f"{s.accuracy * 100:.1f}% {ci_str}"
         ece_str = f"{s.calibration.expected_calibration_error:.4f}"
-        brier_str = f"{s.calibration.brier_score:.4f}"
+        regret_str = f"₹{s.total_regret_paise / 100:.2f}" if s.total_regret_paise is not None else "N/A"
+        net_val_str = f"₹{s.net_value_added_inr:.2f}" if s.net_value_added_inr is not None else "N/A"
         cost_str = f"${s.cost_per_1000_usd:.4f}"
         auton_str = "YES" if s.is_eligible_for_autonomous else "NO"
 
         lines.append(
-            f"| **{s.provider_name}** | {s.sample_count} | {acc_str} | {s.macro_f1:.4f} | {ece_str} | {brier_str} | {s.p50_latency_ms:.1f} | {s.p95_latency_ms:.1f} | {cost_str} | {auton_str} |"
+            f"| **{s.provider_name}** | {s.sample_count} | {acc_str} | {s.macro_f1:.4f} | {ece_str} | {regret_str} | {net_val_str} | {cost_str} | {auton_str} |"
         )
     return "\n".join(lines)
 
