@@ -230,31 +230,60 @@ class AdsModuleClient:
                     return res.json()
         return conv_data
 
-    def get_attribution_summary(self, workspace_id: str) -> Dict[str, Any]:
+    def get_attribution_summary(self, workspace_id: str, default_aov: float = 1450.0) -> Dict[str, Any]:
         if self.is_live_api:
             import httpx
             with httpx.Client(timeout=5.0) as client:
                 res = client.get(f"{self.api_url}/api/v1/ads/attribution/summary?workspace_id={workspace_id}")
                 if res.status_code == 200:
                     return res.json()
+        total_rev = round(default_aov * 10, 2)
+        attr_rev = round(default_aov * 8.4, 2)
+        ad_spend = round(attr_rev / 3.48, 2)
         return {
             "workspace_id": workspace_id,
             "total_conversions": 12,
             "attributed_conversions": 10,
-            "total_revenue_inr": 14500.0,
-            "attributed_revenue_inr": 12200.0,
-            "ad_spend_inr": 3500.0,
+            "total_revenue_inr": total_rev,
+            "attributed_revenue_inr": attr_rev,
+            "ad_spend_inr": ad_spend,
             "roas": 3.48,
-            "cac_inr": 350.0
+            "cac_inr": round(ad_spend / 10, 2)
         }
 
-    def evaluate_optimization(self, account_id: str) -> List[Dict[str, Any]]:
+    def evaluate_optimization(self, account_id: str, scenario: Optional[Any] = None) -> List[Dict[str, Any]]:
         if self.is_live_api:
             import httpx
             with httpx.Client(timeout=5.0) as client:
                 res = client.post(f"{self.api_url}/api/v1/ads/optimizations/generate", json={"account_id": account_id})
                 if res.status_code == 200:
                     return res.json()
+        if scenario and getattr(scenario, "ads", None) and scenario.ads.campaigns:
+            sorted_camps = sorted(scenario.ads.campaigns, key=lambda c: c.true_roas)
+            bleeder = sorted_camps[0]
+            winner = sorted_camps[-1] if len(sorted_camps) > 1 else sorted_camps[0]
+            curr_paise = bleeder.daily_budget_paise
+            curr_inr = round(curr_paise / 100.0, 2)
+            shift_paise = int(round(curr_paise * 0.15))
+            prop_paise = curr_paise - shift_paise
+            prop_inr = round(prop_paise / 100.0, 2)
+            cpa_inr = bleeder.target_cpa_paise // 100
+            return [
+                {
+                    "proposal_id": f"opt_{uuid.uuid4().hex[:8]}",
+                    "campaign_id": bleeder.campaign_id,
+                    "campaign_name": bleeder.name,
+                    "proposal_type": "BUDGET_REBALANCE",
+                    "current_budget_paise": curr_paise,
+                    "current_budget_inr": curr_inr,
+                    "proposed_budget_paise": prop_paise,
+                    "proposed_budget_inr": prop_inr,
+                    "change_percent": -15.0,
+                    "confidence_score": 0.94,
+                    "reasoning": f"High CPA bleed detected ({cpa_inr} INR target with true ROAS {bleeder.true_roas:.2f}x). Shifted 15% budget to top-performing '{winner.name}' ({winner.true_roas:.2f}x ROAS).",
+                    "status": "PROPOSED"
+                }
+            ]
         return [
             {
                 "proposal_id": f"opt_{uuid.uuid4().hex[:8]}",
@@ -267,7 +296,7 @@ class AdsModuleClient:
                 "proposed_budget_inr": 4250.0,
                 "change_percent": -15.0,
                 "confidence_score": 0.92,
-                "reasoning": "High CPA bleed detected (₹780 vs ₹250 target). Shifted 15% budget to high-performing Cheese Burst Campaign.",
+                "reasoning": "High CPA bleed detected (780 INR vs 250 INR target). Shifted 15% budget to high-performing Cheese Burst Campaign.",
                 "status": "PROPOSED"
             }
         ]
@@ -287,8 +316,14 @@ class AIModuleRunner:
         self.nl_engine = None
         self.as_of = datetime(2026, 10, 6, 0, 0, 0, tzinfo=timezone(timedelta(hours=5, minutes=30)))
         self.init_error = None
+        self.scenario = None
+        self.tenant = None
 
-    def initialize(self, provider_choice: str = "mock"):
+    def initialize(self, provider_choice: str = "mock", scenario: Optional[Any] = None):
+        if scenario is not None:
+            self.scenario = scenario
+            self.tenant = scenario.tenants[0] if getattr(scenario, "tenants", None) else None
+
         # Isolate sys.path for AI module
         ai_path = str(WORKSPACE_ROOT / "research" / "ai-module")
         ads_path = str(WORKSPACE_ROOT / "research" / "Ads-Module")
@@ -354,8 +389,24 @@ class AIModuleRunner:
 
     def _seed_telemetry(self, storage, EventEnvelope):
         import random
-        rng = random.Random(42)
-        tenant_id = "tenant_demo"
+        tenant = self.tenant
+        tenant_id = tenant.tenant_id if tenant else "tenant_demo"
+        aov_inr = float(tenant.aov_paise // 100) if tenant else 650.0
+        vertical_val = tenant.vertical.value if tenant else "ecommerce"
+        seed = self.scenario.seed if self.scenario else 42
+        rng = random.Random(seed)
+
+        path_map = {
+            "qsr": "/menu/pizzas",
+            "fashion": "/catalog/apparel",
+            "electronics": "/catalog/devices",
+            "grocery": "/catalog/fresh",
+            "d2c_subscription": "/plans/subscription",
+            "travel": "/catalog/flights",
+            "lending": "/products/credit",
+            "saas": "/pricing/plans",
+        }
+        catalog_path = path_map.get(vertical_val, "/catalog/products")
         events = []
 
         def seed_window(start_time, count, p_add, p_chk, p_s1, p_s2, p_pur, prefix):
@@ -364,13 +415,13 @@ class AIModuleRunner:
                 anon_id = f"{prefix}_anon_{i:04d}"
                 cid = f"{prefix}_cust_{i:04d}"
                 t = start_time + timedelta(minutes=i * 20)
-                cart_val = round(650.0 + rng.uniform(-50.0, 50.0), 2)
+                cart_val = round(aov_inr + rng.uniform(-0.15 * aov_inr, 0.15 * aov_inr), 2)
 
                 events.append(EventEnvelope(
                     event_id=f"{prefix}_view_{i}", schema_version="1.0.0", tenant_id=tenant_id,
                     source_module="module_2", event_name="page.viewed", occurred_at=t.isoformat(),
                     received_at=t.isoformat(), session_id=sid, customer_id=cid, anonymous_id=anon_id,
-                    properties={"path": "/menu/pizzas"}
+                    properties={"path": catalog_path}
                 ))
                 if i < int(count * p_add):
                     events.append(EventEnvelope(
@@ -414,10 +465,13 @@ class AIModuleRunner:
         storage.store_batch(events)
 
     def ask(self, question: str) -> Dict[str, Any]:
-        if not self.initialized:
-            self.initialize("mock")
+        if not self.initialized or self.nl_engine is None:
+            self.initialize("mock", scenario=self.scenario)
+        if self.nl_engine is None:
+            raise RuntimeError(f"NL engine failed to initialize: {self.init_error}")
+        tenant_id = self.tenant.tenant_id if self.tenant else "tenant_demo"
         res = self.nl_engine.process_query(
-            tenant_id="tenant_demo",
+            tenant_id=tenant_id,
             query_text=question,
             vertical="ecommerce",
             as_of=self.as_of
@@ -444,7 +498,7 @@ class AIModuleRunner:
 # CLI WORKFLOWS
 # =============================================================================
 
-def run_ads_workflow(ads_client: AdsModuleClient):
+def run_ads_workflow(ads_client: AdsModuleClient, scenario: Optional[Any] = None):
     print_banner("MODULE 3: ADS MODULE INTERACTIVE WORKFLOW", "Google Search Campaign Synthesis, Character Guardrails & Deployment")
     
     # Mode notice
@@ -453,23 +507,44 @@ def run_ads_workflow(ads_client: AdsModuleClient):
     else:
         print(Style.YELLOW + "[Ads Module Service offline on port 8001 - Running in in-process direct execution mode]" + Style.RESET)
 
+    tenant = scenario.tenants[0] if (scenario and scenario.tenants) else None
+    primary_camp = scenario.ads.campaigns[0] if (scenario and getattr(scenario, "ads", None) and scenario.ads.campaigns) else None
+    
+    default_store = tenant.name if tenant else "Dominos Pizza Mumbai"
+    default_city = tenant.city if tenant else "Mumbai"
+    vertical_val = tenant.vertical.value if tenant else "qsr"
+    
+    category_map = {
+        "qsr": ("pizza", "Drive dinner delivery orders for signature pizzas with 20% discount"),
+        "fashion": ("apparel", "Drive seasonal wardrobe and trendy apparel purchases with 15% discount"),
+        "electronics": ("electronics", "Drive orders for smart audio and wireless accessories"),
+        "grocery": ("grocery", "Drive orders for fresh daily groceries and express pantry"),
+        "d2c_subscription": ("subscription", "Drive monthly membership signups with 20% welcome discount"),
+        "travel": ("travel", "Drive flight and weekend getaway bookings"),
+        "lending": ("credit", "Drive pre-approved instant credit loan applications"),
+        "saas": ("software", "Drive team productivity software workspace signups"),
+    }
+    default_prod, default_goal_suffix = category_map.get(vertical_val, ("products", "Drive online sales with exclusive seasonal deals"))
+    default_goal = f"{default_goal_suffix} in {default_city}"
+    default_budget = str(float(primary_camp.daily_budget_paise // 100)) if primary_camp else "3500.0"
+    default_cpa = str(float(primary_camp.target_cpa_paise // 100)) if primary_camp else "200.0"
+    default_url = f"https://{default_store.lower().replace(' ', '')}.com"
+    workspace_id = f"ws-{tenant.tenant_id}" if tenant else "ws-dominos-india"
+
     print("\nEnter your campaign specifications or press Enter to accept defaults:")
-    store_name = prompt_input("Store Business Name", "Dominos Pizza Mumbai")
-    product_cat = prompt_input("Product Category", "pizza")
-    goal = prompt_input(
-        "Marketing Goal / Prompt",
-        "Drive Friday evening dinner delivery orders for Cheese Burst and Peppy Paneer pizzas with 20% discount in Mumbai"
-    )
-    city = prompt_input("Target City", "Mumbai")
-    budget_inr = float(prompt_input("Daily Budget (INR)", "3500.0"))
-    cpa_inr = float(prompt_input("Target CPA (INR)", "200.0"))
-    store_url = prompt_input("Final Destination URL", "https://dominos.co.in")
+    store_name = prompt_input("Store Business Name", default_store)
+    product_cat = prompt_input("Product Category", default_prod)
+    goal = prompt_input("Marketing Goal / Prompt", default_goal)
+    city = prompt_input("Target City", default_city)
+    budget_inr = float(prompt_input("Daily Budget (INR)", default_budget))
+    cpa_inr = float(prompt_input("Target CPA (INR)", default_cpa))
+    store_url = prompt_input("Final Destination URL", default_url)
 
     print_section("Synthesizing Search Campaign via Planning Engine")
     time.sleep(0.5)
 
     payload = {
-        "workspace_id": "ws-dominos-india",
+        "workspace_id": workspace_id,
         "account_id": "8023466278",
         "goal_prompt": goal,
         "store_name": store_name,
@@ -542,7 +617,7 @@ def run_ads_workflow(ads_client: AdsModuleClient):
 
     if should_approve:
         approver = prompt_input("Approver Name", "Mihir Patil")
-        notes = prompt_input("Approval Notes", "Approved for Mumbai Friday delivery campaign")
+        notes = prompt_input("Approval Notes", f"Approved for {city} growth campaign")
         app_res = ads_client.approve_plan(plan_id, approver, notes)
         print(Style.GREEN + f"[APPROVED] Plan {plan_id} status transitioned to: {app_res.get('status')}" + Style.RESET)
         print(f"  Approved by : {app_res.get('approved_by')}")
@@ -570,7 +645,7 @@ def run_ads_workflow(ads_client: AdsModuleClient):
         print(Style.YELLOW + "[SKIPPED] Deployment skipped." + Style.RESET)
 
 
-def run_ai_workflow(ai_runner: AIModuleRunner):
+def run_ai_workflow(ai_runner: AIModuleRunner, scenario: Optional[Any] = None):
     print_banner("MODULE 4: AI GROWTH BRAIN INTERACTIVE WORKFLOW", "Deterministic Metric Catalog, Anti-Hallucination Guardrails & 3-Tier Answers")
 
     print("Select LLM Provider Mode:")
@@ -582,7 +657,7 @@ def run_ai_workflow(ai_runner: AIModuleRunner):
     mode_map = {"1": "gemini", "2": "openrouter", "3": "mock"}
     chosen_mode = mode_map.get(prov_choice, "mock")
     print(f"\nInitializing telemetry and AI engine in [{chosen_mode.upper()}] mode...")
-    ai_runner.initialize(chosen_mode)
+    ai_runner.initialize(chosen_mode, scenario=scenario)
 
     print("\nSelect or type your business question:")
     print("  1. 'Why did cart abandonment spike this week?'")
@@ -646,36 +721,63 @@ def run_ai_workflow(ai_runner: AIModuleRunner):
     )
 
 
-def run_combined_pipeline(ads_client: AdsModuleClient, ai_runner: AIModuleRunner):
+def run_combined_pipeline(ads_client: AdsModuleClient, ai_runner: AIModuleRunner, scenario: Optional[Any] = None):
     print_banner(
         "GROWTHOS CLOSED-LOOP DEMONSTRATION",
         "Autonomous Feedback Loop: Storefront -> AI Brain -> Ad Synthesis -> Validation -> Closed-Loop Attribution"
     )
 
+    tenant = scenario.tenants[0] if (scenario and scenario.tenants) else None
+    primary_camp = scenario.ads.campaigns[0] if (scenario and getattr(scenario, "ads", None) and scenario.ads.campaigns) else None
+
+    tenant_name = tenant.name if tenant else "Dominos Pizza Mumbai"
+    tenant_id = tenant.tenant_id if tenant else "tenant_sim_01"
+    city = tenant.city if tenant else "Mumbai"
+    vertical_val = tenant.vertical.value if tenant else "qsr"
+    aov_inr = float(tenant.aov_paise // 100) if tenant else 877.0
+    daily_budget_inr = float(primary_camp.daily_budget_paise // 100) if primary_camp else 3500.0
+    target_cpa_inr = float(primary_camp.target_cpa_paise // 100) if primary_camp else 200.0
+
     print(Style.BOLD + "STEP 1: TELEMETRY INGESTION & ANOMALY DETECTION (Storefront -> AI Brain)" + Style.RESET)
-    print("AI Brain monitors checkout telemetry on Domino's Mumbai store...")
+    print(f"AI Brain monitors checkout telemetry on {tenant_name} ({city} store)...")
     time.sleep(0.6)
-    ai_runner.initialize("gemini")
+    ai_runner.initialize("gemini", scenario=scenario)
     print(Style.GREEN + f"  Active AI Provider: {ai_runner.active_provider}" + Style.RESET)
     ans = ai_runner.ask("Where are customers dropping off between Step 1 and Step 2?")
-    print(f"  Detected Anomaly: Checkout Step 2 drop-off increased to 54.0% (Address -> Payment friction).")
-    print(f"  Live Gemini Diagnostic: {ans.get('executive_summary')}")
+    print(f"  Detected Anomaly: Checkout step drop-off spike detected in {city} storefront.")
+    print(f"  Live Diagnostic: {ans.get('executive_summary')}")
+
+    category_map = {
+        "qsr": ("pizza", "dinner delivery orders for signature pizzas with 20% discount"),
+        "fashion": ("apparel", "weekend seasonal wardrobe orders and trendy collections with 15% discount"),
+        "electronics": ("electronics", "flagship smart devices and premium wireless audio with bundle savings"),
+        "grocery": ("grocery", "express pantry deliveries and fresh weekly essentials"),
+        "d2c_subscription": ("subscription", "curated monthly membership boxes and recurring deliveries with 20% welcome discount"),
+        "travel": ("travel", "weekend getaway bookings and roundtrip flight bundles"),
+        "lending": ("credit", "instant pre-approved personal credit and zero-processing fee loans"),
+        "saas": ("software", "team workspace productivity subscriptions with 14-day premium trial"),
+    }
+    prod_cat, goal_suffix = category_map.get(vertical_val, ("products", "high-intent orders with seasonal discounts"))
+    goal_prompt = f"Drive {city} high-intent online orders for {tenant_name}: {goal_suffix}"
+    store_url = f"https://{tenant_name.lower().replace(' ', '')}.com"
+    workspace_id = f"ws-{tenant_id}"
+    account_id = "8023466278"
 
     print("\n" + Style.BOLD + "STEP 2: AUTONOMOUS ACTION SYNTHESIS (AI Brain -> Ads Module)" + Style.RESET)
-    print("AI Brain issues a growth action to capture high-intent Friday night delivery demand:")
+    print(f"AI Brain issues a growth action to capture high-intent {city} demand:")
     payload = {
-        "workspace_id": "ws-dominos-india",
-        "account_id": "8023466278",
-        "goal_prompt": "Drive Friday evening dinner delivery orders for Cheese Burst and Peppy Paneer pizzas with 20% discount in Mumbai",
-        "store_name": "Dominos Pizza Mumbai",
-        "store_url": "https://dominos.co.in",
-        "daily_budget_inr": 3500.0,
-        "target_cpa_inr": 200.0,
-        "target_cities": ["Mumbai"],
-        "product_category": "pizza"
+        "workspace_id": workspace_id,
+        "account_id": account_id,
+        "goal_prompt": goal_prompt,
+        "store_name": tenant_name,
+        "store_url": store_url,
+        "daily_budget_inr": daily_budget_inr,
+        "target_cpa_inr": target_cpa_inr,
+        "target_cities": [city],
+        "product_category": prod_cat
     }
     plan = ads_client.generate_plan(payload)
-    plan_id = plan.get("plan_id")
+    plan_id = str(plan.get("plan_id") or f"plan_{uuid.uuid4().hex[:8]}")
     print(f"  Synthesized Search Campaign : '{plan.get('name')}'")
     print(f"  Allocated Daily Budget      : INR {plan.get('daily_budget_inr'):,.2f} ({plan.get('daily_budget_paise'):,} paise)")
     print(f"  Target CPA                  : INR {plan.get('target_cpa_inr'):,.2f} ({plan.get('target_cpa_paise'):,} paise)")
@@ -714,7 +816,7 @@ def run_combined_pipeline(ads_client: AdsModuleClient, ai_runner: AIModuleRunner
     print("\n" + Style.BOLD + "STEP 4: MERCHANT APPROVAL GATE" + Style.RESET)
     should_app = prompt_bool("Approve synthesized campaign?", default=True)
     if should_app:
-        ads_client.approve_plan(plan_id, "Mihir Patil", "Approved for Friday dinner promo")
+        ads_client.approve_plan(plan_id, "Mihir Patil", f"Approved for {city} growth campaign")
         print(Style.GREEN + "  Merchant Approval Recorded in append-only audit ledger." + Style.RESET)
 
     print("\n" + Style.BOLD + "STEP 5: GOOGLE ADS DEPLOYMENT" + Style.RESET)
@@ -724,39 +826,40 @@ def run_combined_pipeline(ads_client: AdsModuleClient, ai_runner: AIModuleRunner
     print("\n" + Style.BOLD + "STEP 6: CLOSED-LOOP CLICK & CONVERSION ATTRIBUTION" + Style.RESET)
     print("Simulating a customer journey from ad click to completed order...")
     time.sleep(0.5)
-    gclid = f"gclid_mumbai_{uuid.uuid4().hex[:8]}"
+    gclid_prefix = city.lower().replace(" ", "_")
+    gclid = f"gclid_{gclid_prefix}_{uuid.uuid4().hex[:8]}"
     ads_client.track_click({
-        "workspace_id": "ws-dominos-india",
-        "account_id": "8023466278",
+        "workspace_id": workspace_id,
+        "account_id": account_id,
         "gclid": gclid,
         "utm_source": "google",
         "utm_medium": "cpc",
         "utm_campaign": plan.get("name"),
-        "anonymous_id": "anon_mumbai_881"
+        "anonymous_id": f"anon_{gclid_prefix}_881"
     })
     print(f"  1. Ad Click Touchpoint Recorded (GCLID: {gclid})")
 
     ads_client.record_conversion({
-        "workspace_id": "ws-dominos-india",
-        "account_id": "8023466278",
+        "workspace_id": workspace_id,
+        "account_id": account_id,
         "order_id": f"ORD_{uuid.uuid4().hex[:6].upper()}",
-        "anonymous_id": "anon_mumbai_881",
-        "amount_inr": 1450.0,
+        "anonymous_id": f"anon_{gclid_prefix}_881",
+        "amount_inr": aov_inr,
         "gclid": gclid
     })
-    print(f"  2. Purchase Completed: Order value INR 1,450.00 matched to GCLID {gclid}")
+    print(f"  2. Purchase Completed: Order value INR {aov_inr:,.2f} matched to GCLID {gclid}")
     print(Style.GREEN + "  3. Offline conversion uploaded to Google Ads ConversionUploadService." + Style.RESET)
 
     print("\n" + Style.BOLD + "STEP 7: PERFORMANCE DIGEST & AUTONOMOUS REBALANCING" + Style.RESET)
-    summary = ads_client.get_attribution_summary("ws-dominos-india")
-    rev = summary.get("total_attributed_revenue_inr") or summary.get("attributed_revenue_inr", 1450.0)
+    summary = ads_client.get_attribution_summary(workspace_id, default_aov=aov_inr)
+    rev = summary.get("total_attributed_revenue_inr") or summary.get("attributed_revenue_inr", round(aov_inr * 8.4, 2))
     roas = summary.get("roas", 3.48)
-    cac = summary.get("cac_inr", 350.0)
+    cac = summary.get("cac_inr", target_cpa_inr)
     print(f"  Closed-Loop Attributed Revenue : INR {float(rev):,.2f}")
     print(f"  Closed-Loop ROAS               : {roas}x")
     print(f"  Blended CAC                    : INR {float(cac):,.2f}")
 
-    proposals = ads_client.evaluate_optimization("8023466278")
+    proposals = ads_client.evaluate_optimization(account_id, scenario=scenario)
     if proposals:
         prop = proposals[0]
         print(f"\n  Autonomous Optimization Proposal:")
@@ -768,9 +871,10 @@ def run_combined_pipeline(ads_client: AdsModuleClient, ai_runner: AIModuleRunner
     print_banner("CLOSED-LOOP RUN COMPLETE", "Storefront Telemetry -> AI Analysis -> Ad Campaign -> Purchase Attribution")
 
 
-def run_optimizations_demo(ads_client: AdsModuleClient):
+def run_optimizations_demo(ads_client: AdsModuleClient, scenario: Optional[Any] = None):
     print_banner("ADS MODULE: AUTONOMOUS BUDGET REBALANCING & ROLLBACK", "Bleeder Detection, 15% Daily Shift Limits & 1-Click Rollback")
-    proposals = ads_client.evaluate_optimization("8023466278")
+    account_id = "8023466278"
+    proposals = ads_client.evaluate_optimization(account_id, scenario=scenario)
 
     print(Style.BOLD + "Active Optimization Proposals:" + Style.RESET)
     for p in proposals:
@@ -778,7 +882,8 @@ def run_optimizations_demo(ads_client: AdsModuleClient):
         print(f"Campaign       : {p.get('campaign_name')} (ID: {p.get('campaign_id')})")
         print(f"Current Budget : INR {p.get('current_budget_inr'):,.2f}")
         print(f"Proposed Budget: INR {p.get('proposed_budget_inr'):,.2f} ({p.get('change_percent')}%)")
-        print(f"Confidence     : {p.get('confidence_score') * 100:.0f}%")
+        conf = float(p.get("confidence_score") or 0.0)
+        print(f"Confidence     : {conf * 100:.0f}%")
         print(f"Rationale      : {p.get('reasoning')}")
 
     if proposals:
@@ -849,13 +954,13 @@ def main_menu(scenario=None):
         choice = prompt_input("Select an option (1-5)", "3")
 
         if choice == "1":
-            run_ads_workflow(ads_client)
+            run_ads_workflow(ads_client, scenario=scenario)
         elif choice == "2":
-            run_ai_workflow(ai_runner)
+            run_ai_workflow(ai_runner, scenario=scenario)
         elif choice == "3":
-            run_combined_pipeline(ads_client, ai_runner)
+            run_combined_pipeline(ads_client, ai_runner, scenario=scenario)
         elif choice == "4":
-            run_optimizations_demo(ads_client)
+            run_optimizations_demo(ads_client, scenario=scenario)
         elif choice in ["5", "q", "exit"]:
             print("\nExiting GrowthOS Presentation CLI. Goodbye.")
             if scenario is not None:

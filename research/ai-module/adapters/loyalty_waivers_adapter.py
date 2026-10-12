@@ -95,7 +95,7 @@ class HttpLoyaltyAdapter(LoyaltyPort):
             "action": "waive_delivery_fee",
             "customer_id": customer_id,
             "fee_amount": float(fee_amount),
-            "points_deducted": int(points_deducted),
+            "points_deducted": points_deducted,
             "idempotency_key": idempotency_key,
             "created_at": datetime.now(timezone.utc).isoformat()
         }
@@ -167,7 +167,7 @@ class HttpLoyaltyAdapter(LoyaltyPort):
         payload = {
             "action": "grant_bonus_points",
             "customer_id": customer_id,
-            "points": int(points),
+            "points": points,
             "reason": reason,
             "idempotency_key": idempotency_key
         }

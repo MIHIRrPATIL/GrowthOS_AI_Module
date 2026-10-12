@@ -18,7 +18,7 @@ invariant across root seed changes.
 Strictly NO emojis in code, docstrings, or logs.
 """
 
-from typing import List, Dict, Optional, Tuple, Any
+from typing import List, Dict, Optional, Tuple, Any, TypedDict
 import numpy as np
 from numpy.random import SeedSequence, default_rng
 
@@ -37,6 +37,17 @@ from .scenario import (
     PlantedEffectSpec,
     ScenarioSpec,
 )
+
+
+class VerticalConfig(TypedDict):
+    aov_range: Tuple[int, int]
+    delivery_fee_range: Tuple[int, int]
+    free_delivery_threshold: int
+    margin_range: Tuple[float, float]
+    loyalty_earn: float
+    waiver_cost: int
+    waiver_budget: int
+    cooldown_hours: int
 
 
 class SeedStreamManager:
@@ -97,7 +108,7 @@ class ScenarioSampler:
         "Ahmedabad",
     ]
 
-    VERTICAL_DEFAULTS = {
+    VERTICAL_DEFAULTS: Dict[TenantVertical, VerticalConfig] = {
         TenantVertical.QSR: {
             "aov_range": (35000, 85000),             # 350 - 850 INR
             "delivery_fee_range": (3500, 6000),      # 35 - 60 INR
@@ -205,7 +216,7 @@ class ScenarioSampler:
 
         base_waiver_budget = int(loyalty_rng.integers(150000, 400000))
         budget_jitter = float(loyalty_rng.uniform(0.85, 1.15))
-        daily_waiver_budget_paise = int(round(base_waiver_budget * budget_jitter))
+        daily_waiver_budget_paise = round(base_waiver_budget * budget_jitter)
 
         loyalty_profile = TenantLoyaltyProfile(
             points_earn_ratio=loyalty_earn,
@@ -224,7 +235,7 @@ class ScenarioSampler:
 
         tenant = TenantSpec(
             tenant_id="tenant_sim_01",
-            name=f"GrowthOS {vertical.value.upper()} Store",
+            name=f"GrowthOS {vertical.value.replace('_', ' ').title()} Store",
             vertical=vertical,
             size_tier=size,
             city=city,
@@ -245,7 +256,7 @@ class ScenarioSampler:
         # 2. Traffic
         base_sessions = self.SIZE_VOLUMES.get(size, 12000)
         sessions_jitter = float(traffic_rng.uniform(0.85, 1.15))
-        sessions_per_day = int(round(base_sessions * sessions_jitter))
+        sessions_per_day = round(base_sessions * sessions_jitter)
 
         traffic = TrafficSpec(
             sessions_per_day=sessions_per_day,
