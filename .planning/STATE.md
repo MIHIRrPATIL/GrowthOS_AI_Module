@@ -24,8 +24,12 @@
   - `sim/oracle/metrics.py`: `ExactMetricsOracle` computing exact counts and revenue.
   - `sim/oracle/loyalty.py`: `ExactLoyaltyOracle` verifying point conservation, non-negativity, and cooldown compliance.
   - Exit criterion met: Zero oracle mismatches across 200 random seeds in `test_phase1_generators_and_oracles.py`.
-- [ ] **Phase 2: Invariant Engine & Data Fault Injection** (UP NEXT)
-- [ ] **Phase 3: Closed-Loop Governance, Holdouts & Attribution**
+- [x] **Phase 2: Invariant Engine & Data Fault Injection** (COMPLETED)
+  - `sim/checks/invariants.py`: `InvariantChecker` checking funnel monotonicity, loyalty points non-negativity, cooldown adherence, tenant data isolation, and integer paise/points purity.
+  - `sim/generators/faults.py`: `FaultInjector` injecting event duplicates, late/out-of-order events, clock skew, and telemetry drops (preserving orders).
+  - `sim/golden.py`: Golden scenarios (`null_week`, `step2_spike`, `bot_flood`, `loyalty_cooldown_boundary`).
+  - Verified with 7/7 tests in `research/ai-module/tests/test_phase2_invariants_and_faults.py`.
+- [ ] **Phase 3: Closed-Loop Governance, Holdouts & Attribution** (UP NEXT)
 - [ ] **Phase 4: Cross-Module Ads & Loyalty Optimization**
 - [ ] **Phase 5: Chaos Simulation & Service Fault Injection**
 - [ ] **Phase 6: Coverage Tracking, CLI Integration & Golden Regression Suite**
