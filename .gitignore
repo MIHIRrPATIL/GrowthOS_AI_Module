@@ -245,3 +245,6 @@ research/Ads-Module/*.db
 research/Ads-Module/*.db-wal
 research/Ads-Module/*.db-shm
 
+# Simulation run artifacts
+runs/
+

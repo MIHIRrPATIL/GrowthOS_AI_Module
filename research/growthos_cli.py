@@ -788,7 +788,49 @@ def run_optimizations_demo(ads_client: AdsModuleClient):
             print(f"Budget safely restored to INR {proposals[0].get('current_budget_inr'):,.2f}.")
 
 
-def main_menu():
+def init_scenario(
+    seed: Optional[int] = None,
+    mode: str = "random",
+    scenario_path: Optional[str] = None,
+    freeze: Optional[str] = None,
+    size: str = "standard",
+    reveal: bool = False,
+):
+    """Initializes and renders simulation scenario card according to Phase 0 specification."""
+    use_ai_module()
+    from sim import ScenarioSampler, ScenarioSpec, render_scenario_card
+    from sim.scenario import RunMode, TenantSizeTier
+    from sim.storage import save_run_artifacts
+
+    frozen_list = [f.strip() for f in freeze.split(",") if f.strip()] if freeze else []
+    try:
+        run_mode = RunMode(mode)
+    except ValueError:
+        run_mode = RunMode.RANDOM
+
+    try:
+        size_tier = TenantSizeTier(size)
+    except ValueError:
+        size_tier = TenantSizeTier.STANDARD
+
+    if scenario_path:
+        with open(scenario_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        scenario = ScenarioSpec.model_validate(data)
+    else:
+        root_seed = seed if seed is not None else int(time.time() * 1000) % 100000000
+        sampler = ScenarioSampler(root_seed=root_seed, frozen_domains=frozen_list)
+        scenario = sampler.sample_scenario(mode=run_mode, size=size_tier)
+
+    card_text = render_scenario_card(scenario, reveal_planted=reveal)
+    print("\n" + card_text + "\n")
+
+    run_dir = save_run_artifacts(scenario, card_text, base_dir=str(WORKSPACE_ROOT / "runs"))
+    print(Style.DIM + f"Run artifacts saved to: {run_dir}" + Style.RESET)
+    return scenario
+
+
+def main_menu(scenario=None):
     ads_client = AdsModuleClient()
     ai_runner = AIModuleRunner()
 
@@ -816,9 +858,47 @@ def main_menu():
             run_optimizations_demo(ads_client)
         elif choice in ["5", "q", "exit"]:
             print("\nExiting GrowthOS Presentation CLI. Goodbye.")
+            if scenario is not None:
+                use_ai_module()
+                from sim.card import render_ground_truth
+                print(render_ground_truth(scenario))
             break
         else:
             print(Style.RED + "Invalid option. Please choose between 1 and 5." + Style.RESET)
 
+
+def main():
+    import argparse
+
+    parser = argparse.ArgumentParser(description="GrowthOS Seeded Scenario Simulator & Presentation CLI")
+    parser.add_argument("--seed", type=int, default=None, help="Root integer seed for deterministic simulation")
+    parser.add_argument("--mode", type=str, default="random", choices=["random", "edge", "coverage", "golden", "stress"], help="Run mode")
+    parser.add_argument("--scenario", type=str, default=None, help="Path to existing scenario.json to replay")
+    parser.add_argument("--freeze", type=str, default=None, help="Comma-separated domains to freeze (e.g. loyalty,ads)")
+    parser.add_argument("--size", type=str, default="standard", choices=["small", "standard", "stress"], help="Scenario size tier")
+    parser.add_argument("--reveal", action="store_true", help="Reveal planted effects on the initial scenario card")
+    parser.add_argument("--sim-only", action="store_true", help="Render scenario card, save artifacts, reveal ground truth, and exit without interactive menu")
+
+    args = parser.parse_args()
+
+    scenario = init_scenario(
+        seed=args.seed,
+        mode=args.mode,
+        scenario_path=args.scenario,
+        freeze=args.freeze,
+        size=args.size,
+        reveal=args.reveal,
+    )
+
+    if args.sim_only:
+        use_ai_module()
+        from sim.card import render_ground_truth
+        print(render_ground_truth(scenario))
+        sys.exit(0)
+
+    main_menu(scenario=scenario)
+
+
 if __name__ == "__main__":
-    main_menu()
+    main()
+
