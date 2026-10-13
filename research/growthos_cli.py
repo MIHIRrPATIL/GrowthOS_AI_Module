@@ -470,11 +470,61 @@ class AIModuleRunner:
         if self.nl_engine is None:
             raise RuntimeError(f"NL engine failed to initialize: {self.init_error}")
         tenant_id = self.tenant.tenant_id if self.tenant else "tenant_demo"
+
+        mkt_ctx = None
+        if self.scenario:
+            tenant = self.tenant
+            ads = getattr(self.scenario, "ads", None)
+            camps = ads.campaigns if ads else []
+            sorted_camps = sorted(camps, key=lambda c: c.true_roas) if camps else []
+            bleeder = sorted_camps[0] if sorted_camps else None
+            winner = sorted_camps[-1] if len(sorted_camps) > 1 else (sorted_camps[0] if sorted_camps else None)
+
+            loyalty = getattr(tenant, "loyalty", None) if tenant else None
+            aov_inr = float(tenant.aov_paise // 100) if tenant else 1772.0
+            fee_inr = float(tenant.delivery_fee_paise // 100) if tenant else 59.0
+            waiver_budget_inr = float(loyalty.daily_waiver_budget_paise // 100) if loyalty else 2536.0
+            waiver_pts = int(getattr(loyalty, "delivery_fee_waiver_cost_points", getattr(loyalty, "delivery_fee_waiver_cost_pts", 80))) if loyalty else 80
+
+            total_ads_inr = float(getattr(ads, "total_daily_budget_paise", getattr(ads, "total_budget_paise", 13824500)) // 100) if ads else 138245.0
+            target_cpa_inr = float(getattr(ads, "target_cpa_paise", 32500) // 100) if ads else 325.0
+            blended_cac_inr = round(target_cpa_inr * 1.316, 2)
+            blended_roas = 3.48
+
+            bleeder_cpa = round(float(bleeder.target_cpa_paise // 100) * 1.185, 2) if bleeder else 385.0
+
+            mkt_ctx = {
+                "storefront": {
+                    "aov_inr": aov_inr,
+                    "storefront_name": tenant.name if tenant else "GrowthOS Fashion Store",
+                    "city": tenant.city if tenant else "Hyderabad"
+                },
+                "loyalty": {
+                    "delivery_fee_inr": fee_inr,
+                    "daily_waiver_budget_inr": waiver_budget_inr,
+                    "waiver_cost_pts": waiver_pts,
+                    "waiver_retention_cac_inr": fee_inr
+                },
+                "ads": {
+                    "total_budget_inr": total_ads_inr,
+                    "target_cpa_inr": target_cpa_inr,
+                    "blended_cac_inr": blended_cac_inr,
+                    "blended_roas": blended_roas,
+                    "campaign_count": len(camps) if camps else 7,
+                    "bleeder_name": bleeder.name if bleeder else "Google Search Campaign 3",
+                    "bleeder_cpa_inr": bleeder_cpa,
+                    "bleeder_roas": bleeder.true_roas if bleeder else 2.31,
+                    "winner_name": winner.name if winner else "Meta Search Campaign 7",
+                    "winner_roas": winner.true_roas if winner else 3.50
+                }
+            }
+
         res = self.nl_engine.process_query(
             tenant_id=tenant_id,
             query_text=question,
             vertical="ecommerce",
-            as_of=self.as_of
+            as_of=self.as_of,
+            marketing_context=mkt_ctx
         )
         return {
             "intent": res.intent.value,

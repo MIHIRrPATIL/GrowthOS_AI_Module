@@ -274,6 +274,12 @@ class MetricsEngine:
         - session: fast funnels, attributed by session start time with maturity rules.
         - customer / application: slow funnels, cohort window tracking from start event.
         """
+        if metric_def.metric_name in (
+            "blended_roas", "blended_cac", "ad_spend", "loyalty_waiver_cost",
+            "daily_waiver_budget", "marketing_budget_arbitration"
+        ):
+            return 0, 0
+
         if metric_def.entity == "session":
             return self._compute_session_counts(metric_def, events, window, watermark, tenant_id=tenant_id)
         else:

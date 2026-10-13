@@ -66,7 +66,14 @@ class EvidenceLinker:
         "cac": "blended_cac",
         "blended cac": "blended_cac",
         "ad impressions": "ad_impressions",
-        "ad clicks": "ad_clicks"
+        "ad clicks": "ad_clicks",
+        "blended roas": "blended_roas",
+        "loyalty waiver": "loyalty_waiver_cost",
+        "delivery fee waiver": "loyalty_waiver_cost",
+        "waiver cost": "loyalty_waiver_cost",
+        "waiver budget": "daily_waiver_budget",
+        "marketing arbitration": "marketing_budget_arbitration",
+        "arbitration": "marketing_budget_arbitration"
     }
 
     def __init__(self, tolerance: float = 0.005):

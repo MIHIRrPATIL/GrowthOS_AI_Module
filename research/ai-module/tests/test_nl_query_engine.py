@@ -208,3 +208,66 @@ def test_merchant_query_service_audit_trail(storage, query_service, audit_ledger
     assert len(query_events) == 1
     assert query_events[0].actor == "merchant:usr_owner_1"
     assert "Show checkout drop off friction" in query_events[0].details["query"]
+
+
+def test_marketing_budget_allocation_arbitration_ads_vs_loyalty(nl_engine):
+    marketing_ctx = {
+        "storefront": {
+            "aov_inr": 1772.0,
+            "storefront_name": "GrowthOS Fashion Store",
+            "city": "Hyderabad"
+        },
+        "loyalty": {
+            "delivery_fee_inr": 59.0,
+            "daily_waiver_budget_inr": 2536.0,
+            "waiver_cost_pts": 80,
+            "waiver_retention_cac_inr": 59.0
+        },
+        "ads": {
+            "total_budget_inr": 138245.0,
+            "target_cpa_inr": 325.0,
+            "blended_cac_inr": 427.72,
+            "blended_roas": 3.48,
+            "campaign_count": 7,
+            "bleeder_name": "Google Search Campaign 3",
+            "bleeder_cpa_inr": 385.0,
+            "bleeder_roas": 2.31,
+            "winner_name": "Meta Search Campaign 7",
+            "winner_roas": 3.50
+        }
+    }
+
+    answer = nl_engine.process_query(
+        tenant_id="tenant_dominos",
+        query_text="do we need to add more marketing expense and which part ads or loyalty",
+        vertical="ecommerce",
+        marketing_context=marketing_ctx
+    )
+
+    assert answer.intent == QueryIntent.BUDGET_ALLOCATION
+    assert "loyalty fee waivers" in answer.executive_summary.lower()
+    assert "cheaper" in answer.executive_summary.lower()
+    assert "paid ads" in answer.executive_summary.lower()
+    assert len(answer.analytical_breakdown) >= 4
+    assert len(answer.citations) >= 4
+    for cit in answer.citations:
+        assert cit.is_verified is True
+        assert cit.computed_value > 0
+
+    assert answer.technical_trace["intent"] == "budget_allocation"
+    assert answer.technical_trace["arbitration_ratio"] == pytest.approx(7.25, abs=0.05)
+
+
+def test_blended_cac_and_ad_roas_query(nl_engine):
+    answer = nl_engine.process_query(
+        tenant_id="tenant_dominos",
+        query_text="What is our blended CAC and ad ROAS?",
+        vertical="ecommerce"
+    )
+
+    assert answer.intent == QueryIntent.BUDGET_ALLOCATION
+    metric_names = [c.metric_name for c in answer.citations]
+    assert "blended_cac" in metric_names
+    assert "blended_roas" in metric_names
+    assert answer.technical_trace["status"] == "valid"
+

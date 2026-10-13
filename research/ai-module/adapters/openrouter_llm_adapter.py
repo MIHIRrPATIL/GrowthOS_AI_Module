@@ -72,7 +72,8 @@ class OpenRouterLLMAdapter(LLMPort):
             "3. If the query does not relate to any metric in the catalog (e.g., weather, general trivia, system commands), "
             "set intent to 'unsupported', target_metric to null, and provide a polite clarification suggestion.\n"
             "4. time_window_preset MUST be chosen strictly from: ['last_7d', 'last_week', 'this_week', 'last_30d', 'today', 'yesterday'].\n"
-            "5. Return strictly a JSON object adhering to the schema below."
+            "5. If query asks about marketing budget, marketing expense, allocating budget between ads and loyalty, CAC vs waiver cost, or capital efficiency, set intent to 'budget_allocation' and target_metric to 'marketing_budget_arbitration'.\n"
+            "6. Return strictly a JSON object adhering to the schema below."
         )
 
         user_prompt = f"""
@@ -85,7 +86,7 @@ Available Metrics Catalog:
 
 JSON Response Contract:
 {{
-  "intent": "metric_lookup" | "period_comparison" | "funnel_drop_off" | "anomaly_diagnosis" | "unsupported",
+  "intent": "metric_lookup" | "period_comparison" | "funnel_drop_off" | "anomaly_diagnosis" | "budget_allocation" | "unsupported",
   "target_metric": "<metric_name from catalog or null>",
   "time_window_preset": "last_7d" | "last_week" | "this_week" | "last_30d" | "today" | "yesterday",
   "filters": {{}},
@@ -120,15 +121,24 @@ JSON Response Contract:
             target_metric = None
             intent_enum = QueryIntent.UNSUPPORTED
 
+        query_lower = query.lower()
+        if any(w in query_lower for w in [
+            "marketing expense", "add more marketing", "ads or loyalty", "ads vs loyalty",
+            "budget allocation", "spend more on", "marketing budget", "blended cac",
+            "ad roas", "cac and roas", "roas and cac", "which part ads or loyalty",
+            "loyalty or ads", "marketing spend"
+        ]):
+            intent_enum = QueryIntent.BUDGET_ALLOCATION
+            target_metric = "marketing_budget_arbitration"
+
         # Resolve windows deterministically from preset enum in code
         preset_raw = data.get("time_window_preset") or "last_7d"
-        query_lower = query.lower()
         if any(kw in query_lower for kw in ("last week", "compared to", "vs", "over last", "prior week", "week")) or ("month" not in query_lower and "30" not in query_lower):
             preset_raw = "last_7d"
 
         from domain.metrics import resolve_preset_window
         time_window, prior_window = resolve_preset_window(preset_raw, now)
-        if intent_enum == QueryIntent.METRIC_LOOKUP and not any(kw in query_lower for kw in ("compared to", "vs", "over last", "prior week", "last week")):
+        if intent_enum in (QueryIntent.METRIC_LOOKUP, QueryIntent.BUDGET_ALLOCATION) and not any(kw in query_lower for kw in ("compared to", "vs", "over last", "prior week", "last week")):
             prior_window = None
 
         result = QueryClassification(

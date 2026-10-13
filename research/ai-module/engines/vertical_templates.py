@@ -231,6 +231,72 @@ ECOMMERCE_TEMPLATE = VerticalTemplate(
             min_sample_threshold=20,
             description="Ratio of visiting sessions triggering mouse cursor exit intent gestures"
         ),
+        "blended_roas": MetricDefinition(
+            metric_name="blended_roas",
+            definition_version="v1.1.0",
+            polarity="higher_is_better",
+            unit="ratio",
+            entity="session",
+            min_sample_threshold=1,
+            numerator_label="attributed ad revenue",
+            denominator_label="ad spend",
+            description="Blended return on advertising spend (attributed revenue / total ad spend)"
+        ),
+        "blended_cac": MetricDefinition(
+            metric_name="blended_cac",
+            definition_version="v1.1.0",
+            polarity="lower_is_better",
+            unit="currency_inr",
+            entity="session",
+            min_sample_threshold=1,
+            numerator_label="total ad spend",
+            denominator_label="new acquired customers",
+            description="Blended customer acquisition cost (ad spend in INR per new customer acquired)"
+        ),
+        "ad_spend": MetricDefinition(
+            metric_name="ad_spend",
+            definition_version="v1.1.0",
+            polarity="lower_is_better",
+            unit="currency_inr",
+            entity="session",
+            min_sample_threshold=1,
+            numerator_label="ad spend in INR",
+            denominator_label="campaigns",
+            description="Total daily paid advertising budget and spend in INR across all channels"
+        ),
+        "loyalty_waiver_cost": MetricDefinition(
+            metric_name="loyalty_waiver_cost",
+            definition_version="v1.1.0",
+            polarity="lower_is_better",
+            unit="currency_inr",
+            entity="session",
+            min_sample_threshold=1,
+            numerator_label="delivery fee waived in INR",
+            denominator_label="waivers granted",
+            description="Delivery fee waiver cost in INR granted to retain or convert shoppers"
+        ),
+        "daily_waiver_budget": MetricDefinition(
+            metric_name="daily_waiver_budget",
+            definition_version="v1.1.0",
+            polarity="higher_is_better",
+            unit="currency_inr",
+            entity="session",
+            min_sample_threshold=1,
+            numerator_label="waiver budget cap in INR",
+            denominator_label="daily budget",
+            description="Daily budget cap in INR allocated for loyalty delivery fee waivers"
+        ),
+        "marketing_budget_arbitration": MetricDefinition(
+            metric_name="marketing_budget_arbitration",
+            definition_version="v1.1.0",
+            polarity="higher_is_better",
+            unit="ratio",
+            entity="session",
+            min_sample_threshold=1,
+            numerator_label="ad acquisition CAC",
+            denominator_label="loyalty waiver retention cost",
+            description="Capital efficiency ratio comparing Paid Ad Acquisition CAC against Loyalty Delivery Fee Waiver retention cost"
+        ),
     }
 )
 

@@ -82,7 +82,8 @@ class GeminiLLMAdapter(LLMPort):
             "4. If query mentions drop off / funnel friction, set intent: 'funnel_drop_off'.\n"
             "5. If query asks for a single point-in-time value, set intent: 'metric_lookup'.\n"
             "6. Default time_window_preset is 'last_7d' unless the query explicitly specifies a different duration (e.g. 'today', 'last 30 days', 'yesterday').\n"
-            "7. Output MUST be valid JSON adhering strictly to the contract."
+            "7. If query asks about marketing budget, marketing expense, allocating budget between ads and loyalty, CAC vs waiver cost, or capital efficiency, set intent: 'budget_allocation' and target_metric: 'marketing_budget_arbitration'.\n"
+            "8. Output MUST be valid JSON adhering strictly to the contract."
         )
 
         user_prompt = f"""
@@ -95,7 +96,7 @@ Available Metrics Catalog:
 
 JSON Response Contract:
 {{
-  "intent": "metric_lookup" | "period_comparison" | "funnel_drop_off" | "anomaly_diagnosis" | "unsupported",
+  "intent": "metric_lookup" | "period_comparison" | "funnel_drop_off" | "anomaly_diagnosis" | "budget_allocation" | "unsupported",
   "target_metric": "<metric_name from catalog or null>",
   "time_window_preset": "last_7d" | "last_week" | "this_week" | "last_30d" | "today" | "yesterday",
   "filters": {{}},
@@ -130,15 +131,24 @@ JSON Response Contract:
             target_metric = None
             intent_enum = QueryIntent.UNSUPPORTED
 
+        query_lower = query.lower()
+        if any(w in query_lower for w in [
+            "marketing expense", "add more marketing", "ads or loyalty", "ads vs loyalty",
+            "budget allocation", "spend more on", "marketing budget", "blended cac",
+            "ad roas", "cac and roas", "roas and cac", "which part ads or loyalty",
+            "loyalty or ads", "marketing spend"
+        ]):
+            intent_enum = QueryIntent.BUDGET_ALLOCATION
+            target_metric = "marketing_budget_arbitration"
+
         # Resolve windows deterministically from preset enum in code
         preset_raw = data.get("time_window_preset") or "last_7d"
-        query_lower = query.lower()
         if any(kw in query_lower for kw in ("last week", "compared to", "vs", "over last", "prior week", "week")) or ("month" not in query_lower and "30" not in query_lower):
             preset_raw = "last_7d"
 
         from domain.metrics import resolve_preset_window
         time_window, prior_window = resolve_preset_window(preset_raw, now)
-        if intent_enum == QueryIntent.METRIC_LOOKUP and not any(kw in query_lower for kw in ("compared to", "vs", "over last", "prior week", "last week")):
+        if intent_enum in (QueryIntent.METRIC_LOOKUP, QueryIntent.BUDGET_ALLOCATION) and not any(kw in query_lower for kw in ("compared to", "vs", "over last", "prior week", "last week")):
             prior_window = None
 
         result = QueryClassification(

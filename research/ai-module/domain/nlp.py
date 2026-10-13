@@ -19,6 +19,7 @@ class QueryIntent(str, Enum):
     COHORT_RETENTION = "cohort_retention"
     FRICTION_INVESTIGATION = "friction_investigation"
     ANOMALY_DIAGNOSIS = "anomaly_diagnosis"
+    BUDGET_ALLOCATION = "budget_allocation"
     UNSUPPORTED = "unsupported"
 
 

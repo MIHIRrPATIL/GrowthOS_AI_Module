@@ -57,6 +57,23 @@ class MockLLMAdapter(LLMPort):
             end=now - timedelta(days=7)
         )
 
+        # Marketing Budget Allocation & Arbitration (Ads vs Loyalty)
+        if any(w in query_lower for w in [
+            "marketing expense", "add more marketing", "ads or loyalty", "ads vs loyalty",
+            "budget allocation", "spend more on", "marketing budget", "blended cac",
+            "ad roas", "cac and roas", "roas and cac", "which part ads or loyalty",
+            "loyalty or ads", "marketing spend"
+        ]):
+            return QueryClassification(
+                query_text=query,
+                intent=QueryIntent.BUDGET_ALLOCATION,
+                target_metric="marketing_budget_arbitration",
+                time_window=current_window,
+                prior_window=None,
+                vertical=vertical,
+                confidence=0.95
+            )
+
         # 1. Specific Step Drop Off (Checked before generic drop-off to avoid masking)
         if "step 2" in query_lower:
             return QueryClassification(
