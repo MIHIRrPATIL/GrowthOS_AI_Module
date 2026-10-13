@@ -36,15 +36,16 @@ class GeminiClient:
     and automatic 429 Circuit Breaker.
     """
 
-    DEFAULT_MODEL = "gemini-3.5-flash"
+    DEFAULT_MODEL = "gemini-2.5-flash"
     BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
 
     # Free tier model pool for automatic quota rotation (100% free tier)
     FREE_TIER_MODEL_POOL = [
-        "gemini-3.5-flash",
-        "gemini-3.5-flash-lite",
+        "gemini-2.5-flash",
         "gemini-2.5-flash-lite",
-        "gemini-2.5-flash"
+        "gemini-2.0-flash",
+        "gemini-2.0-flash-lite",
+        "gemini-3-flash-preview"
     ]
     _exhausted_free_models: set = set()
 
@@ -239,7 +240,18 @@ class GeminiClient:
                         raise RateLimitCircuitOpenError(clean_msg)
 
                     if resp.status_code in (502, 503, 504):
-                        last_error = f"HTTP {resp.status_code}: {resp.text.splitlines()[0]}"
+                        last_error = f"HTTP {resp.status_code}: {resp.text.splitlines()[0] if resp.text else ''}"
+                        candidate_model = None
+                        for m in GeminiClient.FREE_TIER_MODEL_POOL:
+                            if m != model_name and m not in GeminiClient._exhausted_free_models:
+                                candidate_model = m
+                                break
+                        if candidate_model and attempt < max_attempts - 1:
+                            print(f"  [Gemini {resp.status_code} Overload] Rotating from '{model_name}' to fallback model '{candidate_model}'...")
+                            model_name = candidate_model
+                            endpoint = f"{self.base_url}/models/{model_name}:generateContent"
+                            time.sleep(1.0)
+                            continue
                         if attempt < max_attempts - 1:
                             time.sleep(2.0 * (attempt + 1))
                             continue
