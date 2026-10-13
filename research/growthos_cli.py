@@ -472,9 +472,9 @@ class AIModuleRunner:
         storage.store_batch(events)
 
     def ask(self, question: str) -> Dict[str, Any]:
-        if not self.initialized or self.nl_engine is None:
+        if not self.initialized or self.nl_engine is None or self.metrics_engine is None or self.evidence_linker is None:
             self.initialize("mock", scenario=self.scenario)
-        if self.nl_engine is None:
+        if self.nl_engine is None or self.metrics_engine is None or self.evidence_linker is None:
             raise RuntimeError(f"NL engine failed to initialize: {self.init_error}")
         tenant_id = self.tenant.tenant_id if self.tenant else "tenant_demo"
 
@@ -538,6 +538,8 @@ class AIModuleRunner:
             print(f"  [AI Brain Notice] Live model query encountered transient issue ({e}). Re-evaluating with deterministic engine...")
             from adapters.mock_llm import MockLLMAdapter  # type: ignore
             from engines.nl_query_engine import NLQueryEngine  # type: ignore
+            if self.metrics_engine is None or self.evidence_linker is None:
+                raise RuntimeError("Metrics engine or evidence linker is not initialized.")
             fallback_engine = NLQueryEngine(
                 llm_port=MockLLMAdapter(),
                 metrics_engine=self.metrics_engine,

@@ -632,7 +632,7 @@ class NLQueryEngine:
         model_name = getattr(self.llm_port, "model", "deterministic_grounded_template_v1")
         degraded_prefix = "[Degraded Mode - Offline Fallback Active] " if is_degraded else ""
 
-        if prior and prior.value is not None:
+        if cur.value is not None and prior and prior.value is not None:
             pri_pct = prior.value * 100.0
             pri_num = prior.numerator or 0
             pri_den = prior.denominator or 0

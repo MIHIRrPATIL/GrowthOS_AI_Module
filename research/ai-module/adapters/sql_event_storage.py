@@ -382,7 +382,7 @@ class SqlEventStorageAdapter(EventStoragePort):
 
             cart_subtotal = props.get("cart_total_paise")
             if cart_subtotal is None and "cart_value" in props:
-                cart_subtotal = int(round(float(props["cart_value"]) * 100))
+                cart_subtotal = round(float(props["cart_value"]) * 100)
             elif cart_subtotal is None:
                 cart_subtotal = 0
 

@@ -18,6 +18,7 @@ Strictly NO emojis in code, docstrings, or logs.
 import json
 import uuid
 from datetime import datetime, timezone, timedelta
+from typing import Optional
 import pytest
 import httpx
 

@@ -154,7 +154,7 @@ class PolicyRule(BaseModel):
     def sync_paise_and_inr(cls, values: Any) -> Any:
         if isinstance(values, dict):
             if "max_discount_value_inr" in values and "max_discount_value_paise" not in values:
-                values["max_discount_value_paise"] = int(round(float(values["max_discount_value_inr"]) * 100))
+                values["max_discount_value_paise"] = round(float(values["max_discount_value_inr"]) * 100)
             elif "max_discount_value_paise" in values and "max_discount_value_inr" not in values:
                 values["max_discount_value_inr"] = float(values["max_discount_value_paise"]) / 100.0
         return values

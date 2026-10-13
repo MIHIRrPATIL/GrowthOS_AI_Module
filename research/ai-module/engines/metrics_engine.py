@@ -594,14 +594,14 @@ class MetricsEngine:
         conversion_value_paise = attributed_revenue_paise if attributed_revenue_paise > 0 else sum(r.conversion_value_paise for r in ad_records)
 
         blended_ctr = round(float(total_clicks) / float(total_impressions), 4) if total_impressions > 0 else 0.0
-        blended_cpc_paise = int(round(float(total_spend_paise) / float(total_clicks))) if total_clicks > 0 else 0
-        blended_cpa_paise = int(round(float(total_spend_paise) / total_conversions)) if total_conversions > 0 else 0
+        blended_cpc_paise = round(float(total_spend_paise) / float(total_clicks)) if total_clicks > 0 else 0
+        blended_cpa_paise = round(float(total_spend_paise) / total_conversions) if total_conversions > 0 else 0
         blended_roas = round(float(conversion_value_paise) / float(total_spend_paise), 2) if total_spend_paise > 0 else 0.0
 
         blended_cac_paise = None
         blended_cac_inr = None
         if new_customers_count > 0:
-            blended_cac_paise = int(round(float(total_spend_paise) / float(new_customers_count)))
+            blended_cac_paise = round(float(total_spend_paise) / float(new_customers_count))
             blended_cac_inr = round(blended_cac_paise / 100.0, 2)
 
         unique_campaigns = {r.campaign_id for r in ad_records}
@@ -655,7 +655,7 @@ class MetricsEngine:
         discount_paise = sum(o.discount_paise for o in orders)
         tax_paise = sum(o.tax_paise for o in orders)
 
-        aov_paise = int(round(total_revenue_paise / order_count)) if order_count > 0 else 0
+        aov_paise = round(total_revenue_paise / order_count) if order_count > 0 else 0
         aov_inr = round(aov_paise / 100.0, 2)
 
         unique_customers = {o.customer_id for o in orders if o.customer_id}

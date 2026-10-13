@@ -39,4 +39,4 @@ class ConsentPort(ABC):
         Returns True if customer has active, unrevoked consent for the specified purpose.
         Defaults to False (fail-closed) if absent.
         """
-        return bool(self.get_consent(tenant_id, customer_id).get(purpose, False))
+        return self.get_consent(tenant_id, customer_id).get(purpose, False)
