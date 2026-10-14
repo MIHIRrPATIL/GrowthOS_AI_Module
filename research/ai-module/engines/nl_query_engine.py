@@ -445,7 +445,177 @@ class NLQueryEngine:
         model_name = getattr(self.llm_port, "model", "deterministic_arbitration_template_v1")
         degraded_prefix = "[Degraded Mode - Offline Fallback Active] " if is_degraded else ""
 
-        # Tier 1 Executive Summary
+        # Prepare verified MetricResult facts for synthesis and evidence linking
+        from domain.metrics import MetricResult
+        arbitration_metrics = [
+            MetricResult(
+                metric_name="blended_cac",
+                value=blended_cac_inr,
+                sample_size=campaign_count,
+                min_sample_threshold=1,
+                min_sample_met=True,
+                status="normal",
+                window=classification.time_window,
+                as_of=now,
+                definition_version="v1.1.0",
+                unit="currency_inr"
+            ),
+            MetricResult(
+                metric_name="blended_roas",
+                value=blended_roas,
+                sample_size=campaign_count,
+                min_sample_threshold=1,
+                min_sample_met=True,
+                status="normal",
+                window=classification.time_window,
+                as_of=now,
+                definition_version="v1.1.0",
+                unit="ratio"
+            ),
+            MetricResult(
+                metric_name="loyalty_waiver_cost",
+                value=delivery_fee_inr,
+                sample_size=1,
+                min_sample_threshold=1,
+                min_sample_met=True,
+                status="normal",
+                window=classification.time_window,
+                as_of=now,
+                definition_version="v1.1.0",
+                unit="currency_inr"
+            ),
+            MetricResult(
+                metric_name="daily_waiver_budget",
+                value=daily_waiver_budget_inr,
+                sample_size=1,
+                min_sample_threshold=1,
+                min_sample_met=True,
+                status="normal",
+                window=classification.time_window,
+                as_of=now,
+                definition_version="v1.1.0",
+                unit="currency_inr"
+            ),
+            MetricResult(
+                metric_name="ad_spend",
+                value=ads_budget_inr,
+                sample_size=campaign_count,
+                min_sample_threshold=1,
+                min_sample_met=True,
+                status="normal",
+                window=classification.time_window,
+                as_of=now,
+                definition_version="v1.1.0",
+                unit="currency_inr"
+            ),
+            MetricResult(
+                metric_name="marketing_budget_arbitration",
+                value=cac_efficiency_ratio,
+                sample_size=campaign_count,
+                min_sample_threshold=1,
+                min_sample_met=True,
+                status="normal",
+                window=classification.time_window,
+                as_of=now,
+                definition_version="v1.1.0",
+                unit="ratio"
+            )
+        ]
+
+        # Attempt dynamic contextual synthesis via live LLM port if active
+        if not is_degraded and hasattr(self.llm_port, "synthesize_answer"):
+            try:
+                live_answer = self.llm_port.synthesize_answer(
+                    query=query_text,
+                    classification=classification,
+                    metrics=arbitration_metrics
+                )
+                if live_answer and live_answer.executive_summary and "No computed metric data" not in live_answer.executive_summary:
+                    full_text = f"{live_answer.executive_summary} {' '.join(live_answer.analytical_breakdown)}"
+                    clean_text, live_cits, dropped = self.evidence_linker.verify_and_link(
+                        text=full_text,
+                        metrics=arbitration_metrics
+                    )
+                    # Baseline citations from ground-truth facts
+                    base_cits = [
+                        EvidenceCitation(
+                            citation_id="cit_blended_cac",
+                            claim_text=f"Blended Ad CAC: INR {blended_cac_inr:.2f}",
+                            metric_name="blended_cac",
+                            computed_value=blended_cac_inr,
+                            sample_size=campaign_count,
+                            is_verified=True
+                        ),
+                        EvidenceCitation(
+                            citation_id="cit_blended_roas",
+                            claim_text=f"Blended Ad ROAS: {blended_roas:.2f}x",
+                            metric_name="blended_roas",
+                            computed_value=blended_roas,
+                            sample_size=campaign_count,
+                            is_verified=True
+                        ),
+                        EvidenceCitation(
+                            citation_id="cit_loyalty_waiver_cost",
+                            claim_text=f"Loyalty Delivery Fee Waiver Cost: INR {delivery_fee_inr:.2f}",
+                            metric_name="loyalty_waiver_cost",
+                            computed_value=delivery_fee_inr,
+                            sample_size=1,
+                            is_verified=True
+                        ),
+                        EvidenceCitation(
+                            citation_id="cit_daily_waiver_budget",
+                            claim_text=f"Daily Loyalty Waiver Budget: INR {daily_waiver_budget_inr:,.2f}",
+                            metric_name="daily_waiver_budget",
+                            computed_value=daily_waiver_budget_inr,
+                            sample_size=1,
+                            is_verified=True
+                        ),
+                        EvidenceCitation(
+                            citation_id="cit_ad_spend",
+                            claim_text=f"Daily Ad Spend: INR {ads_budget_inr:,.2f}",
+                            metric_name="ad_spend",
+                            computed_value=ads_budget_inr,
+                            sample_size=campaign_count,
+                            is_verified=True
+                        ),
+                        EvidenceCitation(
+                            citation_id="cit_arbitration_ratio",
+                            claim_text=f"Marketing Efficiency Ratio: {cac_efficiency_ratio:.2f}x (Ads CAC / Waiver Cost)",
+                            metric_name="marketing_budget_arbitration",
+                            computed_value=cac_efficiency_ratio,
+                            sample_size=campaign_count,
+                            is_verified=True
+                        )
+                    ]
+                    merged_cits = base_cits + [c for c in live_cits if c.metric_name not in {x.metric_name for x in base_cits}]
+                    return StructuredAnswer(
+                        query_text=query_text,
+                        intent=classification.intent,
+                        executive_summary=live_answer.executive_summary,
+                        analytical_breakdown=live_answer.analytical_breakdown,
+                        technical_trace={
+                            "status": "valid",
+                            "synthesizer": "live_llm",
+                            "model": getattr(self.llm_port, "model", "live"),
+                            "ratio_cac_to_fee": cac_efficiency_ratio,
+                            "aov_inr": aov_inr,
+                            "blended_cac_inr": blended_cac_inr,
+                            "delivery_fee_inr": delivery_fee_inr,
+                            "target_cpa_inr": target_cpa_inr,
+                            "blended_roas": blended_roas,
+                            "campaign_count": campaign_count,
+                            "bleeder_campaign": bleeder_name,
+                            "bleeder_cpa_inr": bleeder_cpa_inr,
+                            "winner_campaign": winner_name,
+                            "winner_roas": winner_roas
+                        },
+                        citations=merged_cits,
+                        unsupported_claims_dropped=dropped
+                    )
+            except Exception:
+                pass  # Fall back to deterministic arbitration template
+
+        # Fallback: Deterministic Rule Template
         exec_summary = (
             f"{degraded_prefix}Do not add more overall marketing expense to Paid Ads. Reallocate budget to expand Loyalty Fee Waivers: "
             f"retention/conversion cost (INR {delivery_fee_inr:.2f}) is {cac_efficiency_ratio:.2f}x cheaper than cold ad acquisition CAC "
@@ -454,7 +624,6 @@ class NLQueryEngine:
             f"to top-performing campaigns ('{winner_name}' at {winner_roas:.2f}x ROAS) before adding fresh acquisition funds."
         )
 
-        # Tier 2 Analytical Breakdown
         analytical_breakdown = [
             "Cross-Module Marketing Efficiency & Unit Economics Comparison:",
             f"  * Paid Ad Acquisition (Module 3): Blended CAC INR {blended_cac_inr:.2f} | Target CPA INR {target_cpa_inr:.2f} | Blended ROAS {blended_roas:.2f}x | Daily Budget INR {ads_budget_inr:,.2f} ({ads_budget_share:.1f}% of marketing across {campaign_count} campaigns).",
@@ -631,6 +800,46 @@ class NLQueryEngine:
         provider_name = "mock_fallback" if is_degraded else getattr(self.llm_port, "provider_name", "live_provider")
         model_name = getattr(self.llm_port, "model", "deterministic_grounded_template_v1")
         degraded_prefix = "[Degraded Mode - Offline Fallback Active] " if is_degraded else ""
+
+        # Attempt dynamic contextual synthesis via live LLM port if active
+        if not is_degraded and hasattr(self.llm_port, "synthesize_answer"):
+            try:
+                live_answer = self.llm_port.synthesize_answer(
+                    query=query_text,
+                    classification=classification,
+                    metrics=metric_results
+                )
+                if live_answer and live_answer.executive_summary and "No computed metric data" not in live_answer.executive_summary:
+                    full_text = f"{live_answer.executive_summary} {' '.join(live_answer.analytical_breakdown)}"
+                    clean_text, live_cits, dropped = self.evidence_linker.verify_and_link(
+                        text=full_text,
+                        metrics=metric_results
+                    )
+                    merged_cits = citations + [c for c in live_cits if c.metric_name not in {x.metric_name for x in citations}]
+                    return StructuredAnswer(
+                        query_text=query_text,
+                        intent=classification.intent,
+                        executive_summary=live_answer.executive_summary,
+                        analytical_breakdown=live_answer.analytical_breakdown,
+                        technical_trace={
+                            "metric_name": cur.metric_name,
+                            "status": cur.status,
+                            "window": f"{cur.window.start.strftime('%b %d, %Y')} to {cur.window.end.strftime('%b %d, %Y')}",
+                            "window_start": cur.window.start.isoformat(),
+                            "window_end": cur.window.end.isoformat(),
+                            "as_of": cur.as_of.isoformat(),
+                            "definition_version": cur.definition_version,
+                            "computed_value": cur.value,
+                            "sample_size": cur.sample_size,
+                            "synthesizer": "live_llm",
+                            "model": getattr(self.llm_port, "model", "live"),
+                            "evidence_ref": cur.evidence_ref
+                        },
+                        citations=merged_cits,
+                        unsupported_claims_dropped=dropped
+                    )
+            except Exception:
+                pass  # Fall back to deterministic template
 
         if cur.value is not None and prior and prior.value is not None:
             pri_pct = prior.value * 100.0
