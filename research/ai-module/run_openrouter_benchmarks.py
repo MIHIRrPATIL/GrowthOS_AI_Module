@@ -49,6 +49,11 @@ from evaluation.evaluator import BenchmarkEvaluator
 
 RECOMMENDED_MODELS = [
     {
+        "model_id": "typesafe/jev-router",
+        "description": "TypeSafe Jev System One Router, 1,000,000 context, automated adaptive model routing (Recommended)",
+        "recommended": True
+    },
+    {
         "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
         "description": "Free MoE (120B params, 12B active), 262k context, $0.00/1M tokens (Recommended)",
         "recommended": True

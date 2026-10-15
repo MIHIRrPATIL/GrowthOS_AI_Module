@@ -445,86 +445,111 @@ class NLQueryEngine:
         model_name = getattr(self.llm_port, "model", "deterministic_arbitration_template_v1")
         degraded_prefix = "[Degraded Mode - Offline Fallback Active] " if is_degraded else ""
 
-        # Prepare verified MetricResult facts for synthesis and evidence linking
-        from domain.metrics import MetricResult
-        arbitration_metrics = [
-            MetricResult(
-                metric_name="blended_cac",
-                value=blended_cac_inr,
-                sample_size=campaign_count,
-                min_sample_threshold=1,
-                min_sample_met=True,
-                status="normal",
-                window=classification.time_window,
-                as_of=now,
-                definition_version="v1.1.0",
-                unit="currency_inr"
-            ),
-            MetricResult(
-                metric_name="blended_roas",
-                value=blended_roas,
-                sample_size=campaign_count,
-                min_sample_threshold=1,
-                min_sample_met=True,
-                status="normal",
-                window=classification.time_window,
-                as_of=now,
-                definition_version="v1.1.0",
-                unit="ratio"
-            ),
-            MetricResult(
-                metric_name="loyalty_waiver_cost",
-                value=delivery_fee_inr,
-                sample_size=1,
-                min_sample_threshold=1,
-                min_sample_met=True,
-                status="normal",
-                window=classification.time_window,
-                as_of=now,
-                definition_version="v1.1.0",
-                unit="currency_inr"
-            ),
-            MetricResult(
-                metric_name="daily_waiver_budget",
-                value=daily_waiver_budget_inr,
-                sample_size=1,
-                min_sample_threshold=1,
-                min_sample_met=True,
-                status="normal",
-                window=classification.time_window,
-                as_of=now,
-                definition_version="v1.1.0",
-                unit="currency_inr"
-            ),
-            MetricResult(
-                metric_name="ad_spend",
-                value=ads_budget_inr,
-                sample_size=campaign_count,
-                min_sample_threshold=1,
-                min_sample_met=True,
-                status="normal",
-                window=classification.time_window,
-                as_of=now,
-                definition_version="v1.1.0",
-                unit="currency_inr"
-            ),
-            MetricResult(
-                metric_name="marketing_budget_arbitration",
-                value=cac_efficiency_ratio,
-                sample_size=campaign_count,
-                min_sample_threshold=1,
-                min_sample_met=True,
-                status="normal",
-                window=classification.time_window,
-                as_of=now,
-                definition_version="v1.1.0",
-                unit="ratio"
-            )
-        ]
+        win_str = f"{classification.time_window.start.strftime('%b %d, %Y')} to {classification.time_window.end.strftime('%b %d, %Y')}"
+        ref_str = f"query:tenant={tenant_id}:arbitration=ads_vs_loyalty:as_of={now.strftime('%Y%m%d%H%M%S')}"
 
         # Attempt dynamic contextual synthesis via live LLM port if active
         if not is_degraded and hasattr(self.llm_port, "synthesize_answer"):
             try:
+                from domain.metrics import MetricResult
+                arbitration_metrics = [
+                    MetricResult(
+                        tenant_id=tenant_id,
+                        vertical_template_id=template_id,
+                        metric_name="blended_cac",
+                        value=blended_cac_inr,
+                        sample_size=campaign_count,
+                        min_sample_threshold=1,
+                        min_sample_met=True,
+                        status="valid",
+                        calculated_at=now,
+                        evidence_ref=ref_str,
+                        window=classification.time_window,
+                        as_of=now,
+                        definition_version="v1.1.0",
+                        unit="currency_inr"
+                    ),
+                    MetricResult(
+                        tenant_id=tenant_id,
+                        vertical_template_id=template_id,
+                        metric_name="blended_roas",
+                        value=blended_roas,
+                        sample_size=campaign_count,
+                        min_sample_threshold=1,
+                        min_sample_met=True,
+                        status="valid",
+                        calculated_at=now,
+                        evidence_ref=ref_str,
+                        window=classification.time_window,
+                        as_of=now,
+                        definition_version="v1.1.0",
+                        unit="count"
+                    ),
+                    MetricResult(
+                        tenant_id=tenant_id,
+                        vertical_template_id=template_id,
+                        metric_name="loyalty_waiver_cost",
+                        value=delivery_fee_inr,
+                        sample_size=1,
+                        min_sample_threshold=1,
+                        min_sample_met=True,
+                        status="valid",
+                        calculated_at=now,
+                        evidence_ref=ref_str,
+                        window=classification.time_window,
+                        as_of=now,
+                        definition_version="v1.1.0",
+                        unit="currency_inr"
+                    ),
+                    MetricResult(
+                        tenant_id=tenant_id,
+                        vertical_template_id=template_id,
+                        metric_name="daily_waiver_budget",
+                        value=daily_waiver_budget_inr,
+                        sample_size=1,
+                        min_sample_threshold=1,
+                        min_sample_met=True,
+                        status="valid",
+                        calculated_at=now,
+                        evidence_ref=ref_str,
+                        window=classification.time_window,
+                        as_of=now,
+                        definition_version="v1.1.0",
+                        unit="currency_inr"
+                    ),
+                    MetricResult(
+                        tenant_id=tenant_id,
+                        vertical_template_id=template_id,
+                        metric_name="ad_spend",
+                        value=ads_budget_inr,
+                        sample_size=campaign_count,
+                        min_sample_threshold=1,
+                        min_sample_met=True,
+                        status="valid",
+                        calculated_at=now,
+                        evidence_ref=ref_str,
+                        window=classification.time_window,
+                        as_of=now,
+                        definition_version="v1.1.0",
+                        unit="currency_inr"
+                    ),
+                    MetricResult(
+                        tenant_id=tenant_id,
+                        vertical_template_id=template_id,
+                        metric_name="marketing_budget_arbitration",
+                        value=cac_efficiency_ratio,
+                        sample_size=campaign_count,
+                        min_sample_threshold=1,
+                        min_sample_met=True,
+                        status="valid",
+                        calculated_at=now,
+                        evidence_ref=ref_str,
+                        window=classification.time_window,
+                        as_of=now,
+                        definition_version="v1.1.0",
+                        unit="count"
+                    )
+                ]
                 live_answer = self.llm_port.synthesize_answer(
                     query=query_text,
                     classification=classification,

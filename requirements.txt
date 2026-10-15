@@ -1,0 +1,21 @@
+# GrowthOS Unified Requirements
+# Consolidates all dependencies across AI Module (Module 4), Ads Module (Module 3),
+# Backend Bridge, Telemetry Ingestion, and Simulator Test Harnesses.
+
+# Core Web Framework & Asynchronous HTTP
+fastapi>=0.115.0
+uvicorn>=0.34.0
+pydantic>=2.10.0
+httpx>=0.28.0
+python-dotenv>=1.0.0
+
+# Numerical Simulation & Data Processing
+numpy>=1.24.0
+networkx>=3.0.0
+pyyaml>=6.0.0
+
+# Testing & Test Runners
+pytest>=8.0.0
+
+# Google Ads API Integration (Optional/Deployment)
+google-ads>=24.0.0

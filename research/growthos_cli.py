@@ -237,7 +237,7 @@ class AdsModuleClient:
                     return res.json()
         return conv_data
 
-    def get_attribution_summary(self, workspace_id: str, default_aov: float = 1450.0) -> Dict[str, Any]:
+    def get_attribution_summary(self, workspace_id: str, default_aov: float = 1450.0, scenario: Optional[Any] = None) -> Dict[str, Any]:
         if self.is_live_api:
             import httpx
             with httpx.Client(timeout=5.0) as client:
@@ -246,7 +246,10 @@ class AdsModuleClient:
                     return res.json()
         total_rev = round(default_aov * 10, 2)
         attr_rev = round(default_aov * 8.4, 2)
-        ad_spend = round(attr_rev / 3.48, 2)
+        camps = getattr(getattr(scenario, "ads", None), "campaigns", []) if scenario else []
+        tot_b = sum(getattr(c, "daily_budget_paise", 0) for c in camps)
+        roas = round(sum(getattr(c, "daily_budget_paise", 0) * getattr(c, "true_roas", 1.0) for c in camps) / tot_b, 2) if tot_b > 0 else 3.48
+        ad_spend = round(attr_rev / roas, 2) if roas > 0 else round(attr_rev / 3.48, 2)
         return {
             "workspace_id": workspace_id,
             "total_conversions": 12,
@@ -254,7 +257,7 @@ class AdsModuleClient:
             "total_revenue_inr": total_rev,
             "attributed_revenue_inr": attr_rev,
             "ad_spend_inr": ad_spend,
-            "roas": 3.48,
+            "roas": roas,
             "cac_inr": round(ad_spend / 10, 2)
         }
 
@@ -371,10 +374,10 @@ class AIModuleRunner:
                 client = GeminiClient(api_key=gemini_key, model=model)
                 llm_adapter = GeminiLLMAdapter(client)
                 self.active_provider = f"Google Gemini ({model})"
-            elif provider_choice == "openrouter" and openrouter_key:
+            elif provider_choice in ("openrouter", "jev") and openrouter_key:
                 from adapters.openrouter_client import OpenRouterClient  # type: ignore
                 from adapters.openrouter_llm_adapter import OpenRouterLLMAdapter  # type: ignore
-                model = os.getenv("OPENROUTER_MODEL", "google/gemini-2.5-flash")
+                model = "typesafe/jev-router" if provider_choice == "jev" else os.getenv("OPENROUTER_MODEL", "google/gemini-2.5-flash")
                 client = OpenRouterClient(api_key=openrouter_key, model=model)
                 llm_adapter = OpenRouterLLMAdapter(client)
                 self.active_provider = f"OpenRouter ({model})"
@@ -496,7 +499,8 @@ class AIModuleRunner:
             total_ads_inr = float(getattr(ads, "total_daily_budget_paise", getattr(ads, "total_budget_paise", 13824500)) // 100) if ads else 138245.0
             target_cpa_inr = float(getattr(ads, "target_cpa_paise", 32500) // 100) if ads else 325.0
             blended_cac_inr = round(target_cpa_inr * 1.316, 2)
-            blended_roas = 3.48
+            tot_b = sum(getattr(c, "daily_budget_paise", 0) for c in camps)
+            blended_roas = round(sum(getattr(c, "daily_budget_paise", 0) * getattr(c, "true_roas", 1.0) for c in camps) / tot_b, 2) if tot_b > 0 else 3.48
 
             bleeder_cpa = round(float(bleeder.target_cpa_paise // 100) * 1.185, 2) if bleeder else 385.0
 
@@ -726,11 +730,12 @@ def run_ai_workflow(ai_runner: AIModuleRunner, scenario: Optional[Any] = None):
 
     print("Select LLM Provider Mode:")
     print("  1. Gemini Live API (gemini-3.5-flash / gemini-2.5-flash)")
-    print("  2. OpenRouter Live API (google/gemini-2.5-flash)")
-    print("  3. Offline Deterministic Provider (Instant, zero latency, no network needed)")
-    prov_choice = prompt_input("Choice (1/2/3)", "1")
+    print(f"  2. OpenRouter Live API ({os.getenv('OPENROUTER_MODEL', 'google/gemini-2.5-flash')})")
+    print("  3. TypeSafe Jev Router via OpenRouter (typesafe/jev-router)")
+    print("  4. Offline Deterministic Provider (Instant, zero latency, no network needed)")
+    prov_choice = prompt_input("Choice (1/2/3/4)", "1")
 
-    mode_map = {"1": "gemini", "2": "openrouter", "3": "mock"}
+    mode_map = {"1": "gemini", "2": "openrouter", "3": "jev", "4": "mock"}
     chosen_mode = mode_map.get(prov_choice, "mock")
     print(f"\nInitializing telemetry and AI engine in [{chosen_mode.upper()}] mode...")
     ai_runner.initialize(chosen_mode, scenario=scenario)
@@ -927,7 +932,7 @@ def run_combined_pipeline(ads_client: AdsModuleClient, ai_runner: AIModuleRunner
     print(Style.GREEN + "  3. Offline conversion uploaded to Google Ads ConversionUploadService." + Style.RESET)
 
     print("\n" + Style.BOLD + "STEP 7: PERFORMANCE DIGEST & AUTONOMOUS REBALANCING" + Style.RESET)
-    summary = ads_client.get_attribution_summary(workspace_id, default_aov=aov_inr)
+    summary = ads_client.get_attribution_summary(workspace_id, default_aov=aov_inr, scenario=scenario)
     rev = summary.get("total_attributed_revenue_inr") or summary.get("attributed_revenue_inr", round(aov_inr * 8.4, 2))
     roas = summary.get("roas", 3.48)
     cac = summary.get("cac_inr", target_cpa_inr)
