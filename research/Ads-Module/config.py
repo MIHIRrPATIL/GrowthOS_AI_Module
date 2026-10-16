@@ -10,18 +10,28 @@ from pydantic import BaseModel, Field
 
 
 def _load_env_file() -> None:
-    env_path = Path(__file__).parent / ".env"
-    if env_path.exists():
-        with open(env_path, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if not line or line.startswith("#") or "=" not in line:
-                    continue
-                k, v = line.split("=", 1)
-                k = k.strip()
-                v = v.strip().strip("'\"")
-                if k and k not in os.environ:
-                    os.environ[k] = v
+    candidates = [
+        Path.cwd() / ".env",
+        Path(__file__).parent / ".env",
+        Path(__file__).parents[1] / ".env",
+        Path(__file__).parents[2] / ".env",
+    ]
+    for env_path in candidates:
+        if env_path.exists():
+            try:
+                with open(env_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line or line.startswith("#") or "=" not in line:
+                            continue
+                        k, v = line.split("=", 1)
+                        k = k.strip()
+                        v = v.strip().strip("'\"")
+                        if k and k not in os.environ:
+                            os.environ[k] = v
+                break
+            except Exception:
+                pass
 
 
 _load_env_file()

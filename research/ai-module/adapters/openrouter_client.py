@@ -19,7 +19,8 @@ def load_dotenv_if_present() -> None:
         os.path.join(os.getcwd(), ".env"),
         os.path.join(current_dir, ".env"),
         os.path.join(os.path.dirname(current_dir), ".env"),
-        os.path.join(os.path.dirname(os.path.dirname(current_dir)), ".env")
+        os.path.join(os.path.dirname(os.path.dirname(current_dir)), ".env"),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(current_dir))), ".env"),
     ]
     for env_path in candidates:
         if os.path.isfile(env_path):
