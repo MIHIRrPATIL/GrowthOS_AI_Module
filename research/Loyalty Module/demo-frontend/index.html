@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GrowthOS — Loyalty &amp; Rewards</title>
+<style>
+  :root {
+    --bg: #f3f1ea;
+    --ink: #16241d;
+    --accent: #6b8e23;
+    --accent-dark: #17281c;
+    --card: #ffffff;
+    --border: #e2ded2;
+    --error: #a13a25;
+    --success: #d9f0dd;
+    --muted: #6b6b60;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--border);
+  }
+  .brand { display: flex; align-items: baseline; gap: 10px; }
+  .brand b { font-size: 20px; letter-spacing: -0.02em; }
+  .brand span.tag { color: var(--muted); font-size: 13px; }
+  .conn { display: flex; gap: 8px; align-items: center; font-size: 13px; }
+  .conn input {
+    padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; width: 180px;
+  }
+  main { display: flex; max-width: 1200px; margin: 0 auto; padding: 24px 32px; gap: 32px; }
+  nav { min-width: 160px; }
+  nav button {
+    display: block; width: 100%; text-align: left; padding: 10px 12px; margin-bottom: 4px;
+    border: none; background: transparent; border-radius: 6px; cursor: pointer; font-size: 14px; color: var(--ink);
+  }
+  nav button.active { background: #d7ea9a; font-weight: 600; }
+  .content { flex: 1; min-width: 0; }
+  .eyebrow { font-size: 12px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px;}
+  h1 { font-size: 28px; margin: 0 0 20px 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 22px; margin-bottom: 20px;
+  }
+  .card h3 { margin: 0 0 6px 0; font-size: 17px; }
+  .card p.desc { color: var(--muted); font-size: 13px; margin: 0 0 16px 0; }
+  label { display: block; font-size: 13px; font-weight: 600; margin: 12px 0 4px 0; }
+  input, select {
+    width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px;
+    background: #fff; color: var(--ink);
+  }
+  button.action {
+    margin-top: 16px; width: 100%; padding: 11px; background: var(--accent-dark); color: #fff;
+    border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  button.action:hover { opacity: 0.92; }
+  button.action:disabled { opacity: 0.5; cursor: not-allowed; }
+  .banner {
+    padding: 14px 16px; border-radius: 8px; margin-bottom: 18px; font-size: 14px;
+  }
+  .banner.error { background: #fbe4de; color: var(--error); border: 1px solid #e9b6a8; }
+  .banner.ok { background: var(--success); color: #1c4a29; border: 1px solid #b7dcc0; }
+  .balance-box {
+    background: var(--success); border-radius: 10px; padding: 24px; margin-bottom: 20px;
+  }
+  .balance-box .num { font-size: 44px; font-weight: 700; line-height: 1; }
+  .balance-box .lbl { color: #2e5a3c; font-size: 13px; margin-top: 6px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .pill.EARN, .pill.BONUS, .pill.REFUND { background: #dcefdd; color: #1c4a29; }
+  .pill.REDEEM, .pill.EXPIRE, .pill.ADJUST { background: #fbe4de; color: var(--error); }
+  .row-actions { display: flex; gap: 12px; }
+  .row-actions > div { flex: 1; }
+  small.hint { display:block; color: var(--muted); font-size: 12px; margin-top: 6px; }
+  code.small { background: #eee; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <b>GROWTH<span style="color:var(--accent)">OS</span></b>
+    <span class="tag">LOYALTY &amp; REWARDS · PHASE 1</span>
+  </div>
+  <div class="conn">
+    <span>API base</span>
+    <input id="apiBase" value="http://localhost:8000" />
+    <span>API key</span>
+    <input id="apiKey" value="demo-api-key" />
+  </div>
+</header>
+
+<main>
+  <nav id="nav"></nav>
+  <div class="content">
+    <div id="banner"></div>
+    <div id="view"></div>
+  </div>
+</main>
+
+<script>
+const $ = (sel, root=document) => root.querySelector(sel);
+const state = {
+  tab: "overview",
+  programId: "demo-program",
+  walletId: "demo-wallet",
+};
+
+function apiBase() { return $("#apiBase").value.replace(/\/+$/, ""); }
+function apiKey() { return $("#apiKey").value; }
+
+async function api(path, opts = {}) {
+  const res = await fetch(apiBase() + path, {
+    ...opts,
+    headers: {
+      "Content-Type": "application/json",
+      "X-Api-Key": apiKey(),
+      ...(opts.headers || {}),
+    },
+  });
+  let body = null;
+  try { body = await res.json(); } catch (e) {}
+  if (!res.ok) {
+    const msg = (body && body.detail) ? body.detail : `HTTP ${res.status}`;
+    throw new Error(msg);
+  }
+  return body;
+}
+
+function banner(msg, type) {
+  const el = $("#banner");
+  if (!msg) { el.innerHTML = ""; return; }
+  el.innerHTML = `<div class="banner ${type}">${msg}</div>`;
+}
+
+const TABS = [
+  ["overview", "Overview"],
+  ["programs", "Programs"],
+  ["rules", "Rules"],
+  ["rewards", "Rewards"],
+  ["wallets", "Wallets"],
+  ["transactions", "Transactions"],
+  ["referrals", "Referrals"],
+];
+
+function renderNav() {
+  const nav = $("#nav");
+  nav.innerHTML = TABS.map(([key, label]) =>
+    `<button data-tab="${key}" class="${state.tab===key?'active':''}">${label}</button>`
+  ).join("");
+  nav.querySelectorAll("button").forEach(b => {
+    b.onclick = () => { state.tab = b.dataset.tab; render(); };
+  });
+}
+
+async function render() {
+  renderNav();
+  banner("");
+  const view = $("#view");
+  view.innerHTML = "<p>Loading…</p>";
+  try {
+    if (state.tab === "overview") await renderOverview(view);
+    else if (state.tab === "programs") await renderPrograms(view);
+    else if (state.tab === "rules") await renderRules(view);
+    else if (state.tab === "rewards") await renderRewards(view);
+    else if (state.tab === "wallets") await renderWallets(view);
+    else if (state.tab === "transactions") await renderTransactions(view);
+    else if (state.tab === "referrals") await renderReferrals(view);
+  } catch (e) {
+    banner("Failed to fetch: " + e.message, "error");
+    view.innerHTML = "";
+  }
+}
+
+// ---------------- Overview ----------------
+async function renderOverview(view) {
+  const wallet = await api(`/api/v1/customers/wallets/${state.walletId}`);
+  view.innerHTML = `
+    <div class="eyebrow">Demo wallet</div>
+    <h1>Customer balance</h1>
+    <div class="balance-box">
+      <div class="num" id="balanceNum">${wallet.available_points}</div>
+      <div class="lbl">available points · ${wallet.lifetime_points} lifetime · tier ${wallet.tier}</div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h3>Earn points</h3>
+        <p class="desc">Enter a spend amount. The highest matching active rule determines the points — computed server-side, never sent by this form.</p>
+        <label>Wallet ID</label>
+        <input id="earnWallet" value="${state.walletId}" />
+        <label>Spend (₹)</label>
+        <input id="earnSpend" type="number" value="600" />
+        <button class="action" id="earnBtn">Run earn rule</button>
+      </div>
+      <div class="card">
+        <h3>Redeem reward</h3>
+        <p class="desc">Redeem a reward by ID. Point cost comes from the reward config, not the client.</p>
+        <label>Wallet ID</label>
+        <input id="redeemWallet" value="${state.walletId}" />
+        <label>Reward ID</label>
+        <input id="redeemReward" value="demo-reward" />
+        <button class="action" id="redeemBtn">Redeem reward</button>
+      </div>
+    </div>
+    <div class="card" id="lastTxnCard" style="display:none;">
+      <h3>Last transaction</h3>
+      <pre id="lastTxn" style="white-space:pre-wrap; font-size:12px; background:#f7f6f1; padding:12px; border-radius:6px;"></pre>
+    </div>
+  `;
+  $("#earnBtn").onclick = async () => {
+    try {
+      const txn = await api("/api/v1/loyalty/earn", {
+        method: "POST",
+        body: JSON.stringify({
+          wallet_id: $("#earnWallet").value,
+          spend_amount: Number($("#earnSpend").value),
+        }),
+      });
+      banner(`Earned ${txn.points} points via rule. New balance: ${txn.balance_after}.`, "ok");
+      showLastTxn(txn);
+      renderOverview(view);
+    } catch (e) { banner(e.message, "error"); }
+  };
+  $("#redeemBtn").onclick = async () => {
+    try {
+      const txn = await api("/api/v1/loyalty/rewards/redeem", {
+        method: "POST",
+        body: JSON.stringify({
+          wallet_id: $("#redeemWallet").value,
+          reward_id: $("#redeemReward").value,
+        }),
+      });
+      banner(`Redeemed. ${-txn.points} points spent. New balance: ${txn.balance_after}.`, "ok");
+      showLastTxn(txn);
+      renderOverview(view);
+    } catch (e) { banner(e.message, "error"); }
+  };
+}
+function showLastTxn(txn) {
+  const card = document.querySelector("#lastTxnCard");
+  if (!card) return;
+  card.style.display = "block";
+  document.querySelector("#lastTxn").textContent = JSON.stringify(txn, null, 2);
+}
+
+// ---------------- Programs ----------------
+async function renderPrograms(view) {
+  const programs = await api("/api/v1/loyalty/programs");
+  view.innerHTML = `
+    <div class="eyebrow">Programs</div>
+    <h1>Loyalty programs</h1>
+    <div class="card">
+      <h3>Create program</h3>
+      <p class="desc">The program is created in the organization your API key belongs to (needs an ADMIN key).</p>
+      <label>Name</label>
+      <input id="progName" value="New Program" />
+      <label>Referral bonus points (optional, set by the server per program)</label>
+      <input id="progReferralBonus" type="number" min="1" placeholder="e.g. 500" />
+      <button class="action" id="createProgBtn">Create program</button>
+    </div>
+    <div class="card">
+      <h3>Existing programs</h3>
+      <table>
+        <thead><tr><th>ID</th><th>Name</th><th>Status</th><th>Currency</th><th>Referral bonus</th></tr></thead>
+        <tbody>${programs.map(p => `<tr><td><code class="small">${p.program_id}</code></td><td>${p.name}</td><td>${p.status}</td><td>${p.currency}</td><td>${p.referral_bonus_points ?? "—"}</td></tr>`).join("")}</tbody>
+      </table>
+    </div>
+  `;
+  $("#createProgBtn").onclick = async () => {
+    try {
+      await api("/api/v1/loyalty/programs", {
+        method: "POST",
+        body: JSON.stringify({
+          name: $("#progName").value,
+          referral_bonus_points: $("#progReferralBonus").value ? Number($("#progReferralBonus").value) : null,
+        }),
+      });
+      banner("Program created.", "ok");
+      renderPrograms(view);
+    } catch (e) { banner(e.message, "error"); }
+  };
+}
+
+// ---------------- Rules ----------------
+async function renderRules(view) {
+  const rules = await api(`/api/v1/loyalty/rules?program_id=${state.programId}`);
+  view.innerHTML = `
+    <div class="eyebrow">Rules</div>
+    <h1>Earn rules — ${state.programId}</h1>
+    <div class="card">
+      <h3>Create rule</h3>
+      <div class="row-actions">
+        <div><label>Name</label><input id="ruleName" value="Base rule" /></div>
+        <div><label>Priority</label><input id="rulePriority" type="number" value="0" /></div>
+      </div>
+      <div class="row-actions">
+        <div><label>Min spend (₹)</label><input id="ruleMinSpend" type="number" value="0" /></div>
+        <div><label>Per amount (₹)</label><input id="rulePerAmount" type="number" value="100" /></div>
+      </div>
+      <div class="row-actions">
+        <div><label>Points per unit</label><input id="rulePoints" type="number" value="10" /></div>
+        <div><label>Multiplier</label><input id="ruleMultiplier" type="number" value="1" /></div>
+      </div>
+      <button class="action" id="createRuleBtn">Create rule</button>
+    </div>
+    <div class="card">
+      <h3>Active rules (highest priority match wins)</h3>
+      <table>
+        <thead><tr><th>Name</th><th>Min spend</th><th>Reward</th><th>Priority</th><th>Active</th></tr></thead>
+        <tbody>${rules.map(r => `<tr><td>${r.name}</td><td>₹${r.min_spend}</td><td>${r.points_per_unit} pts / ₹${r.per_amount} × ${r.multiplier}</td><td>${r.priority}</td><td>${r.is_active ? "Yes" : "No"}</td></tr>`).join("")}</tbody>
+      </table>
+    </div>
+  `;
+  $("#createRuleBtn").onclick = async () => {
+    try {
+      await api("/api/v1/loyalty/rules", {
+        method: "POST",
+        body: JSON.stringify({
+          program_id: state.programId,
+          name: $("#ruleName").value,
+          min_spend: Number($("#ruleMinSpend").value),
+          per_amount: Number($("#rulePerAmount").value),
+          points_per_unit: Number($("#rulePoints").value),
+          multiplier: Number($("#ruleMultiplier").value),
+          priority: Number($("#rulePriority").value),
+        }),
+      });
+      banner("Rule created.", "ok");
+      renderRules(view);
+    } catch (e) { banner(e.message, "error"); }
+  };
+}
+
+// ---------------- Rewards ----------------
+async function renderRewards(view) {
+  const rewards = await api(`/api/v1/loyalty/rewards?program_id=${state.programId}`);
+  view.innerHTML = `
+    <div class="eyebrow">Rewards</div>
+    <h1>Rewards — ${state.programId}</h1>
+    <div class="card">
+      <h3>Create reward</h3>
+      <label>Name</label>
+      <input id="rewardName" value="Free coffee" />
+      <label>Point cost</label>
+      <input id="rewardCost" type="number" value="50" />
+      <button class="action" id="createRewardBtn">Create reward</button>
+    </div>
+    <div class="card">
+      <h3>Available rewards</h3>
+      <table>
+        <thead><tr><th>ID</th><th>Name</th><th>Cost</th><th>Stock</th><th>Active</th></tr></thead>
+        <tbody>${rewards.map(r => `<tr><td><code class="small">${r.reward_id}</code></td><td>${r.name}</td><td>${r.point_cost} pts</td><td>${r.stock_remaining ?? "∞"}</td><td>${r.is_active ? "Yes" : "No"}</td></tr>`).join("")}</tbody>
+      </table>
+    </div>
+  `;
+  $("#createRewardBtn").onclick = async () => {
+    try {
+      await api("/api/v1/loyalty/rewards", {
+        method: "POST",
+        body: JSON.stringify({
+          program_id: state.programId,
+          name: $("#rewardName").value,
+          point_cost: Number($("#rewardCost").value),
+        }),
+      });
+      banner("Reward created.", "ok");
+      renderRewards(view);
+    } catch (e) { banner(e.message, "error"); }
+  };
+}
+
+// ---------------- Wallets ----------------
+async function renderWallets(view) {
+  view.innerHTML = `
+    <div class="eyebrow">Wallets</div>
+    <h1>Customer wallets</h1>
+    <div class="card">
+      <h3>Create / fetch wallet</h3>
+      <label>Program ID</label>
+      <input id="walletProgram" value="${state.programId}" />
+      <label>Customer ID</label>
+      <input id="walletCustomer" value="new-customer" />
+      <button class="action" id="createWalletBtn">Create wallet</button>
+    </div>
+    <div class="card">
+      <h3>Look up wallet</h3>
+      <label>Wallet ID</label>
+      <input id="lookupWalletId" value="${state.walletId}" />
+      <button class="action" id="lookupWalletBtn">Fetch wallet</button>
+      <pre id="walletResult" style="white-space:pre-wrap; font-size:12px; background:#f7f6f1; padding:12px; border-radius:6px; margin-top:16px;"></pre>
+    </div>
+  `;
+  $("#createWalletBtn").onclick = async () => {
+    try {
+      const w = await api("/api/v1/customers/wallets", {
+        method: "POST",
+        body: JSON.stringify({ program_id: $("#walletProgram").value, customer_id: $("#walletCustomer").value }),
+      });
+      banner(`Wallet ready: ${w.wallet_id}`, "ok");
+      $("#lookupWalletId").value = w.wallet_id;
+    } catch (e) { banner(e.message, "error"); }
+  };
+  $("#lookupWalletBtn").onclick = async () => {
+    try {
+      const w = await api(`/api/v1/customers/wallets/${$("#lookupWalletId").value}`);
+      $("#walletResult").textContent = JSON.stringify(w, null, 2);
+      state.walletId = w.wallet_id;
+    } catch (e) { banner(e.message, "error"); }
+  };
+}
+
+// ---------------- Transactions ----------------
+async function renderTransactions(view) {
+  const txns = await api(`/api/v1/loyalty/transactions?program_id=${state.programId}`);
+  view.innerHTML = `
+    <div class="eyebrow">Transactions</div>
+    <h1>Ledger — insert-only, immutable</h1>
+    <div class="card">
+      <table>
+        <thead><tr><th>Type</th><th>Points</th><th>Balance after</th><th>Wallet</th><th>Note</th><th>When</th></tr></thead>
+        <tbody>${txns.map(t => `<tr>
+          <td><span class="pill ${t.type}">${t.type}</span></td>
+          <td>${t.points > 0 ? "+" : ""}${t.points}</td>
+          <td>${t.balance_after}</td>
+          <td><code class="small">${t.wallet_id}</code></td>
+          <td>${t.note ?? ""}</td>
+          <td>${new Date(t.created_at).toLocaleString()}</td>
+        </tr>`).join("")}</tbody>
+      </table>
+      <small class="hint">Every row here is append-only: the database itself rejects UPDATE/DELETE on this table. Corrections show up as new REFUND/ADJUST rows.</small>
+    </div>
+  `;
+}
+
+// ---------------- Referrals ----------------
+async function renderReferrals(view) {
+  view.innerHTML = `
+    <div class="eyebrow">Referrals</div>
+    <h1>Referral bonus</h1>
+    <div class="grid2">
+      <div class="card">
+        <h3>Create referral</h3>
+        <p class="desc">Create a pending referral for the current program and referrer wallet.</p>
+        <label>Program ID</label>
+        <input id="refProgram" value="${state.programId}" />
+        <label>Referrer wallet ID</label>
+        <input id="refWallet" value="${state.walletId}" />
+        <label>Referee customer ID</label>
+        <input id="refCustomer" placeholder="customer_friend" />
+        <button class="action" id="createRefBtn">Create referral</button>
+      </div>
+      <div class="card">
+        <h3>Complete referral</h3>
+        <p class="desc">Completing a referral creates an immutable BONUS transaction for the referrer. The amount is the program's configured referral bonus — it is never sent by this form.</p>
+        <label>Referral ID</label>
+        <input id="completeRefId" placeholder="Paste created referral ID" />
+        <button class="action" id="completeRefBtn">Complete and award</button>
+      </div>
+    </div>
+  `;
+  $("#createRefBtn").onclick = async () => {
+    try {
+      const ref = await api("/api/v1/loyalty/referrals", {
+        method: "POST",
+        body: JSON.stringify({
+          program_id: $("#refProgram").value,
+          referrer_wallet_id: $("#refWallet").value,
+          referee_customer_id: $("#refCustomer").value,
+        }),
+      });
+      banner(`Referral created: ${ref.referral_id}`, "ok");
+      $("#completeRefId").value = ref.referral_id;
+    } catch (e) { banner(e.message, "error"); }
+  };
+  $("#completeRefBtn").onclick = async () => {
+    try {
+      const txn = await api("/api/v1/loyalty/referrals/complete", {
+        method: "POST",
+        body: JSON.stringify({
+          referral_id: $("#completeRefId").value,
+        }),
+      });
+      banner(`Awarded ${txn.points} points. New balance: ${txn.balance_after}.`, "ok");
+    } catch (e) { banner(e.message, "error"); }
+  };
+}
+
+render();
+</script>
+</body>
+</html>
